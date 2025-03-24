@@ -85,7 +85,7 @@ CANAIS_CONFIG = {
     },
     '-1002658649212': {
         'nome': 'Canal 4',
-        'link_corretora': 'https://encurtador.com.br/8928H'
+        'link_corretora': 'https://encurtador.com.br/uvuJ0'
     },
     '-1002550653389': {
         'nome': 'Canal 5',
