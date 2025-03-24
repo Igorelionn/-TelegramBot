@@ -27,6 +27,9 @@ logging.basicConfig(
 LOCK_FILE = "bot_telegram.lock"
 lock_socket = None
 
+# Variável global para controlar se os sinais já foram agendados
+sinais_agendados = False
+
 def is_bot_already_running():
     """Verifica se outra instância do bot já está rodando"""
     try:
@@ -860,18 +863,28 @@ def send_message():
 
 # Inicialização e execução do bot
 def schedule_messages():
-    # Limpar agendamentos existentes para evitar duplicação
+    """
+    Agenda o envio de sinais a cada 6 minutos, com um atraso de 2 segundos após o minuto exato.
+    Limpa todos os agendamentos anteriores para evitar duplicação.
+    """
+    # Limpa todos os agendamentos existentes para evitar duplicação
     schedule.clear()
     
-    # Agenda para horários exatos com 2 segundos de atraso a cada 6 minutos durante todo o dia
-    for hora in range(24):  # 0 a 23 horas
-        for minuto in [0, 6, 12, 18, 24, 30, 36, 42, 48, 54]:  # A cada 6 minutos
-            # Adiciona 2 segundos para evitar problemas de arredondamento no Telegram
-            horario_formatado = f"{hora:02d}:{minuto:02d}:02"  # Alterado para 2 segundos
-            schedule.every().day.at(horario_formatado).do(send_message)
+    # Flag global para controlar se os sinais já foram agendados
+    global sinais_agendados
+    if sinais_agendados:
+        logging.info("Sinais já agendados. Pulando reagendamento.")
+        return
+    
+    # Definindo horários a cada 6 minutos ao longo do dia com 2 segundos de atraso
+    for hora in range(24):
+        for minuto in range(0, 60, 6):
+            horario_formatado = f"{hora:02d}:{minuto:02d}:02"
             logging.info(f"Sinal agendado para {horario_formatado}")
+            schedule.every().day.at(horario_formatado).do(send_message)
     
     logging.info("Bot agendado para enviar sinais a cada 6 minutos em horários exatos (com 2 segundos de atraso).")
+    sinais_agendados = True
 
 # Função para manter o bot vivo em serviços de hospedagem gratuitos
 def keep_alive():
@@ -883,58 +896,52 @@ def keep_alive():
         logging.error(f"Erro na função keep_alive: {e}")
 
 def keep_bot_running():
-    logging.info(f"Bot iniciado! Horário de Brasília atual: {obter_hora_brasilia().strftime('%d/%m/%Y %H:%M:%S')}")
-    verificar_disponibilidade()
+    """
+    Mantém o bot em execução, verificando e reagendando sinais se necessário.
+    Verifica a cada 10 minutos se o bot está funcionando adequadamente.
+    """
+    # Obter o horário atual em Brasília
+    fuso_horario = pytz.timezone('America/Sao_Paulo')
+    agora = datetime.datetime.now(fuso_horario)
+    logging.info(f"Bot iniciado! Horário de Brasília atual: {agora.strftime('%d/%m/%Y %H:%M:%S')}")
     
-    # Calcular o próximo horário exato para enviar o primeiro sinal
-    agora = obter_hora_brasilia()
-    minuto_atual = agora.minute
-    # Encontra o próximo minuto divisível por 6
-    proximo_minuto = ((minuto_atual // 6) + 1) * 6
-    if proximo_minuto >= 60:
-        proximo_minuto = 0  # Volta para o início da próxima hora
-        agora = agora + timedelta(hours=1)  # Ajusta para a próxima hora
+    # Verificar quais ativos estão disponíveis
+    ativos = list(ATIVOS_CATEGORIAS.keys())
+    logging.info(f"Ativos disponíveis para negociação no momento: {len(ativos)}")
+    amostra = ativos[:10]
+    logging.info(f"Amostra de ativos disponíveis: {', '.join(amostra)}")
+    logging.info(f"... e mais {len(ativos) - 10} ativos")
     
-    # Adiciona 2 segundos ao horário exato para evitar arredondamento no Telegram
-    proximo_horario = agora.replace(minute=proximo_minuto, second=2, microsecond=0)
-    if proximo_horario <= agora:
-        proximo_horario = proximo_horario + timedelta(minutes=6)
+    # Agendar sinais apenas se não tiverem sido agendados ainda
+    if not sinais_agendados:
+        schedule_messages()
     
-    # Definir agendamentos
-    schedule_messages()
-    
-    # Adicionar verificação de keep_alive a cada 10 minutos
+    # Agendar a verificação de funcionamento do bot (keep_alive) a cada 10 minutos
     schedule.every(10).minutes.do(keep_alive)
     
+    # Calcular tempo até o próximo sinal agendado
+    agora = datetime.datetime.now(fuso_horario)
+    minuto_atual = agora.minute
+    proximo_minuto = ((minuto_atual // 6) + 1) * 6
+    if proximo_minuto >= 60:
+        proximo_minuto = 0
+        proxima_hora = (agora.hour + 1) % 24
+    else:
+        proxima_hora = agora.hour
+        
+    # Definir o próximo horário exato (com ajuste de 2 segundos para evitar arredondamento no Telegram)
+    proximo_horario = agora.replace(hour=proxima_hora, minute=proximo_minuto, second=2, microsecond=0)
+    if proximo_horario <= agora:
+        proximo_horario = proximo_horario + datetime.timedelta(minutes=6)
+    
+    # Calcular tempo de espera
+    tempo_espera = (proximo_horario - agora).total_seconds()
     logging.info(f"Aguardando até o próximo horário para iniciar: {proximo_horario.strftime('%H:%M:%S')}")
     
-    # Contador para reinício em caso de problemas
-    contador_erros = 0
-    max_erros = 5
-    
-    try:
-        while True:
-            try:
-                schedule.run_pending()
-                time.sleep(0.1)  # Reduzido para 0.1 segundos para maior precisão
-                contador_erros = 0  # Reseta contador se tudo estiver funcionando bem
-            except Exception as e:
-                contador_erros += 1
-                logging.error(f"Erro durante execução (tentativa {contador_erros}/{max_erros}): {e}")
-                if contador_erros >= max_erros:
-                    logging.critical("Muitos erros consecutivos. Reiniciando bot...")
-                    # Reinicia o agendamento
-                    schedule.clear()
-                    schedule_messages()
-                    schedule.every(10).minutes.do(keep_alive)
-                    contador_erros = 0
-                time.sleep(30)  # Espera um pouco antes de tentar novamente
-    except KeyboardInterrupt:
-        logging.info("Bot interrompido pelo usuário.")
-    except Exception as e:
-        logging.error(f"Erro inesperado: {e}")
-    finally:
-        logging.info("Bot finalizado!")
+    # Loop principal para manter o bot em execução
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 if __name__ == "__main__":
     try:
