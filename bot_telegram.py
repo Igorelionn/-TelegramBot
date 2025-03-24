@@ -77,7 +77,7 @@ CANAIS_CONFIG = {
     },
     '-1002538423500': {
         'nome': 'Canal 2',
-        'link_corretora': 'https://encurtador.com.br/LofkS'
+        'link_corretora': 'https://trade.xxbroker.com/register?aff=751924&aff_model=revenue&afftrack='
     },
     '-1002599454520': {
         'nome': 'Canal 3',
