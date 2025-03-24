@@ -853,7 +853,7 @@ def send_message():
         logging.error(f"Erro durante o envio da mensagem: {e}")
 
 # Inicializar o timestamp de último envio
-send_message.ultimo_envio_timestamp = datetime.now() - timedelta(minutes=10)  # Inicializar com um valor no passado
+send_message.ultimo_envio_timestamp = obter_hora_brasilia() - timedelta(minutes=10)  # Inicializar com um valor no passado
 
 def schedule_messages():
     """
