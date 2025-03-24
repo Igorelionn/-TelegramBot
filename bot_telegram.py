@@ -82,6 +82,10 @@ CANAIS_CONFIG = {
     '-1002599454520': {
         'nome': 'Canal 3',
         'link_corretora': 'https://encurtador.com.br/EdRSx'
+    },
+    '-1002658649212': {
+        'nome': 'Canal 4',
+        'link_corretora': 'https://encurtador.com.br/8928H'
     }
 }
 
