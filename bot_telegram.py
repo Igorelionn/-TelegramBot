@@ -455,7 +455,6 @@ ATIVOS_CATEGORIAS = {
     "ETH(OTC)": "Blitz", "BNB(OTC)": "Blitz", 
     "SOL(OTC)": "Blitz",
     "DOT(OTC)": "Blitz",
-    "ATOM(OTC)": "Blitz",
     "NEAR(OTC)": "Blitz",
     "ETC(OTC)": "Blitz", "BCH(OTC)": "Blitz",
     "GOOGLE (OTC)": "Blitz", "Amazon (OTC)": "Blitz", "Apple (OTC)": "Blitz",
