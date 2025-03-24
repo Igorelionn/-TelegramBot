@@ -902,7 +902,7 @@ def keep_bot_running():
     """
     # Obter o horário atual em Brasília
     fuso_horario = pytz.timezone('America/Sao_Paulo')
-    agora = datetime.datetime.now(fuso_horario)
+    agora = datetime.now(fuso_horario)
     logging.info(f"Bot iniciado! Horário de Brasília atual: {agora.strftime('%d/%m/%Y %H:%M:%S')}")
     
     # Verificar quais ativos estão disponíveis
@@ -920,7 +920,7 @@ def keep_bot_running():
     schedule.every(10).minutes.do(keep_alive)
     
     # Calcular tempo até o próximo sinal agendado
-    agora = datetime.datetime.now(fuso_horario)
+    agora = datetime.now(fuso_horario)
     minuto_atual = agora.minute
     proximo_minuto = ((minuto_atual // 6) + 1) * 6
     if proximo_minuto >= 60:
@@ -932,7 +932,7 @@ def keep_bot_running():
     # Definir o próximo horário exato (com ajuste de 2 segundos para evitar arredondamento no Telegram)
     proximo_horario = agora.replace(hour=proxima_hora, minute=proximo_minuto, second=2, microsecond=0)
     if proximo_horario <= agora:
-        proximo_horario = proximo_horario + datetime.timedelta(minutes=6)
+        proximo_horario = proximo_horario + timedelta(minutes=6)
     
     # Calcular tempo de espera
     tempo_espera = (proximo_horario - agora).total_seconds()
