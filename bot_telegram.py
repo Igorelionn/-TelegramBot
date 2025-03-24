@@ -716,60 +716,60 @@ def verificar_disponibilidade():
 
 # Função principal para enviar mensagens
 def send_message():
-    global ultimo_ativo, ultimo_signal
+    global ultimo_ativo, ultimo_signal, ultimo_envio_timestamp
+    
     try:
+        # Verificar se o último envio ocorreu há menos de 5 minutos
         agora = obter_hora_brasilia()
+        if hasattr(send_message, 'ultimo_envio_timestamp'):
+            tempo_desde_ultimo_envio = (agora - send_message.ultimo_envio_timestamp).total_seconds() / 60.0
+            if tempo_desde_ultimo_envio < 5:
+                logging.warning(f"Ignorando sinal - último envio ocorreu há apenas {tempo_desde_ultimo_envio:.1f} minutos")
+                return
+
+        # Restante do código original
         current_time = agora.strftime("%H:%M")
         current_day = agora.strftime("%A")
 
-        # Filtra ativos disponíveis no horário atual e no dia da semana
-        # Usa list comprehension em uma única passagem
+        # Filtrar ativos disponíveis
         available_assets = [asset for asset in ATIVOS_FORNECIDOS 
                           if asset != ultimo_ativo and is_asset_available(asset, current_time, current_day)]
 
         if not available_assets:
-            # Se só restou o último ativo, inclua-o novamente
             available_assets = [asset for asset in ATIVOS_FORNECIDOS 
                              if is_asset_available(asset, current_time, current_day)]
             if not available_assets:
                 logging.warning("Nenhum ativo disponível no horário atual.")
                 return
 
-        # Escolhe um ativo aleatório e gera o sinal
+        # Escolher um ativo e gerar o sinal
         asset = random.choice(available_assets)
         signal = 'sell' if ultimo_signal == 'buy' else 'buy' if ultimo_signal is not None else random.choice(['buy', 'sell'])
         action = "COMPRA" if signal == 'buy' else "VENDA"
-        emoji = "🟢" if signal == 'buy' else "🛑"  # Emoji verde para compra, vermelho para venda
+        emoji = "🟢" if signal == 'buy' else "🛑"
 
-        # Calcular horário inicial de entrada (1 minuto após o sinal)
+        # Calcular horários
         entry_time = agora + timedelta(minutes=1)
         categoria = ATIVOS_CATEGORIAS.get(asset, "Não categorizado")
         
-        # Remove o prefixo "Digital_" do nome do ativo para exibição
         nome_ativo_exibicao = asset.replace("Digital_", "") if asset.startswith("Digital_") else asset
         
-        # Garante que haja um espaço entre o nome do ativo e "(OTC)"
         if "(OTC)" in nome_ativo_exibicao and not " (OTC)" in nome_ativo_exibicao:
             nome_ativo_exibicao = nome_ativo_exibicao.replace("(OTC)", " (OTC)")
         
-        # Define a expiração com base na categoria e calcula o tempo real de expiração
-        # Variável para armazenar o tempo de expiração em minutos (ou fração de minutos para segundos)
-        tempo_expiracao_minutos = 1  # Valor padrão
+        tempo_expiracao_minutos = 1
         
-        # Caso especial para NEAR (OTC)
         if "NEAR (OTC)" in nome_ativo_exibicao or asset == "NEAR (OTC)":
-            # Tempo de expiração fixo de 2 minutos para NEAR (OTC)
             tempo_expiracao_minutos = 2
             expiracao_time = entry_time + timedelta(minutes=tempo_expiracao_minutos)
             expiracao_texto = f"⏳ Expiração: {tempo_expiracao_minutos} minutos ({expiracao_time.strftime('%H:%M')})"
         elif categoria == "Blitz":
             expiracao_segundos = random.choice([5, 10, 15, 30])
-            tempo_expiracao_minutos = expiracao_segundos / 60  # Converter segundos para minutos
+            tempo_expiracao_minutos = expiracao_segundos / 60
             expiracao_texto = f"⏳ Expiração: {expiracao_segundos} segundos"
         elif categoria == "Digital":
             tempo_expiracao_minutos = random.choice([1, 3, 5])
             expiracao_time = entry_time + timedelta(minutes=tempo_expiracao_minutos)
-            # Correção gramatical: "1 minuto" (singular) vs "X minutos" (plural)
             if tempo_expiracao_minutos == 1:
                 expiracao_texto = f"⏳ Expiração: 1 minuto ({expiracao_time.strftime('%H:%M')})"
             else:
@@ -779,33 +779,22 @@ def send_message():
             expiracao_time = entry_time + timedelta(minutes=tempo_expiracao_minutos)
             expiracao_texto = f"⏳ Expiração: 1 minuto ({expiracao_time.strftime('%H:%M')})"
         else:
-            tempo_expiracao_minutos = 5  # Valor padrão máximo para "até 5 minutos"
+            tempo_expiracao_minutos = 5
             expiracao_texto = "⏳ Expiração: até 5 minutos"
 
-        # Calcula o horário do fim da operação (entrada + expiração)
         fim_operacao = entry_time + timedelta(minutes=tempo_expiracao_minutos)
-        
-        # Garante que a reentrada 1 seja depois do fim da primeira operação
-        # Adiciona pelo menos 1 minuto após o fim da operação anterior
         gale1_time = fim_operacao + timedelta(minutes=1)
-        
-        # Calcula o tempo de expiração para a primeira reentrada (mesmo tempo da operação original)
         fim_gale1 = gale1_time + timedelta(minutes=tempo_expiracao_minutos)
-        
-        # Garante que a reentrada 2 seja depois do fim da operação de reentrada 1
-        # Adiciona pelo menos 1 minuto após o fim da operação anterior
         gale2_time = fim_gale1 + timedelta(minutes=1)
 
-        # Enviar mensagem pelo Telegram para todos os canais configurados
+        # Enviar mensagem
         logging.info(f"Enviando sinal para o ativo {asset}: {action}")
-        envio_sucesso = False  # Flag para verificar se pelo menos um envio foi bem-sucedido
+        envio_sucesso = False
         
         for chat_id in CHAT_IDS:
             try:
-                # Pegar o link específico para este canal
                 link_corretora = CANAIS_CONFIG[chat_id]['link_corretora']
                 
-                # Construir mensagem específica para este canal
                 canal_message = (
                     f"⚠️TRADE RÁPIDO⚠️\n\n"
                     f"💵 Ativo: {nome_ativo_exibicao}\n"
@@ -817,7 +806,6 @@ def send_message():
                     f"Reentrada 2 - {gale2_time.strftime('%H:%M')}"
                 )
 
-                # Cria teclado inline com o botão que contém o link
                 inline_keyboard = {
                     "inline_keyboard": [
                         [
@@ -836,7 +824,7 @@ def send_message():
                         'text': canal_message,
                         'reply_markup': json.dumps(inline_keyboard)
                     },
-                    timeout=10  # Adicionar timeout para evitar bloqueios
+                    timeout=10
                 )
                 
                 if response.status_code == 200:
@@ -849,10 +837,13 @@ def send_message():
         
         if envio_sucesso:
             logging.info(f"Operação realizada com sucesso! Ativo: {asset}")
-            # Registra o tempo de espera até o próximo sinal
             proximo_sinal = agora + timedelta(minutes=6)
             logging.info(f"Esperando 6 minutos para o próximo sinal. Próximo sinal previsto para: {proximo_sinal.strftime('%H:%M:%S')}")
-            # Atualizar os últimos valores para controle de repetição
+            
+            # Registrar timestamp deste envio
+            send_message.ultimo_envio_timestamp = agora
+            
+            # Atualizar valores para controle
             ultimo_ativo = asset
             ultimo_signal = signal
         else:
@@ -861,7 +852,9 @@ def send_message():
     except Exception as e:
         logging.error(f"Erro durante o envio da mensagem: {e}")
 
-# Inicialização e execução do bot
+# Inicializar o timestamp de último envio
+send_message.ultimo_envio_timestamp = datetime.now() - timedelta(minutes=10)  # Inicializar com um valor no passado
+
 def schedule_messages():
     """
     Agenda o envio de sinais a cada 6 minutos, com um atraso de 2 segundos após o minuto exato.
