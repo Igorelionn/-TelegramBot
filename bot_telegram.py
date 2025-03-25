@@ -797,56 +797,51 @@ def send_message():
         logging.info(f"Enviando sinal para o ativo {asset}: {action}")
         envio_sucesso = False
         
-        try:
-            for chat_id in CHAT_IDS:
-                try:
-                    link_corretora = CANAIS_CONFIG[chat_id]['link_corretora']
-                    
-                    canal_message = (
-                        f"⚠️TRADE RÁPIDO⚠️\n\n"
-                        f"💵 Ativo: {nome_ativo_exibicao}\n"
-                        f"🏷️ Categoria: {categoria}\n"
-                        f"{emoji} {action}\n"
-                        f"➡ Entrada: {entry_time.strftime('%H:%M')}\n"
-                        f"{expiracao_texto}\n"
-                        f"Reentrada 1 - {gale1_time.strftime('%H:%M')}\n"
-                        f"Reentrada 2 - {gale2_time.strftime('%H:%M')}"
-                    )
-                    
-                    inline_keyboard = {
-                        "inline_keyboard": [
-                            [
-                                {
-                                    "text": "👉🏻 Abrir corretora",
-                                    "url": link_corretora
-                                }
-                            ]
+        for chat_id in CHAT_IDS:
+            try:
+                link_corretora = CANAIS_CONFIG[chat_id]['link_corretora']
+                
+                canal_message = (
+                    f"⚠️TRADE RÁPIDO⚠️\n\n"
+                    f"💵 Ativo: {nome_ativo_exibicao}\n"
+                    f"🏷️ Categoria: {categoria}\n"
+                    f"{emoji} {action}\n"
+                    f"➡ Entrada: {entry_time.strftime('%H:%M')}\n"
+                    f"{expiracao_texto}\n"
+                    f"Reentrada 1 - {gale1_time.strftime('%H:%M')}\n"
+                    f"Reentrada 2 - {gale2_time.strftime('%H:%M')}"
+                )
+                
+                inline_keyboard = {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": "👉🏻 Abrir corretora",
+                                "url": link_corretora
+                            }
                         ]
-                    }
-                    
-                    response = requests.post(
-                        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-                        data={
-                            'chat_id': chat_id, 
-                            'text': canal_message,
-                            'reply_markup': json.dumps(inline_keyboard)
-                        },
-                        timeout=10
-                    )
-                    
-                    if response.status_code == 200:
-                        logging.info(f"Sinal enviado com sucesso para o canal {chat_id}")
-                        envio_sucesso = True
-                    else:
-                        logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Erro: {response.status_code} - {response.text}")
-                except Exception as e:
-                    logging.error(f"Erro ao enviar para o canal {chat_id}: {e}")
-            
-            if envio_sucesso:
-                logging.info(f"Operação realizada com sucesso! Ativo: {asset}")
-        except Exception as e:
-            logging.error(f"Erro geral durante o envio de mensagens: {e}")
-
+                    ]
+                }
+                
+                response = requests.post(
+                    f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+                    data={
+                        'chat_id': chat_id, 
+                        'text': canal_message,
+                        'reply_markup': json.dumps(inline_keyboard)
+                    },
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    logging.info(f"Sinal enviado com sucesso para o canal {chat_id}")
+                    envio_sucesso = True
+                else:
+                    logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Erro: {response.status_code} - {response.text}")
+            except Exception as e:
+                logging.error(f"Erro ao enviar para o canal {chat_id}: {e}")
+                continue
+        
         if envio_sucesso:
             logging.info(f"Operação realizada com sucesso! Ativo: {asset}")
             proximo_sinal = agora + timedelta(minutes=6)
@@ -1028,43 +1023,11 @@ BOT2_MENSAGENS_INICIALIZACAO = []  # Lista vazia - não enviará mensagens de in
 # Limite de sinais por hora
 BOT2_LIMITE_SINAIS_POR_HORA = 3
 
-# Categorias dos ativos
-BOT2_ATIVOS_CATEGORIAS = {
-    "EUR/USD": "Digital",
-    "EUR/GBP": "Digital",
-    "AUD/CAD": "Digital",
-    "EUR/JPY": "Digital",
-    "GBP/USD": "Digital",
-    "NZD/USD": "Digital",
-    "USD/CHF": "Digital",
-    "USD/JPY": "Digital",
-    "GOLD": "Digital",
-    "SILVER": "Digital",
-    "AUD/JPY": "Digital",
-    "EURUSD-OTC": "Digital",
-    "AUDCAD-OTC": "Digital",
-    "NZDUSD-OTC": "Digital",
-    "USDRUB-OTC": "Digital",
-    "USDCHF-OTC": "Digital",
-    "BTC/USD": "Blitz",
-    "ETH/USD": "Blitz",
-    "LTC/USD": "Blitz",
-    "DOT/USD": "Binary",
-    "Oil": "Binary",
-    "Apple": "Binary",
-    "Amazon": "Binary",
-    "DAX (Allemand 30)": "Binary",
-    "AUDCHF": "Binary",
-    "CADCHF": "Binary",
-    "CHFJPY": "Binary",
-    "EURAUD": "Binary",
-    "EURCHF": "Binary",
-    "GBPCHF": "Binary",
-    "NZDCHF": "Binary",
-    "D/COP": "Digital",
-    "USD/SGD": "Digital",
-    "USOUSD": "Digital",
-}
+# Categorias dos ativos do Bot 2 (usando as mesmas do Bot 1)
+BOT2_ATIVOS_CATEGORIAS = ATIVOS_CATEGORIAS
+
+# Mapeamento de ativos para padrões de horários do Bot 2 (usando os mesmos do Bot 1)
+BOT2_ASSETS = assets
 
 # Função para obter hora no fuso horário de Brasília (específica para Bot 2)
 def bot2_obter_hora_brasilia():
@@ -1079,8 +1042,13 @@ def bot2_verificar_disponibilidade():
     Verifica quais ativos estão disponíveis para o sinal atual.
     Retorna uma lista de ativos disponíveis.
     """
-    # Simplificado para este exemplo - todos os ativos estão disponíveis
-    available_assets = list(BOT2_ATIVOS_CATEGORIAS.keys())
+    agora = bot2_obter_hora_brasilia()
+    current_time = agora.strftime("%H:%M")
+    current_day = agora.strftime("%A")
+    
+    available_assets = [asset for asset in BOT2_ATIVOS_CATEGORIAS.keys() 
+                       if is_asset_available(asset, current_time, current_day)]
+    
     return available_assets
 
 def bot2_gerar_sinal_aleatorio():
@@ -1098,23 +1066,30 @@ def bot2_gerar_sinal_aleatorio():
     
     # Definir o tempo de expiração baseado na categoria
     if categoria == "Blitz":
-        tempo_expiracao_minutos = random.choice([5, 10, 15, 30])
+        expiracao_segundos = random.choice([5, 10, 15, 30])
+        tempo_expiracao_minutos = expiracao_segundos / 60
+        expiracao_texto = f"⏳ Expiração: {expiracao_segundos} segundos"
     elif categoria == "Digital":
         tempo_expiracao_minutos = random.choice([1, 3, 5])
+        expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
+        if tempo_expiracao_minutos == 1:
+            expiracao_texto = f"⏳ Expiração: 1 minuto ({expiracao_time.strftime('%H:%M')})"
+        else:
+            expiracao_texto = f"⏳ Expiração: {tempo_expiracao_minutos} minutos ({expiracao_time.strftime('%H:%M')})"
     elif categoria == "Binary":
         tempo_expiracao_minutos = 1
+        expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
+        expiracao_texto = f"⏳ Expiração: 1 minuto ({expiracao_time.strftime('%H:%M')})"
     else:
         tempo_expiracao_minutos = 5
-        
-    # Simplificar a informação de expiração para facilitar o processamento
-    expiracao_texto = f"⏳ Expiração: {tempo_expiracao_minutos} minutos"
+        expiracao_texto = "⏳ Expiração: até 5 minutos"
     
     return {
         'ativo': ativo,
         'direcao': direcao,
         'categoria': categoria,
         'expiracao_texto': expiracao_texto,
-        'tempo_expiracao_minutos': tempo_expiracao_minutos  # Adicionar diretamente o valor numérico
+        'tempo_expiracao_minutos': tempo_expiracao_minutos
     }
 
 def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
@@ -1142,18 +1117,21 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_entrada = datetime.strptime(hora_formatada, "%H:%M")
     hora_entrada = bot2_obter_hora_brasilia().replace(hour=hora_entrada.hour, minute=hora_entrada.minute, second=0, microsecond=0)
     
-    # Calcular horário de expiração
-    hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
+    # Calcular horário de entrada (5 minutos depois)
+    hora_entrada_ajustada = hora_entrada + timedelta(minutes=5)
+    
+    # Calcular horário de expiração (a partir do horário de entrada ajustado)
+    hora_expiracao = hora_entrada_ajustada + timedelta(minutes=tempo_expiracao_minutos)
     
     # Calcular horários de reentrada
     # Reentrada 1: Expiração + 2 minutos
     hora_reentrada1 = hora_expiracao + timedelta(minutes=2)
     
     # Reentrada 2: Reentrada 1 + tempo_expiracao_minutos + 2 minutos
-    # Isto garante que durante a reentrada 1 não seja solicitada a reentrada 2
     hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos) + timedelta(minutes=2)
     
     # Formatação dos horários
+    hora_entrada_formatada = hora_entrada_ajustada.strftime("%H:%M")
     hora_exp_formatada = hora_expiracao.strftime("%H:%M")
     hora_reentrada1_formatada = hora_reentrada1.strftime("%H:%M")
     hora_reentrada2_formatada = hora_reentrada2.strftime("%H:%M")
@@ -1169,7 +1147,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"💵 Ativo: {nome_ativo_exibicao}\n"
                 f"🏷️ Categoria: {categoria}\n"
                 f"{emoji} {action_pt}\n"
-                f"➡ Entrada: {hora_formatada}\n"
+                f"➡ Entrada: {hora_entrada_formatada}\n"
                 f"{expiracao_texto_pt}\n"
                 f"Reentrada 1 - {hora_reentrada1_formatada}\n"
                 f"Reentrada 2 - {hora_reentrada2_formatada}")
@@ -1179,7 +1157,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"💵 Asset: {nome_ativo_exibicao}\n"
                 f"🏷️ Category: {categoria}\n"
                 f"{emoji} {action_en}\n"
-                f"➡ Entry: {hora_formatada}\n"
+                f"➡ Entry: {hora_entrada_formatada}\n"
                 f"{expiracao_texto_en}\n"
                 f"Re-entry 1 - {hora_reentrada1_formatada}\n"
                 f"Re-entry 2 - {hora_reentrada2_formatada}")
@@ -1189,7 +1167,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"💵 Activo: {nome_ativo_exibicao}\n"
                 f"🏷️ Categoría: {categoria}\n"
                 f"{emoji} {action_es}\n"
-                f"➡ Entrada: {hora_formatada}\n"
+                f"➡ Entrada: {hora_entrada_formatada}\n"
                 f"{expiracao_texto_es}\n"
                 f"Reentrada 1 - {hora_reentrada1_formatada}\n"
                 f"Reentrada 2 - {hora_reentrada2_formatada}")
@@ -1199,7 +1177,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"💵 Ativo: {nome_ativo_exibicao}\n"
             f"🏷️ Categoria: {categoria}\n"
             f"{emoji} {action_pt}\n"
-            f"➡ Entrada: {hora_formatada}\n"
+            f"➡ Entrada: {hora_entrada_formatada}\n"
             f"{expiracao_texto_pt}\n"
             f"Reentrada 1 - {hora_reentrada1_formatada}\n"
             f"Reentrada 2 - {hora_reentrada2_formatada}")
@@ -1216,53 +1194,50 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
     Função para enviar uma mensagem do bot para o canal.
     Inclui lógica anti-duplicação, geração de sinais aleatórios,
     formatação de múltiplos idiomas, e tratamento de erros de comunicação.
-    
-    Args:
-        ignorar_anti_duplicacao (bool): Se True, ignora a verificação de anti-duplicação
     """
-    # Verifica se já enviou muito recentemente (anti-duplicação)
-    agora = bot2_obter_hora_brasilia()
-    if not ignorar_anti_duplicacao and hasattr(bot2_send_message, 'ultimo_envio_timestamp'):
-        ultimo_envio = bot2_send_message.ultimo_envio_timestamp
-        diferenca = (agora - ultimo_envio).total_seconds()
-        if diferenca < 60:  # Se a última mensagem foi enviada há menos de 1 minuto
-            BOT2_LOGGER.info(f"Anti-duplicação: Mensagem ignorada. Última enviada há {diferenca:.1f} segundos.")
-            return
-    
-    # Atualiza o timestamp da última mensagem enviada para evitar duplicações
-    bot2_send_message.ultimo_envio_timestamp = agora
-    
-    # Verifica se não excedeu o limite por hora
-    hora_atual = agora.replace(minute=0, second=0, microsecond=0)
-    if hora_atual not in bot2_send_message.contagem_por_hora:
-        bot2_send_message.contagem_por_hora = {hora_atual: 0}
-    
-    if not ignorar_anti_duplicacao and bot2_send_message.contagem_por_hora[hora_atual] >= BOT2_LIMITE_SINAIS_POR_HORA:
-        BOT2_LOGGER.info(f"Limite de {BOT2_LIMITE_SINAIS_POR_HORA} sinais por hora atingido. Ignorando este sinal.")
-        return
-    
-    # Gera um sinal aleatório para enviar
-    sinal = bot2_gerar_sinal_aleatorio()
-    if not sinal:
-        BOT2_LOGGER.error("Erro ao gerar sinal. Abortando envio.")
-        return
-    
-    # Incrementa o contador de mensagens enviadas nesta hora
-    bot2_send_message.contagem_por_hora[hora_atual] += 1
-    
-    # Registra a hora de geração do sinal
-    hora_geracao = agora.strftime("%H:%M:%S")
-    BOT2_LOGGER.info(f"Sinal gerado às {hora_geracao}. Enviando para todos os canais configurados...")
-    
-    # Obter dados do sinal
-    ativo = sinal['ativo']
-    direcao = sinal['direcao']
-    categoria = sinal['categoria']
-    
-    # Obtém a hora atual para formatação na mensagem
-    hora_formatada = bot2_obter_hora_brasilia().strftime("%H:%M")
-    
     try:
+        # Verifica se já enviou muito recentemente (anti-duplicação)
+        agora = bot2_obter_hora_brasilia()
+        if not ignorar_anti_duplicacao and hasattr(bot2_send_message, 'ultimo_envio_timestamp'):
+            ultimo_envio = bot2_send_message.ultimo_envio_timestamp
+            diferenca = (agora - ultimo_envio).total_seconds()
+            if diferenca < 60:  # Se a última mensagem foi enviada há menos de 1 minuto
+                BOT2_LOGGER.info(f"Anti-duplicação: Mensagem ignorada. Última enviada há {diferenca:.1f} segundos.")
+                return
+        
+        # Atualiza o timestamp da última mensagem enviada para evitar duplicações
+        bot2_send_message.ultimo_envio_timestamp = agora
+        
+        # Verifica se não excedeu o limite por hora
+        hora_atual = agora.replace(minute=0, second=0, microsecond=0)
+        if hora_atual not in bot2_send_message.contagem_por_hora:
+            bot2_send_message.contagem_por_hora = {hora_atual: 0}
+        
+        if not ignorar_anti_duplicacao and bot2_send_message.contagem_por_hora[hora_atual] >= BOT2_LIMITE_SINAIS_POR_HORA:
+            BOT2_LOGGER.info(f"Limite de {BOT2_LIMITE_SINAIS_POR_HORA} sinais por hora atingido. Ignorando este sinal.")
+            return
+        
+        # Gera um sinal aleatório para enviar
+        sinal = bot2_gerar_sinal_aleatorio()
+        if not sinal:
+            BOT2_LOGGER.error("Erro ao gerar sinal. Abortando envio.")
+            return
+        
+        # Incrementa o contador de mensagens enviadas nesta hora
+        bot2_send_message.contagem_por_hora[hora_atual] += 1
+        
+        # Registra a hora de geração do sinal
+        hora_geracao = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"Sinal gerado às {hora_geracao}. Enviando para todos os canais configurados...")
+        
+        # Obter dados do sinal
+        ativo = sinal['ativo']
+        direcao = sinal['direcao']
+        categoria = sinal['categoria']
+        
+        # Obtém a hora atual para formatação na mensagem
+        hora_formatada = bot2_obter_hora_brasilia().strftime("%H:%M")
+        
         # Loop para enviar aos canais configurados com base no idioma
         for chat_id in BOT2_CHAT_IDS:
             # Pegar configuração do canal
@@ -1345,11 +1320,14 @@ def bot2_schedule_messages():
     
     # Definindo horários distribuídos ao longo da hora para 3 sinais
     # Escolhemos pontos distribuídos: minuto 10, 30 e 50 de cada hora
+    # Agora vamos agendar no horário exato, pois a mensagem já mostrará 5 minutos depois
     for hora in range(24):
         for minuto in [10, 30, 50]:  # 3 sinais por hora, distribuídos uniformemente
-            horario_formatado = f"{hora:02d}:{minuto:02d}:02"
-            BOT2_LOGGER.info(f"Sinal agendado para {horario_formatado}")
-            schedule.every().day.at(horario_formatado).do(bot2_send_message)
+            # Calcula o horário de envio (no horário exato)
+            horario_envio = f"{hora:02d}:{minuto:02d}:02"
+            horario_entrada = f"{hora:02d}:{minuto:02d}"
+            BOT2_LOGGER.info(f"Sinal agendado para {horario_envio} (entrada em {horario_entrada})")
+            schedule.every().day.at(horario_envio).do(bot2_send_message)
     
     BOT2_LOGGER.info("Bot 2 agendado para enviar 3 sinais por hora, distribuídos nos minutos 10, 30 e 50.")
     BOT2_LOGGER.info(f"Adicionalmente, um sinal de teste será enviado em 5 segundos ({horario_teste_str}).")
@@ -1359,12 +1337,21 @@ def bot2_keep_bot_running():
     """
     Função principal para manter o bot em execução.
     """
-    BOT2_LOGGER.info("Bot 2 iniciando...")
-    
-    # Agendar mensagens
-    bot2_schedule_messages()
-    
-    BOT2_LOGGER.info("Bot 2 está em execução!")
+    try:
+        BOT2_LOGGER.info("Bot 2 iniciando...")
+        
+        # Agendar mensagens
+        bot2_schedule_messages()
+        
+        BOT2_LOGGER.info("Bot 2 está em execução!")
+        
+        # Loop principal para manter o bot em execução
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro no loop principal do Bot 2: {str(e)}")
+        traceback.print_exc()
 
 # Inicialização do Bot 2 quando este arquivo for executado
 bot2_sinais_agendados = False
