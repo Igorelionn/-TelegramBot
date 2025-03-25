@@ -804,21 +804,34 @@ def send_message():
                 canal_message = (
                     f"⚠️TRADE RÁPIDO⚠️\n\n"
                     f"💵 Ativo: {nome_ativo_exibicao}\n"
-                    f"🏷️ Opções: {categoria}\n"
+                    f"🏷️ Categoria: {categoria}\n"
                     f"{emoji} {action}\n"
                     f"➡ Entrada: {entry_time.strftime('%H:%M')}\n"
                     f"{expiracao_texto}\n"
                     f"Reentrada 1 - {gale1_time.strftime('%H:%M')}\n"
-                    f"Reentrada 2 - {gale2_time.strftime('%H:%M')}\n\n"
-                    f"👉🏻 Abrir corretora"
+                    f"Reentrada 2 - {gale2_time.strftime('%H:%M')}"
                 )
+                
+                # Configura o teclado inline com o link da corretora
+                teclado_inline = {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": "👉🏻 Abrir corretora",
+                                "url": link_corretora
+                            }
+                        ]
+                    ]
+                }
                 
                 response = requests.post(
                     f"https://api.telegram.org/bot{TOKEN}/sendMessage",
                     json={
                         "chat_id": chat_id,
                         "text": canal_message,
-                        "parse_mode": "HTML"
+                        "parse_mode": "HTML",
+                        "disable_web_page_preview": True,
+                        "reply_markup": json.dumps(teclado_inline)
                     }
                 )
                 
