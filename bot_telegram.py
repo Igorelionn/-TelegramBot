@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 import requests
 import schedule
-import time 
+import time
 import random
 import logging
 import json
@@ -52,7 +52,7 @@ def is_bot_already_running():
         # Cria um novo arquivo de lock
         with open(LOCK_FILE, 'w') as f:
             f.write(str(os.getpid()))
-            
+        
         # Registra uma função para liberar o lock ao sair
         def release_lock():
             if os.path.exists(LOCK_FILE):
@@ -797,50 +797,56 @@ def send_message():
         logging.info(f"Enviando sinal para o ativo {asset}: {action}")
         envio_sucesso = False
         
-        for chat_id in CHAT_IDS:
-            try:
-                link_corretora = CANAIS_CONFIG[chat_id]['link_corretora']
-                
-                canal_message = (
-                    f"⚠️TRADE RÁPIDO⚠️\n\n"
-                    f"💵 Ativo: {nome_ativo_exibicao}\n"
-                    f"🏷️ Categoria: {categoria}\n"
-                    f"{emoji} {action}\n"
-                    f"➡ Entrada: {entry_time.strftime('%H:%M')}\n"
-                    f"{expiracao_texto}\n"
-                    f"Reentrada 1 - {gale1_time.strftime('%H:%M')}\n"
-                    f"Reentrada 2 - {gale2_time.strftime('%H:%M')}"
-                )
-
-                inline_keyboard = {
-                    "inline_keyboard": [
-                        [
-                            {
-                                "text": "👉🏻 Abrir corretora",
-                                "url": link_corretora
-                            }
+        try:
+            for chat_id in CHAT_IDS:
+                try:
+                    link_corretora = CANAIS_CONFIG[chat_id]['link_corretora']
+                    
+                    canal_message = (
+                        f"⚠️TRADE RÁPIDO⚠️\n\n"
+                        f"💵 Ativo: {nome_ativo_exibicao}\n"
+                        f"🏷️ Categoria: {categoria}\n"
+                        f"{emoji} {action}\n"
+                        f"➡ Entrada: {entry_time.strftime('%H:%M')}\n"
+                        f"{expiracao_texto}\n"
+                        f"Reentrada 1 - {gale1_time.strftime('%H:%M')}\n"
+                        f"Reentrada 2 - {gale2_time.strftime('%H:%M')}"
+                    )
+                    
+                    inline_keyboard = {
+                        "inline_keyboard": [
+                            [
+                                {
+                                    "text": "👉🏻 Abrir corretora",
+                                    "url": link_corretora
+                                }
+                            ]
                         ]
-                    ]
-                }
-                
-                response = requests.post(
-                    f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-                    data={
-                        'chat_id': chat_id, 
-                        'text': canal_message,
-                        'reply_markup': json.dumps(inline_keyboard)
-                    },
-                    timeout=10
-                )
-                
-                if response.status_code == 200:
-                    logging.info(f"Sinal enviado com sucesso para o canal {chat_id}")
-                    envio_sucesso = True
-                else:
-                    logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Erro: {response.status_code} - {response.text}")
-            except Exception as e:
-                logging.error(f"Erro ao enviar para o canal {chat_id}: {e}")
-        
+                    }
+                    
+                    response = requests.post(
+                        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+                        data={
+                            'chat_id': chat_id, 
+                            'text': canal_message,
+                            'reply_markup': json.dumps(inline_keyboard)
+                        },
+                        timeout=10
+                    )
+                    
+                    if response.status_code == 200:
+                        logging.info(f"Sinal enviado com sucesso para o canal {chat_id}")
+                        envio_sucesso = True
+                    else:
+                        logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Erro: {response.status_code} - {response.text}")
+                except Exception as e:
+                    logging.error(f"Erro ao enviar para o canal {chat_id}: {e}")
+            
+            if envio_sucesso:
+                logging.info(f"Operação realizada com sucesso! Ativo: {asset}")
+        except Exception as e:
+            logging.error(f"Erro geral durante o envio de mensagens: {e}")
+
         if envio_sucesso:
             logging.info(f"Operação realizada com sucesso! Ativo: {asset}")
             proximo_sinal = agora + timedelta(minutes=6)
@@ -1139,9 +1145,13 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     # Calcular horário de expiração
     hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
     
-    # Calcular horários de reentrada (2 minutos após entrada + expiração)
+    # Calcular horários de reentrada
+    # Reentrada 1: Expiração + 2 minutos
     hora_reentrada1 = hora_expiracao + timedelta(minutes=2)
-    hora_reentrada2 = hora_reentrada1 + timedelta(minutes=2)
+    
+    # Reentrada 2: Reentrada 1 + tempo_expiracao_minutos + 2 minutos
+    # Isto garante que durante a reentrada 1 não seja solicitada a reentrada 2
+    hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos) + timedelta(minutes=2)
     
     # Formatação dos horários
     hora_exp_formatada = hora_expiracao.strftime("%H:%M")
