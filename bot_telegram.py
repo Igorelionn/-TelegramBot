@@ -803,6 +803,7 @@ def send_message():
                 
                 canal_message = (
                     f"{emoji} {action} {nome_ativo_exibicao}\n"
+                    f"🏷️ Opções: {categoria}\n"
                     f"⏰ Entrada: {entry_time.strftime('%H:%M')}\n"
                     f"{expiracao_texto}\n"
                     f"🎯 Reentrada 1: {gale1_time.strftime('%H:%M')}\n"
@@ -1140,7 +1141,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     if idioma == "pt":
         return (f"⚠️TRADE RÁPIDO⚠️\n\n"
                 f"💵 Ativo: {nome_ativo_exibicao}\n"
-                f"🏷️ Categoria: {categoria}\n"
+                f"🏷️ Opções: {categoria}\n"
                 f"{emoji} {action_pt}\n"
                 f"➡ Entrada: {hora_entrada_formatada}\n"
                 f"{expiracao_texto_pt}\n"
@@ -1150,7 +1151,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     elif idioma == "en":
         return (f"⚠️QUICK TRADE⚠️\n\n"
                 f"💵 Asset: {nome_ativo_exibicao}\n"
-                f"🏷️ Category: {categoria}\n"
+                f"🏷️ Options: {categoria}\n"
                 f"{emoji} {action_en}\n"
                 f"➡ Entry: {hora_entrada_formatada}\n"
                 f"{expiracao_texto_en}\n"
@@ -1160,7 +1161,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     elif idioma == "es":
         return (f"⚠️COMERCIO RÁPIDO⚠️\n\n"
                 f"💵 Activo: {nome_ativo_exibicao}\n"
-                f"🏷️ Categoría: {categoria}\n"
+                f"🏷️ Opciones: {categoria}\n"
                 f"{emoji} {action_es}\n"
                 f"➡ Entrada: {hora_entrada_formatada}\n"
                 f"{expiracao_texto_es}\n"
