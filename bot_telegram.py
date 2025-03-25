@@ -838,6 +838,7 @@ def send_message():
                 if response.status_code == 200:
                     logging.info(f"Sinal enviado com sucesso para o canal {chat_id}")
                     envio_sucesso = True
+                    break  # Sai do loop após enviar com sucesso para um canal
                 else:
                     logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Erro: {response.status_code} - {response.text}")
             except Exception as e:
