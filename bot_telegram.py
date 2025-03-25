@@ -18,11 +18,29 @@ import traceback
 FUSO_HORARIO_BRASILIA = pytz.timezone('America/Sao_Paulo')
 obter_hora_brasilia = lambda: datetime.now(FUSO_HORARIO_BRASILIA)
 
+# Configuração do logger principal
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[logging.FileHandler("bot_telegram_logs.log"), logging.StreamHandler()]
 )
+
+# Configuração do logger específico para o Bot 2
+BOT2_LOGGER = logging.getLogger('bot2')
+BOT2_LOGGER.setLevel(logging.INFO)
+
+# Remover handlers existentes do BOT2_LOGGER para evitar duplicação
+for handler in BOT2_LOGGER.handlers[:]:
+    BOT2_LOGGER.removeHandler(handler)
+
+# Adicionar handlers específicos para o BOT2_LOGGER
+bot2_formatter = logging.Formatter('%(asctime)s - BOT2 - %(levelname)s - %(message)s')
+bot2_file_handler = logging.FileHandler("bot_telegram_bot2_logs.log")
+bot2_file_handler.setFormatter(bot2_formatter)
+BOT2_LOGGER.addHandler(bot2_file_handler)
+
+# Desabilitar propagação para o logger raiz
+BOT2_LOGGER.propagate = False
 
 # Arquivo de bloqueio para impedir múltiplas instâncias
 LOCK_FILE = "bot_telegram.lock"
@@ -945,21 +963,6 @@ if 'requests' not in globals():
     import requests
 if 'logging' not in globals():
     import logging
-
-# Configuração do logger específico para o Bot 2 - IMPORTANTE: Definição antes do uso
-BOT2_LOGGER = logging.getLogger('bot2')
-BOT2_LOGGER.setLevel(logging.INFO)
-bot2_formatter = logging.Formatter('%(asctime)s - BOT2 - %(levelname)s - %(message)s')
-
-# Evitar duplicação de handlers
-if not BOT2_LOGGER.handlers:
-    bot2_file_handler = logging.FileHandler("bot_telegram_bot_logs.log")
-    bot2_file_handler.setFormatter(bot2_formatter)
-    BOT2_LOGGER.addHandler(bot2_file_handler)
-    
-    bot2_console_handler = logging.StreamHandler()
-    bot2_console_handler.setFormatter(bot2_formatter)
-    BOT2_LOGGER.addHandler(bot2_console_handler)
 
 # Credenciais Telegram
 BOT2_TOKEN = '7997585882:AAFDyG-BYskj1gyAbh17X5jd6DDClXdluww'
