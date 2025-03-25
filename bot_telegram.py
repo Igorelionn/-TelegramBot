@@ -797,8 +797,8 @@ def send_message():
         logging.info(f"Enviando sinal para o ativo {asset}: {action}")
         envio_sucesso = False
         
-        for chat_id in CHAT_IDS:
-            try:
+        try:
+            for chat_id in CHAT_IDS:
                 link_corretora = CANAIS_CONFIG[chat_id]['link_corretora']
                 
                 canal_message = (
@@ -838,12 +838,13 @@ def send_message():
                 if response.status_code == 200:
                     logging.info(f"Sinal enviado com sucesso para o canal {chat_id}")
                     envio_sucesso = True
-                    break  # Sai do loop após enviar com sucesso para um canal
+                    # Após enviar com sucesso, sai do loop
+                    break
                 else:
                     logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Erro: {response.status_code} - {response.text}")
-            except Exception as e:
-                logging.error(f"Erro ao enviar para o canal {chat_id}: {e}")
-                continue
+        
+        except Exception as e:
+            logging.error(f"Erro durante o envio da mensagem: {e}")
         
         if envio_sucesso:
             logging.info(f"Operação realizada com sucesso! Ativo: {asset}")
@@ -867,8 +868,8 @@ send_message.ultimo_envio_timestamp = obter_hora_brasilia() - timedelta(minutes=
 
 def schedule_messages():
     """
-    Agenda o envio de sinais a cada 6 minutos, com um atraso de 2 segundos após o minuto exato.
-    Limpa todos os agendamentos anteriores para evitar duplicação.
+    Agenda o envio de sinais a cada 6 minutos durante 24 horas, com 2 segundos de delay.
+    Horários: 00:00:02, 00:06:02, 00:12:02, ..., 23:54:02
     """
     # Limpa todos os agendamentos existentes para evitar duplicação
     schedule.clear()
@@ -880,13 +881,23 @@ def schedule_messages():
         return
     
     # Definindo horários a cada 6 minutos ao longo do dia com 2 segundos de atraso
-    for hora in range(24):
-        for minuto in range(0, 60, 6):
+    for hora in range(24):  # 0 a 23 horas
+        for minuto in range(0, 60, 6):  # 0, 6, 12, 18, 24, 30, 36, 42, 48, 54
             horario_formatado = f"{hora:02d}:{minuto:02d}:02"
-            logging.info(f"Sinal agendado para {horario_formatado}")
             schedule.every().day.at(horario_formatado).do(send_message)
+            logging.info(f"Sinal agendado para {horario_formatado}")
     
-    logging.info("Bot agendado para enviar sinais a cada 6 minutos em horários exatos (com 2 segundos de atraso).")
+    # Lista todos os horários agendados para verificação
+    horarios = [f"{hora:02d}:{minuto:02d}:02" 
+                for hora in range(24) 
+                for minuto in range(0, 60, 6)]
+    
+    logging.info(f"Total de {len(horarios)} sinais agendados para as 24 horas")
+    logging.info("Horários agendados:")
+    for i, horario in enumerate(horarios[:10], 1):
+        logging.info(f"Sinal {i}: {horario}")
+    logging.info("... e assim por diante a cada 6 minutos")
+    
     sinais_agendados = True
 
 # Função para manter o bot vivo em serviços de hospedagem gratuitos
