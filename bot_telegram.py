@@ -845,7 +845,6 @@ def send_message():
                     logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Erro: {response.status_code} - {response.text}")
             except Exception as e:
                 logging.error(f"Erro ao enviar para o canal {chat_id}: {e}")
-                continue
         
         if envio_sucesso:
             logging.info(f"Operação realizada com sucesso! Ativo: {asset}")
@@ -1543,69 +1542,223 @@ def bot2_enviar_aviso_pre_sinais():
         minuto_atual = agora.minute
         
         # Verificar se é um horário de aviso pré-sinal
-        if minuto_atual in [3, 27, 43]:
-            # Obter próximo horário de sinal
-            proximo_minuto = {
-                3: 13,   # 03 -> 13
-                27: 37,  # 27 -> 37
-                43: 53   # 43 -> 53
-            }[minuto_atual]
+        if minuto_atual not in [3, 27, 43]:
+            return
             
-            # Calcular tempo restante
-            tempo_restante = proximo_minuto - minuto_atual
-            if tempo_restante < 0:
-                tempo_restante += 60
-            
-            # Mensagem de aviso
-            mensagem = f"⚠️ ATENÇÃO ⚠️\n\n"
-            mensagem += f"🔔 SINAL EM {tempo_restante} MINUTOS!\n\n"
-            mensagem += f"⏰ Horário do Sinal: {hora_atual:02d}:{proximo_minuto:02d}\n\n"
-            mensagem += f"📊 Prepare-se para receber o próximo sinal!\n"
-            mensagem += f"🎯 Categoria: {random.choice(['Blitz', 'Digital', 'Binary'])}\n"
-            mensagem += f"💎 Entrada: {random.choice(['Entrada 1', 'Entrada 2'])}\n"
-            mensagem += f"⏱️ Expiração: {random.choice(['1 min', '3 min', '5 min'])}\n\n"
-            mensagem += f"🔍 Análise em andamento...\n"
-            mensagem += f"⚡ Preparando sinal de alta precisão!\n\n"
-            mensagem += f"#SinalEmBreve #PrepareSe #AltaPrecisao"
-            
-            # Enviar para todos os canais do Bot 2
-            for chat_id in BOT2_CHAT_IDS:
-                try:
-                    # Configuração do teclado inline com o link da corretora
-                    teclado_inline = {
-                        "inline_keyboard": [
-                            [
-                                {
-                                    "text": "👉🏻 Abrir corretora",
-                                    "url": BOT2_CANAIS_CONFIG[chat_id]["link_corretora"]
-                                }
-                            ]
+        # Obter próximo horário de sinal
+        proximo_minuto = {
+            3: 13,   # 03 -> 13
+            27: 37,  # 27 -> 37
+            43: 53   # 43 -> 53
+        }[minuto_atual]
+        
+        # Calcular tempo restante
+        tempo_restante = proximo_minuto - minuto_atual
+        if tempo_restante < 0:
+            tempo_restante += 60
+        
+        # Mensagem de aviso
+        mensagem = f"⚠️ ATENÇÃO ⚠️\n\n"
+        mensagem += f"🔔 SINAL EM {tempo_restante} MINUTOS!\n\n"
+        mensagem += f"⏰ Horário do Sinal: {hora_atual:02d}:{proximo_minuto:02d}\n\n"
+        mensagem += f"📊 Prepare-se para receber o próximo sinal!\n"
+        mensagem += f"🎯 Categoria: {random.choice(['Blitz', 'Digital', 'Binary'])}\n"
+        mensagem += f"💎 Entrada: {random.choice(['Entrada 1', 'Entrada 2'])}\n"
+        mensagem += f"⏱️ Expiração: {random.choice(['1 min', '3 min', '5 min'])}\n\n"
+        mensagem += f"🔍 Análise em andamento...\n"
+        mensagem += f"⚡ Preparando sinal de alta precisão!\n\n"
+        mensagem += f"#SinalEmBreve #PrepareSe #AltaPrecisao"
+        
+        # Enviar para todos os canais do Bot 2
+        for chat_id in BOT2_CHAT_IDS:
+            try:
+                # Configuração do teclado inline com o link da corretora
+                teclado_inline = {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": "👉🏻 Abrir corretora",
+                                "url": BOT2_CANAIS_CONFIG[chat_id]["link_corretora"]
+                            }
                         ]
-                    }
-                    
-                    # Enviar mensagem usando a API do Telegram
-                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                    payload = {
-                        'chat_id': chat_id,
-                        'text': mensagem,
-                        'parse_mode': 'HTML',
-                        'disable_web_page_preview': True,
-                        'reply_markup': json.dumps(teclado_inline)
-                    }
-                    
-                    response = requests.post(url, json=payload)
-                    if response.status_code == 200:
-                        BOT2_LOGGER.info(f"Aviso pré-sinal enviado com sucesso para o canal {chat_id}")
-                    else:
-                        BOT2_LOGGER.error(f"Erro ao enviar aviso pré-sinal para o canal {chat_id}: {response.text}")
-                    
-                    time.sleep(1)  # Pequena pausa entre envios
-                except Exception as e:
-                    BOT2_LOGGER.error(f"Erro ao enviar aviso pré-sinal para canal {chat_id}: {str(e)}")
-                    continue
-                    
+                    ]
+                }
+                
+                # Enviar mensagem usando a API do Telegram
+                url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                payload = {
+                    'chat_id': chat_id,
+                    'text': mensagem,
+                    'parse_mode': 'HTML',
+                    'disable_web_page_preview': True,
+                    'reply_markup': json.dumps(teclado_inline)
+                }
+                
+                response = requests.post(url, json=payload)
+                if response.status_code == 200:
+                    BOT2_LOGGER.info(f"Aviso pré-sinal enviado com sucesso para o canal {chat_id}")
+                else:
+                    BOT2_LOGGER.error(f"Erro ao enviar aviso pré-sinal para o canal {chat_id}: {response.text}")
+                
+                time.sleep(1)  # Pequena pausa entre envios
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao enviar aviso pré-sinal para canal {chat_id}: {str(e)}")
+                
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao enviar avisos pré-sinais: {str(e)}")
+
+def iniciar_bot2():
+    """Inicializa o Bot 2"""
+    try:
+        BOT2_LOGGER.info("Inicializando Bot 2...")
+        
+        # Iniciar agendamento de mensagens
+        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
+        
+        # Agendar avisos pré-sinais
+        schedule.every().minute.at(":03").do(bot2_enviar_aviso_pre_sinais)
+        schedule.every().minute.at(":27").do(bot2_enviar_aviso_pre_sinais)
+        schedule.every().minute.at(":43").do(bot2_enviar_aviso_pre_sinais)
+        
+        # Agendar sinais
+        schedule.every().hour.at(":13").do(bot2_enviar_sinais)
+        schedule.every().hour.at(":37").do(bot2_enviar_sinais)
+        schedule.every().hour.at(":53").do(bot2_enviar_sinais)
+        
+        # Agendar avisos pós-sinais
+        schedule.every().hour.at(":18").do(bot2_enviar_aviso_pos_sinais)
+        schedule.every().hour.at(":42").do(bot2_enviar_aviso_pos_sinais)
+        schedule.every().hour.at(":58").do(bot2_enviar_aviso_pos_sinais)
+        
+        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído")
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
+        raise
+
+def bot2_enviar_sinais():
+    """Envia sinais para todos os canais do Bot 2"""
+    try:
+        # Gera um sinal aleatório
+        sinal = bot2_gerar_sinal_aleatorio()
+        if not sinal:
+            BOT2_LOGGER.error("Erro ao gerar sinal. Abortando envio.")
+            return
+            
+        # Obtém a hora atual para formatação na mensagem
+        hora_formatada = bot2_obter_hora_brasilia().strftime("%H:%M")
+        
+        # Envia para todos os canais configurados
+        for chat_id in BOT2_CHAT_IDS:
+            try:
+                # Pegar configuração do canal
+                config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                idioma = config_canal["idioma"]
+                link_corretora = config_canal["link_corretora"]
+                
+                # Formatar mensagem no idioma correto
+                mensagem = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
+                
+                # Texto do botão de acordo com o idioma
+                texto_botao = "👉🏻 Abrir corretora"  # Padrão em português
+                if idioma == "en":
+                    texto_botao = "👉🏻 Open broker"
+                elif idioma == "es":
+                    texto_botao = "👉🏻 Abrir corredor"
+                
+                # Configura o teclado inline com o link da corretora
+                teclado_inline = {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": texto_botao,
+                                "url": link_corretora
+                            }
+                        ]
+                    ]
+                }
+                
+                # Envia a mensagem para o canal específico
+                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                payload = {
+                    'chat_id': chat_id,
+                    'text': mensagem,
+                    'parse_mode': 'HTML',
+                    'disable_web_page_preview': True,
+                    'reply_markup': json.dumps(teclado_inline)
+                }
+                
+                resposta = requests.post(url_base, data=payload)
+                if resposta.status_code == 200:
+                    BOT2_LOGGER.info(f"Sinal enviado com sucesso para o canal {chat_id} em {idioma}")
+                else:
+                    BOT2_LOGGER.error(f"Erro ao enviar sinal para o canal {chat_id}: {resposta.text}")
+                
+                time.sleep(1)  # Pequena pausa entre envios
+                
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao enviar sinal para o canal {chat_id}: {str(e)}")
+                
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao enviar sinais: {str(e)}")
+
+def bot2_enviar_aviso_pos_sinais():
+    """Envia avisos pós-sinais para todos os canais do Bot 2"""
+    try:
+        # Configuração das mensagens por idioma
+        mensagens_por_idioma = {
+            "pt": {
+                "texto": (
+                    "✅ Operação finalizada!\n\n"
+                    "Aguardem o próximo sinal...\n\n"
+                    "💡 Dica: Mantenham a corretora aberta para não perder nenhum sinal!"
+                )
+            },
+            "en": {
+                "texto": (
+                    "✅ Operation completed!\n\n"
+                    "Waiting for the next signal...\n\n"
+                    "💡 Tip: Keep the broker platform open to not miss any signals!"
+                )
+            },
+            "es": {
+                "texto": (
+                    "✅ ¡Operación finalizada!\n\n"
+                    "Esperando el próximo señal...\n\n"
+                    "💡 Consejo: ¡Mantén la plataforma abierta para no perder ninguna señal!"
+                )
+            }
+        }
+        
+        # Enviar para todos os canais configurados
+        for chat_id in BOT2_CHAT_IDS:
+            try:
+                config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                idioma = config_canal["idioma"]
+                mensagem = mensagens_por_idioma[idioma]["texto"]
+                
+                # Enviar mensagem usando a API do Telegram
+                url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                payload = {
+                    'chat_id': chat_id,
+                    'text': mensagem,
+                    'parse_mode': 'HTML',
+                    'disable_web_page_preview': True
+                }
+                
+                response = requests.post(url, json=payload)
+                if response.status_code == 200:
+                    BOT2_LOGGER.info(f"Aviso pós-sinal enviado com sucesso para o canal {chat_id}")
+                else:
+                    BOT2_LOGGER.error(f"Erro ao enviar aviso pós-sinal para o canal {chat_id}: {response.text}")
+                
+                time.sleep(1)  # Pequena pausa entre envios
+                
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao enviar aviso pós-sinal para o canal {chat_id}: {str(e)}")
+                
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao enviar avisos pós-sinais: {str(e)}")
 
 if __name__ == "__main__":
     try:
