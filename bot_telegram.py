@@ -1537,7 +1537,7 @@ def bot2_enviar_aviso_pre_sinais():
                 )
             },
             "es": {
-                "gif_url": "blob:https://web.telegram.org/1a69f188-b176-4c25-ae4c-97edeb28ca3a",
+                "gif_url": "blob:https://web.telegram.org/c65f1275-6ff9-4cc5-aff5-d74c06b4d1ea",
                 "texto": (
                     "👉🏼Abran la plataforma\n\n"
                     "⚠️¡ESTÉN ATENTOS⚠️\n\n"
@@ -1546,7 +1546,7 @@ def bot2_enviar_aviso_pre_sinais():
                 )
             },
             "en": {
-                "gif_url": "blob:https://web.telegram.org/664e9a12-3cb2-4dd9-9e56-4901f1558e03",
+                "gif_url": "blob:https://web.telegram.org/c2b8014b-582b-45fd-9d21-062973993dc3",
                 "texto": (
                     "👉🏼Open the platform\n\n"
                     "⚠️STAY ALERT⚠️\n\n"
@@ -1604,6 +1604,70 @@ def bot2_enviar_aviso_pre_sinais():
     except Exception as e:
         BOT2_LOGGER.error(f"Erro geral ao enviar avisos pré-sinais: {str(e)}")
 
+def bot2_enviar_mensagem_fim_operacao():
+    """Envia mensagem de fim de operação após o término do último sinal."""
+    try:
+        # Configuração das mensagens por idioma
+        mensagens_por_idioma = {
+            "pt": {
+                "texto": (
+                    "Seguimos com as operações ✅\n\n"
+                    "Mantenham a corretora aberta!!\n\n"
+                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
+                    "CLIQUE AQUI E ASSISTA O VÍDEO\n\n"
+                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICANDO AQUI</a>"
+                )
+            },
+            "en": {
+                "texto": (
+                    "We continue with operations ✅\n\n"
+                    "Keep the broker platform open!!\n\n"
+                    "For those who haven't started making money with us yet👇🏻\n\n"
+                    "CLICK HERE AND WATCH THE VIDEO\n\n"
+                    "🔥Register on XXBROKER right now🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICK HERE</a>"
+                )
+            },
+            "es": {
+                "texto": (
+                    "¡Seguimos con las operaciones ✅\n\n"
+                    "¡Mantengan la plataforma abierta!!\n\n"
+                    "Para quienes aún no han empezado a ganar dinero con nosotros👇🏻\n\n"
+                    "HAZ CLIC AQUÍ Y MIRA EL VIDEO\n\n"
+                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLIC AQUÍ</a>"
+                )
+            }
+        }
+
+        for chat_id in BOT2_CHAT_IDS:
+            try:
+                config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                idioma = config_canal["idioma"]
+                mensagem = mensagens_por_idioma[idioma]
+                
+                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                payload_msg = {
+                    'chat_id': chat_id,
+                    'text': mensagem["texto"],
+                    'parse_mode': 'HTML',
+                    'disable_web_page_preview': True
+                }
+                resposta_msg = requests.post(url_msg, data=payload_msg)
+                
+                if resposta_msg.status_code == 200:
+                    BOT2_LOGGER.info(f"Mensagem de fim de operação enviada com sucesso para o canal {chat_id} em {idioma}")
+                else:
+                    BOT2_LOGGER.error(f"Erro ao enviar mensagem de fim de operação para o canal {chat_id}: {resposta_msg.text}")
+                
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao enviar mensagem de fim de operação para o canal {chat_id}: {str(e)}")
+                continue
+                
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro geral ao enviar mensagens de fim de operação: {str(e)}")
+
 def bot2_schedule_messages():
     """Agenda o envio de mensagens para o Bot 2."""
     try:
@@ -1626,6 +1690,11 @@ def bot2_schedule_messages():
             schedule.every().day.at(f"{hora:02d}:37:02").do(bot2_send_message)
             schedule.every().day.at(f"{hora:02d}:43:02").do(bot2_enviar_aviso_pre_sinais)
             schedule.every().day.at(f"{hora:02d}:53:02").do(bot2_send_message)
+            
+            # Agendar mensagem de fim de operação 6 minutos após cada sinal
+            schedule.every().day.at(f"{hora:02d}:19:02").do(bot2_enviar_mensagem_fim_operacao)
+            schedule.every().day.at(f"{hora:02d}:43:02").do(bot2_enviar_mensagem_fim_operacao)
+            schedule.every().day.at(f"{hora:02d}:59:02").do(bot2_enviar_mensagem_fim_operacao)
         
         # Marcar como agendado
         bot2_schedule_messages.scheduled = True
