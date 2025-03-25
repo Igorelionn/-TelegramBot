@@ -1075,7 +1075,7 @@ def bot2_gerar_sinal_aleatorio():
     # Definir o tempo de expiração baseado na categoria
     if categoria == "Blitz":
         expiracao_segundos = random.choice([5, 10, 15, 30])
-        tempo_expiracao_minutos = expiracao_segundos / 60
+        tempo_expiracao_minutos = 1  # Fixo em 1 minuto para Blitz
         expiracao_texto = f"⏳ Expiração: {expiracao_segundos} segundos"
     elif categoria == "Digital":
         tempo_expiracao_minutos = random.choice([1, 3, 5])
@@ -1097,7 +1097,7 @@ def bot2_gerar_sinal_aleatorio():
         'direcao': direcao,
         'categoria': categoria,
         'expiracao_texto': expiracao_texto,
-        'tempo_expiracao_minutos': tempo_expiracao_minutos
+        'tempo_expiracao_minutos': int(tempo_expiracao_minutos)  # Garante que seja inteiro
     }
 
 def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
