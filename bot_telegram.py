@@ -13,6 +13,12 @@ import sys
 import socket
 import atexit
 import traceback
+from pytz import timezone
+import telegram
+import asyncio
+from telegram import Bot
+from telegram.constants import ParseMode
+from telegram.error import TelegramError
 
 # Configuração do fuso horário e logger
 FUSO_HORARIO_BRASILIA = pytz.timezone('America/Sao_Paulo')
@@ -1529,87 +1535,77 @@ if __name__ == "__main__":
 # --------------------------------------------------------------------------------
 
 def bot2_enviar_aviso_pre_sinais():
-    """Função para enviar avisos pré-sinais para todos os canais do Bot 2."""
+    """Envia avisos pré-sinais para todos os canais do Bot 2"""
     try:
-        BOT2_LOGGER.info("Iniciando envio de avisos pré-sinais...")
+        # Obter horário atual
+        agora = datetime.now(timezone('America/Sao_Paulo'))
+        hora_atual = agora.hour
+        minuto_atual = agora.minute
         
-        # Configuração dos GIFs e textos por idioma
-        avisos_por_idioma = {
-            "pt": {
-                "gif_url": "https://i.imgur.com/ozKU3Fc.gif",
-                "texto": (
-                    "👉🏼Abram a corretora Pessoal\n\n"
-                    "⚠️FIQUEM ATENTOS⚠️\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICANDO AQUI</a>"
-                )
-            },
-            "es": {
-                "gif_url": "https://i.imgur.com/ST6Wu1w.gif",
-                "texto": (
-                    "👉🏼Abran la plataforma\n\n"
-                    "⚠️¡ESTÉN ATENTOS⚠️\n\n"
-                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLIC AQUÍ</a>"
-                )
-            },
-            "en": {
-                "gif_url": "https://i.imgur.com/OULmo5l.gif",
-                "texto": (
-                    "👉🏼Open the platform\n\n"
-                    "⚠️STAY ALERT⚠️\n\n"
-                    "🔥Register on XXBROKER right now🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICK HERE</a>"
-                )
-            }
-        }
-        
-        # Enviar GIFs e mensagens para todos os canais
-        for chat_id in BOT2_CHAT_IDS:
-            try:
-                config_canal = BOT2_CANAIS_CONFIG[chat_id]
-                idioma = config_canal["idioma"]
-                aviso = avisos_por_idioma[idioma]
-                
-                # Enviar GIF
-                url_gif = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                payload_gif = {
-                    'chat_id': chat_id,
-                    'animation': aviso["gif_url"],
-                    'parse_mode': 'HTML'
-                }
-                resposta_gif = requests.post(url_gif, json=payload_gif)
-                
-                if resposta_gif.status_code == 200:
-                    BOT2_LOGGER.info(f"GIF enviado com sucesso para o canal {chat_id} em {idioma}")
-                else:
-                    BOT2_LOGGER.error(f"Erro ao enviar GIF: {resposta_gif.text}")
-                
-                time.sleep(2)  # Pequena pausa entre o GIF e a mensagem
-                
-                # Enviar mensagem de texto
-                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                payload_msg = {
-                    'chat_id': chat_id,
-                    'text': aviso["texto"],
-                    'parse_mode': 'HTML',
-                    'disable_web_page_preview': True
-                }
-                resposta_msg = requests.post(url_msg, json=payload_msg)
-                
-                if resposta_msg.status_code == 200:
-                    BOT2_LOGGER.info(f"Mensagem enviada com sucesso para o canal {chat_id} em {idioma}")
-                else:
-                    BOT2_LOGGER.error(f"Erro ao enviar mensagem: {resposta_msg.text}")
-                
-                time.sleep(2)  # Pequena pausa entre canais
-                
-            except Exception as e:
-                BOT2_LOGGER.error(f"Erro ao enviar aviso para o canal {chat_id}: {str(e)}")
-                continue
-                
+        # Verificar se é um horário de aviso pré-sinal
+        if minuto_atual in [3, 27, 43]:
+            # Obter próximo horário de sinal
+            proximo_minuto = {
+                3: 13,   # 03 -> 13
+                27: 37,  # 27 -> 37
+                43: 53   # 43 -> 53
+            }[minuto_atual]
+            
+            # Calcular tempo restante
+            tempo_restante = proximo_minuto - minuto_atual
+            if tempo_restante < 0:
+                tempo_restante += 60
+            
+            # Mensagem de aviso
+            mensagem = f"⚠️ ATENÇÃO ⚠️\n\n"
+            mensagem += f"🔔 SINAL EM {tempo_restante} MINUTOS!\n\n"
+            mensagem += f"⏰ Horário do Sinal: {hora_atual:02d}:{proximo_minuto:02d}\n\n"
+            mensagem += f"📊 Prepare-se para receber o próximo sinal!\n"
+            mensagem += f"🎯 Categoria: {random.choice(['Blitz', 'Digital', 'Binary'])}\n"
+            mensagem += f"💎 Entrada: {random.choice(['Entrada 1', 'Entrada 2'])}\n"
+            mensagem += f"⏱️ Expiração: {random.choice(['1 min', '3 min', '5 min'])}\n\n"
+            mensagem += f"🔍 Análise em andamento...\n"
+            mensagem += f"⚡ Preparando sinal de alta precisão!\n\n"
+            mensagem += f"#SinalEmBreve #PrepareSe #AltaPrecisao"
+            
+            # Enviar para todos os canais do Bot 2
+            for chat_id in BOT2_CHAT_IDS:
+                try:
+                    # Configuração do teclado inline com o link da corretora
+                    teclado_inline = {
+                        "inline_keyboard": [
+                            [
+                                {
+                                    "text": "👉🏻 Abrir corretora",
+                                    "url": BOT2_CANAIS_CONFIG[chat_id]["link_corretora"]
+                                }
+                            ]
+                        ]
+                    }
+                    
+                    # Enviar mensagem usando a API do Telegram
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                    payload = {
+                        'chat_id': chat_id,
+                        'text': mensagem,
+                        'parse_mode': 'HTML',
+                        'disable_web_page_preview': True,
+                        'reply_markup': json.dumps(teclado_inline)
+                    }
+                    
+                    response = requests.post(url, json=payload)
+                    if response.status_code == 200:
+                        BOT2_LOGGER.info(f"Aviso pré-sinal enviado com sucesso para o canal {chat_id}")
+                    else:
+                        BOT2_LOGGER.error(f"Erro ao enviar aviso pré-sinal para o canal {chat_id}: {response.text}")
+                    
+                    time.sleep(1)  # Pequena pausa entre envios
+                except Exception as e:
+                    BOT2_LOGGER.error(f"Erro ao enviar aviso pré-sinal para canal {chat_id}: {str(e)}")
+                    continue
+                    
     except Exception as e:
-        BOT2_LOGGER.error(f"Erro geral ao enviar avisos pré-sinais: {str(e)}")
+        BOT2_LOGGER.error(f"Erro ao enviar avisos pré-sinais: {str(e)}")
 
 if __name__ == "__main__":
     try:
