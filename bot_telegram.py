@@ -1090,26 +1090,25 @@ def bot2_gerar_sinal_aleatorio():
     direcao = random.choice(['buy', 'sell'])
     categoria = BOT2_ATIVOS_CATEGORIAS.get(ativo, "Não categorizado")
     
+    # Definir o tempo de expiração baseado na categoria
     if categoria == "Blitz":
         tempo_expiracao_minutos = random.choice([5, 10, 15, 30])
-        expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
-        expiracao_texto = f"⏳ Expiração: {tempo_expiracao_minutos} minutos ({expiracao_time.strftime('%H:%M')})"
     elif categoria == "Digital":
         tempo_expiracao_minutos = random.choice([1, 3, 5])
-        expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
-        expiracao_texto = f"⏳ Expiração: {tempo_expiracao_minutos} minutos ({expiracao_time.strftime('%H:%M')})"
     elif categoria == "Binary":
         tempo_expiracao_minutos = 1
-        expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
-        expiracao_texto = f"⏳ Expiração: 1 minuto ({expiracao_time.strftime('%H:%M')})"
     else:
-        expiracao_texto = "⏳ Expiração: até 5 minutos"
+        tempo_expiracao_minutos = 5
+        
+    # Simplificar a informação de expiração para facilitar o processamento
+    expiracao_texto = f"⏳ Expiração: {tempo_expiracao_minutos} minutos"
     
     return {
         'ativo': ativo,
         'direcao': direcao,
         'categoria': categoria,
-        'expiracao_texto': expiracao_texto
+        'expiracao_texto': expiracao_texto,
+        'tempo_expiracao_minutos': tempo_expiracao_minutos  # Adicionar diretamente o valor numérico
     }
 
 def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
@@ -1120,7 +1119,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     ativo = sinal['ativo']
     direcao = sinal['direcao']
     categoria = sinal['categoria']
-    expiracao_texto = sinal['expiracao_texto']
+    tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
     
     # Formatação do nome do ativo para exibição
     nome_ativo_exibicao = ativo.replace("Digital_", "") if ativo.startswith("Digital_") else ativo
@@ -1133,22 +1132,26 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     action_es = "COMPRA" if direcao == 'buy' else "VENTA"
     emoji = "🟢" if direcao == 'buy' else "🛑"
     
+    # Hora de entrada convertida para datetime
+    hora_entrada = datetime.strptime(hora_formatada, "%H:%M")
+    hora_entrada = bot2_obter_hora_brasilia().replace(hour=hora_entrada.hour, minute=hora_entrada.minute, second=0, microsecond=0)
+    
+    # Calcular horário de expiração
+    hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
+    
+    # Calcular horários de reentrada (2 minutos após entrada + expiração)
+    hora_reentrada1 = hora_expiracao + timedelta(minutes=2)
+    hora_reentrada2 = hora_reentrada1 + timedelta(minutes=2)
+    
+    # Formatação dos horários
+    hora_exp_formatada = hora_expiracao.strftime("%H:%M")
+    hora_reentrada1_formatada = hora_reentrada1.strftime("%H:%M")
+    hora_reentrada2_formatada = hora_reentrada2.strftime("%H:%M")
+    
     # Textos de expiração em diferentes idiomas
-    if "minutos" in expiracao_texto:
-        expiracao_tempo = expiracao_texto.split(":")[1].strip()
-        hora_exp = expiracao_texto.split("(")[1].split(")")[0]
-        expiracao_texto_pt = f"⏳ Expiração: {expiracao_tempo} ({hora_exp})"
-        expiracao_texto_en = f"⏳ Expiration: {expiracao_tempo.replace('minutos', 'minutes')} ({hora_exp})"
-        expiracao_texto_es = f"⏳ Expiración: {expiracao_tempo.replace('minutos', 'minutos')} ({hora_exp})"
-    elif "minuto" in expiracao_texto:
-        hora_exp = expiracao_texto.split("(")[1].split(")")[0]
-        expiracao_texto_pt = f"⏳ Expiração: 1 minuto ({hora_exp})"
-        expiracao_texto_en = f"⏳ Expiration: 1 minute ({hora_exp})"
-        expiracao_texto_es = f"⏳ Expiración: 1 minuto ({hora_exp})"
-    else:
-        expiracao_texto_pt = "⏳ Expiração: até 5 minutos"
-        expiracao_texto_en = f"⏳ Expiration: up to 5 minutes"
-        expiracao_texto_es = f"⏳ Expiración: hasta 5 minutos"
+    expiracao_texto_pt = f"⏳ Expiração: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
+    expiracao_texto_en = f"⏳ Expiration: {tempo_expiracao_minutos} minute{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
+    expiracao_texto_es = f"⏳ Expiración: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
     
     # Retorna a mensagem no idioma correspondente
     if idioma == "pt":
@@ -1158,8 +1161,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"{emoji} {action_pt}\n"
                 f"➡ Entrada: {hora_formatada}\n"
                 f"{expiracao_texto_pt}\n"
-                f"Reentrada 1 - {hora_formatada}\n"
-                f"Reentrada 2 - {hora_formatada}")
+                f"Reentrada 1 - {hora_reentrada1_formatada}\n"
+                f"Reentrada 2 - {hora_reentrada2_formatada}")
     
     elif idioma == "en":
         return (f"⚠️QUICK TRADE⚠️\n\n"
@@ -1168,8 +1171,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"{emoji} {action_en}\n"
                 f"➡ Entry: {hora_formatada}\n"
                 f"{expiracao_texto_en}\n"
-                f"Re-entry 1 - {hora_formatada}\n"
-                f"Re-entry 2 - {hora_formatada}")
+                f"Re-entry 1 - {hora_reentrada1_formatada}\n"
+                f"Re-entry 2 - {hora_reentrada2_formatada}")
     
     elif idioma == "es":
         return (f"⚠️COMERCIO RÁPIDO⚠️\n\n"
@@ -1178,8 +1181,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"{emoji} {action_es}\n"
                 f"➡ Entrada: {hora_formatada}\n"
                 f"{expiracao_texto_es}\n"
-                f"Reentrada 1 - {hora_formatada}\n"
-                f"Reentrada 2 - {hora_formatada}")
+                f"Reentrada 1 - {hora_reentrada1_formatada}\n"
+                f"Reentrada 2 - {hora_reentrada2_formatada}")
     
     # Padrão para qualquer outro idioma (português)
     return (f"⚠️TRADE RÁPIDO⚠️\n\n"
@@ -1188,8 +1191,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"{emoji} {action_pt}\n"
             f"➡ Entrada: {hora_formatada}\n"
             f"{expiracao_texto_pt}\n"
-            f"Reentrada 1 - {hora_formatada}\n"
-            f"Reentrada 2 - {hora_formatada}")
+            f"Reentrada 1 - {hora_reentrada1_formatada}\n"
+            f"Reentrada 2 - {hora_reentrada2_formatada}")
 
 def bot2_registrar_envio(ativo, direcao, categoria):
     """
