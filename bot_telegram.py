@@ -755,7 +755,7 @@ def send_message():
         emoji = "🟢" if signal == 'buy' else "🛑"
 
         # Calcular horários
-        entry_time = agora + timedelta(minutes=1)
+        entry_time = agora + timedelta(minutes=2)  # Alterado de 1 para 2 minutos
         categoria = ATIVOS_CATEGORIAS.get(asset, "Não categorizado")
         
         nome_ativo_exibicao = asset.replace("Digital_", "") if asset.startswith("Digital_") else asset
@@ -802,35 +802,21 @@ def send_message():
                 link_corretora = CANAIS_CONFIG[chat_id]['link_corretora']
                 
                 canal_message = (
-                    f"⚠️TRADE RÁPIDO⚠️\n\n"
-                    f"💵 Ativo: {nome_ativo_exibicao}\n"
-                    f"🏷️ Categoria: {categoria}\n"
-                    f"{emoji} {action}\n"
-                    f"➡ Entrada: {entry_time.strftime('%H:%M')}\n"
+                    f"{emoji} {action} {nome_ativo_exibicao}\n"
+                    f"⏰ Entrada: {entry_time.strftime('%H:%M')}\n"
                     f"{expiracao_texto}\n"
-                    f"Reentrada 1 - {gale1_time.strftime('%H:%M')}\n"
-                    f"Reentrada 2 - {gale2_time.strftime('%H:%M')}"
+                    f"🎯 Reentrada 1: {gale1_time.strftime('%H:%M')}\n"
+                    f"🎯 Reentrada 2: {gale2_time.strftime('%H:%M')}\n"
+                    f"🔗 {link_corretora}"
                 )
-                
-                inline_keyboard = {
-                    "inline_keyboard": [
-                        [
-                            {
-                                "text": "👉🏻 Abrir corretora",
-                                "url": link_corretora
-                            }
-                        ]
-                    ]
-                }
                 
                 response = requests.post(
                     f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-                    data={
-                        'chat_id': chat_id, 
-                        'text': canal_message,
-                        'reply_markup': json.dumps(inline_keyboard)
-                    },
-                    timeout=10
+                    json={
+                        "chat_id": chat_id,
+                        "text": canal_message,
+                        "parse_mode": "HTML"
+                    }
                 )
                 
                 if response.status_code == 200:
@@ -1117,8 +1103,17 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_entrada = datetime.strptime(hora_formatada, "%H:%M")
     hora_entrada = bot2_obter_hora_brasilia().replace(hour=hora_entrada.hour, minute=hora_entrada.minute, second=0, microsecond=0)
     
-    # Calcular horário de entrada (5 minutos depois)
-    hora_entrada_ajustada = hora_entrada + timedelta(minutes=5)
+    # Determinar quantos minutos adicionar baseado no último dígito do minuto
+    ultimo_digito = hora_entrada.minute % 10
+    if ultimo_digito == 3:
+        minutos_adicionar = 2  # Se termina em 3, adiciona 2 minutos
+    elif ultimo_digito == 7:
+        minutos_adicionar = 3  # Se termina em 7, adiciona 3 minutos
+    else:
+        minutos_adicionar = 2  # Padrão: adiciona 2 minutos
+    
+    # Calcular horário de entrada
+    hora_entrada_ajustada = hora_entrada + timedelta(minutes=minutos_adicionar)
     
     # Calcular horário de expiração (a partir do horário de entrada ajustado)
     hora_expiracao = hora_entrada_ajustada + timedelta(minutes=tempo_expiracao_minutos)
@@ -1299,7 +1294,7 @@ bot2_send_message.contagem_por_hora = {bot2_obter_hora_brasilia().replace(minute
 def bot2_schedule_messages():
     """
     Agenda o envio de sinais de forma distribuída ao longo da hora, com 3 por hora.
-    Limpa todos os agendamentos anteriores para evitar duplicação.
+    Horários de envio terminam em 3 ou 7, e horários de entrada terminam em 5 ou 0.
     """
     # Limpa todos os agendamentos existentes para evitar duplicação
     # NÃO podemos limpar todos, pois isso afetaria o bot 1
@@ -1315,21 +1310,30 @@ def bot2_schedule_messages():
     horario_teste = agora + timedelta(seconds=5)
     horario_teste_str = horario_teste.strftime("%H:%M:%S")
     BOT2_LOGGER.info(f"TESTE: Agendando sinal para o horário imediato: {horario_teste_str}")
-    # Para o teste, vamos passar o parâmetro para ignorar anti-duplicação
     schedule.every().day.at(horario_teste_str).do(lambda: bot2_send_message(ignorar_anti_duplicacao=True))
     
     # Definindo horários distribuídos ao longo da hora para 3 sinais
-    # Escolhemos pontos distribuídos: minuto 10, 30 e 50 de cada hora
-    # Agora vamos agendar no horário exato, pois a mensagem já mostrará 5 minutos depois
+    # Horários de envio devem terminar em 3 ou 7
     for hora in range(24):
-        for minuto in [10, 30, 50]:  # 3 sinais por hora, distribuídos uniformemente
-            # Calcula o horário de envio (no horário exato)
-            horario_envio = f"{hora:02d}:{minuto:02d}:02"
-            horario_entrada = f"{hora:02d}:{minuto:02d}"
-            BOT2_LOGGER.info(f"Sinal agendado para {horario_envio} (entrada em {horario_entrada})")
-            schedule.every().day.at(horario_envio).do(bot2_send_message)
+        # Primeiro sinal da hora (termina em 3)
+        horario_envio = f"{hora:02d}:13:02"  # Envio às 13:02, entrada às 13:15
+        BOT2_LOGGER.info(f"Sinal 1 agendado para {horario_envio} (entrada às {hora:02d}:15)")
+        schedule.every().day.at(horario_envio).do(bot2_send_message)
+        
+        # Segundo sinal da hora (termina em 7)
+        horario_envio = f"{hora:02d}:37:02"  # Envio às 37:02, entrada às 37:40
+        BOT2_LOGGER.info(f"Sinal 2 agendado para {horario_envio} (entrada às {hora:02d}:40)")
+        schedule.every().day.at(horario_envio).do(bot2_send_message)
+        
+        # Terceiro sinal da hora (termina em 3)
+        horario_envio = f"{hora:02d}:53:02"  # Envio às 53:02, entrada às 53:55
+        BOT2_LOGGER.info(f"Sinal 3 agendado para {horario_envio} (entrada às {hora:02d}:55)")
+        schedule.every().day.at(horario_envio).do(bot2_send_message)
     
-    BOT2_LOGGER.info("Bot 2 agendado para enviar 3 sinais por hora, distribuídos nos minutos 10, 30 e 50.")
+    BOT2_LOGGER.info("Bot 2 agendado para enviar 3 sinais por hora:")
+    BOT2_LOGGER.info("1. Envio às XX:13:02 (entrada às XX:15)")
+    BOT2_LOGGER.info("2. Envio às XX:37:02 (entrada às XX:40)")
+    BOT2_LOGGER.info("3. Envio às XX:53:02 (entrada às XX:55)")
     BOT2_LOGGER.info(f"Adicionalmente, um sinal de teste será enviado em 5 segundos ({horario_teste_str}).")
     bot2_sinais_agendados = True
 
