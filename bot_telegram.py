@@ -802,12 +802,15 @@ def send_message():
                 link_corretora = CANAIS_CONFIG[chat_id]['link_corretora']
                 
                 canal_message = (
-                    f"{emoji} {action} {nome_ativo_exibicao}\n"
-                    f"⏰ Entrada: {entry_time.strftime('%H:%M')}\n"
+                    f"⚠️TRADE RÁPIDO⚠️\n\n"
+                    f"💵 Ativo: {nome_ativo_exibicao}\n"
+                    f"🏷️ Opções: {categoria}\n"
+                    f"{emoji} {action}\n"
+                    f"➡ Entrada: {entry_time.strftime('%H:%M')}\n"
                     f"{expiracao_texto}\n"
-                    f"🎯 Reentrada 1: {gale1_time.strftime('%H:%M')}\n"
-                    f"🎯 Reentrada 2: {gale2_time.strftime('%H:%M')}\n"
-                    f"🔗 {link_corretora}"
+                    f"Reentrada 1 - {gale1_time.strftime('%H:%M')}\n"
+                    f"Reentrada 2 - {gale2_time.strftime('%H:%M')}\n\n"
+                    f"👉🏻 Abrir corretora"
                 )
                 
                 response = requests.post(
@@ -1140,12 +1143,12 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     if idioma == "pt":
         return (f"⚠️TRADE RÁPIDO⚠️\n\n"
                 f"💵 Ativo: {nome_ativo_exibicao}\n"
-                f"🏷️ Opções: {categoria}\n"
+                f"🏷️ Categoria: {categoria}\n"
                 f"{emoji} {action_pt}\n"
                 f"➡ Entrada: {hora_entrada_formatada}\n"
                 f"{expiracao_texto_pt}\n"
                 f"Reentrada 1 - {hora_reentrada1_formatada}\n"
-                f"Reentrada 2 - {hora_reentrada2_formatada}\n\n")
+                f"Reentrada 2 - {hora_reentrada2_formatada}")
     
     elif idioma == "en":
         return (f"⚠️QUICK TRADE⚠️\n\n"
@@ -1155,7 +1158,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"➡ Entry: {hora_entrada_formatada}\n"
                 f"{expiracao_texto_en}\n"
                 f"Re-entry 1 - {hora_reentrada1_formatada}\n"
-                f"Re-entry 2 - {hora_reentrada2_formatada}\n\n")
+                f"Re-entry 2 - {hora_reentrada2_formatada}")
     
     elif idioma == "es":
         return (f"⚠️COMERCIO RÁPIDO⚠️\n\n"
@@ -1165,7 +1168,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"➡ Entrada: {hora_entrada_formatada}\n"
                 f"{expiracao_texto_es}\n"
                 f"Reentrada 1 - {hora_reentrada1_formatada}\n"
-                f"Reentrada 2 - {hora_reentrada2_formatada}\n\n")
+                f"Reentrada 2 - {hora_reentrada2_formatada}")
     
     # Padrão para qualquer outro idioma (português)
     return (f"⚠️TRADE RÁPIDO⚠️\n\n"
@@ -1175,7 +1178,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"➡ Entrada: {hora_entrada_formatada}\n"
             f"{expiracao_texto_pt}\n"
             f"Reentrada 1 - {hora_reentrada1_formatada}\n"
-            f"Reentrada 2 - {hora_reentrada2_formatada}\n\n")
+            f"Reentrada 2 - {hora_reentrada2_formatada}")
 
 def bot2_registrar_envio(ativo, direcao, categoria):
     """
