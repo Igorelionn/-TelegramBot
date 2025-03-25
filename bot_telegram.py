@@ -755,7 +755,7 @@ def send_message():
         emoji = "🟢" if signal == 'buy' else "🛑"
 
         # Calcular horários
-        entry_time = agora + timedelta(minutes=2)  # Alterado de 1 para 2 minutos
+        entry_time = agora + timedelta(minutes=2)
         categoria = ATIVOS_CATEGORIAS.get(asset, "Não categorizado")
         
         nome_ativo_exibicao = asset.replace("Digital_", "") if asset.startswith("Digital_") else asset
@@ -1210,12 +1210,71 @@ def bot2_registrar_envio(ativo, direcao, categoria):
     """
     pass
 
+def bot2_enviar_mensagem_fim_operacao(hora_reentrada2, tempo_expiracao_minutos):
+    """Envia mensagem de fim de operação após o término do último sinal."""
+    try:
+        # Configuração das mensagens por idioma
+        mensagens_por_idioma = {
+            "pt": {
+                "texto": (
+                    "Seguimos com as operações ✅\n\n"
+                    "Mantenham a corretora aberta!!\n\n"
+                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
+                    "CLIQUE AQUI E ASSISTA O VÍDEO\n\n"
+                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICANDO AQUI</a>"
+                )
+            },
+            "en": {
+                "texto": (
+                    "We continue with operations ✅\n\n"
+                    "Keep the broker platform open!!\n\n"
+                    "For those who haven't started making money with us yet👇🏻\n\n"
+                    "CLICK HERE AND WATCH THE VIDEO\n\n"
+                    "🔥Register on XXBROKER right now🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICK HERE</a>"
+                )
+            },
+            "es": {
+                "texto": (
+                    "¡Seguimos con las operaciones ✅\n\n"
+                    "¡Mantengan la plataforma abierta!!\n\n"
+                    "Para quienes aún no han empezado a ganar dinero con nosotros👇🏻\n\n"
+                    "HAZ CLIC AQUÍ Y MIRA EL VIDEO\n\n"
+                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLIC AQUÍ</a>"
+                )
+            }
+        }
+
+        for chat_id in BOT2_CHAT_IDS:
+            try:
+                config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                idioma = config_canal["idioma"]
+                mensagem = mensagens_por_idioma[idioma]
+                
+                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                payload_msg = {
+                    'chat_id': chat_id,
+                    'text': mensagem["texto"],
+                    'parse_mode': 'HTML',
+                    'disable_web_page_preview': True
+                }
+                resposta_msg = requests.post(url_msg, data=payload_msg)
+                
+                if resposta_msg.status_code == 200:
+                    BOT2_LOGGER.info(f"Mensagem de fim de operação enviada com sucesso para o canal {chat_id} em {idioma}")
+                else:
+                    BOT2_LOGGER.error(f"Erro ao enviar mensagem de fim de operação para o canal {chat_id}: {resposta_msg.text}")
+                
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao enviar mensagem de fim de operação para o canal {chat_id}: {str(e)}")
+                continue
+                
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro geral ao enviar mensagens de fim de operação: {str(e)}")
+
 def bot2_send_message(ignorar_anti_duplicacao=False):
-    """
-    Função para enviar uma mensagem do bot para o canal.
-    Inclui lógica anti-duplicação, geração de sinais aleatórios,
-    formatação de múltiplos idiomas, e tratamento de erros de comunicação.
-    """
     try:
         # Verifica se já enviou muito recentemente (anti-duplicação)
         agora = bot2_obter_hora_brasilia()
@@ -1255,6 +1314,13 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         ativo = sinal['ativo']
         direcao = sinal['direcao']
         categoria = sinal['categoria']
+        tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
+        
+        # Calcular horários para a operação
+        hora_entrada = agora + timedelta(minutes=2)
+        hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
+        hora_reentrada1 = hora_expiracao + timedelta(minutes=1)
+        hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos)
         
         # Obtém a hora atual para formatação na mensagem
         hora_formatada = bot2_obter_hora_brasilia().strftime("%H:%M")
@@ -1308,6 +1374,20 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         
         # Registra estatísticas de envio
         bot2_registrar_envio(ativo, direcao, categoria)
+        
+        # Calcular o tempo para enviar a mensagem de fim de operação
+        # Será 1 minuto após o tempo de reentrada 2 + tempo de expiração
+        tempo_espera = (tempo_expiracao_minutos * 3) + 3  # Reentrada 2 + tempo expiração + 1 minuto extra
+        
+        # Agendar o envio da mensagem de fim de operação
+        hora_envio = agora + timedelta(minutes=tempo_espera)
+        schedule.every().day.at(hora_envio.strftime("%H:%M:%S")).do(
+            bot2_enviar_mensagem_fim_operacao,
+            hora_reentrada2=hora_reentrada2,
+            tempo_expiracao_minutos=tempo_expiracao_minutos
+        ).tag('fim_operacao')
+        
+        BOT2_LOGGER.info(f"Mensagem de fim de operação agendada para {hora_envio.strftime('%H:%M:%S')}")
         
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao enviar mensagem: {str(e)}")
@@ -1443,3 +1523,116 @@ if __name__ == "__main__":
 # --------------------------------------------------------------------------------
 # FIM DO CÓDIGO DO BOT 2 - NÃO MODIFICAR ESTA LINHA
 # --------------------------------------------------------------------------------
+
+def bot2_enviar_aviso_pre_sinais():
+    """Envia GIF e mensagem de aviso 10 minutos antes dos sinais para cada canal."""
+    try:
+        # Configuração dos GIFs e textos por idioma
+        avisos_por_idioma = {
+            "pt": {
+                "gif_url": "blob:https://web.telegram.org/fcbe176c-752d-44db-8d6b-5fcc3d53529b",
+                "texto": (
+                    "👉🏼Abram a corretora Pessoal\n\n"
+                    "⚠️FIQUEM ATENTOS⚠️\n\n"
+                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICANDO AQUI</a>"
+                )
+            },
+            "es": {
+                "gif_url": "blob:https://web.telegram.org/1a69f188-b176-4c25-ae4c-97edeb28ca3a",
+                "texto": (
+                    "👉🏼Abran la plataforma\n\n"
+                    "⚠️¡ESTÉN ATENTOS⚠️\n\n"
+                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLIC AQUÍ</a>"
+                )
+            },
+            "en": {
+                "gif_url": "blob:https://web.telegram.org/664e9a12-3cb2-4dd9-9e56-4901f1558e03",
+                "texto": (
+                    "👉🏼Open the platform\n\n"
+                    "⚠️STAY ALERT⚠️\n\n"
+                    "🔥Register on XXBROKER right now🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICK HERE</a>"
+                )
+            }
+        }
+
+        BOT2_LOGGER.info("Iniciando envio de avisos pré-sinais")
+        
+        # Enviar para cada canal configurado
+        for chat_id in BOT2_CHAT_IDS:
+            try:
+                # Pegar configuração do canal
+                config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                idioma = config_canal["idioma"]
+                
+                # Pegar configuração do aviso para o idioma
+                aviso = avisos_por_idioma[idioma]
+                
+                # Enviar GIF
+                url_gif = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                payload_gif = {
+                    'chat_id': chat_id,
+                    'animation': aviso["gif_url"],
+                    'parse_mode': 'HTML'
+                }
+                resposta_gif = requests.post(url_gif, data=payload_gif)
+                
+                if resposta_gif.status_code == 200:
+                    BOT2_LOGGER.info(f"GIF enviado com sucesso para o canal {chat_id} em {idioma}")
+                else:
+                    BOT2_LOGGER.error(f"Erro ao enviar GIF para o canal {chat_id}: {resposta_gif.text}")
+                
+                # Enviar mensagem de texto
+                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                payload_msg = {
+                    'chat_id': chat_id,
+                    'text': aviso["texto"],
+                    'parse_mode': 'HTML',
+                    'disable_web_page_preview': True
+                }
+                resposta_msg = requests.post(url_msg, data=payload_msg)
+                
+                if resposta_msg.status_code == 200:
+                    BOT2_LOGGER.info(f"Mensagem enviada com sucesso para o canal {chat_id} em {idioma}")
+                else:
+                    BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {resposta_msg.text}")
+                
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao enviar aviso para o canal {chat_id}: {str(e)}")
+                continue
+                
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro geral ao enviar avisos pré-sinais: {str(e)}")
+
+def bot2_schedule_messages():
+    """Agenda o envio de mensagens para o Bot 2."""
+    try:
+        # Limpar agendamentos existentes
+        schedule.clear()
+        
+        # Verificar se já existe agendamento
+        if hasattr(bot2_schedule_messages, 'scheduled'):
+            BOT2_LOGGER.info("Agendamentos já existentes. Pulando...")
+            return
+            
+        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
+        
+        # Agendar envio de sinais a cada hora
+        for hora in range(24):
+            # Agendar aviso 10 minutos antes dos sinais
+            schedule.every().day.at(f"{hora:02d}:03:02").do(bot2_enviar_aviso_pre_sinais)
+            schedule.every().day.at(f"{hora:02d}:13:02").do(bot2_send_message)
+            schedule.every().day.at(f"{hora:02d}:27:02").do(bot2_enviar_aviso_pre_sinais)
+            schedule.every().day.at(f"{hora:02d}:37:02").do(bot2_send_message)
+            schedule.every().day.at(f"{hora:02d}:43:02").do(bot2_enviar_aviso_pre_sinais)
+            schedule.every().day.at(f"{hora:02d}:53:02").do(bot2_send_message)
+        
+        # Marcar como agendado
+        bot2_schedule_messages.scheduled = True
+        
+        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído com sucesso")
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
