@@ -1260,12 +1260,19 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
             # Enviar apenas no idioma configurado para este canal
             mensagem = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
             
+            # Texto do botão de acordo com o idioma
+            texto_botao = "👉🏻 Abrir corretora"  # Padrão em português
+            if idioma == "en":
+                texto_botao = "👉🏻 Open broker"
+            elif idioma == "es":
+                texto_botao = "👉🏻 Abrir corredor"
+            
             # Configura o teclado inline com o link da corretora
             teclado_inline = {
                 "inline_keyboard": [
                     [
                         {
-                            "text": "👉🏻 Abrir corretora",
+                            "text": texto_botao,
                             "url": link_corretora
                         }
                     ]
