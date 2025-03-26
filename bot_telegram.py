@@ -1395,50 +1395,44 @@ bot2_send_message.ultimo_envio_timestamp = bot2_obter_hora_brasilia()
 bot2_send_message.contagem_por_hora = {bot2_obter_hora_brasilia().replace(minute=0, second=0, microsecond=0): 0}
 
 def bot2_schedule_messages():
-    """
-    Agenda o envio de sinais de forma distribuída ao longo da hora, com 3 por hora.
-    Horários de envio terminam em 3 ou 7, e horários de entrada terminam em 5 ou 0.
-    """
-    # Limpa todos os agendamentos existentes para evitar duplicação
-    # NÃO podemos limpar todos, pois isso afetaria o bot 1
-    
-    # Variável global para controlar se os sinais já foram agendados
-    global bot2_sinais_agendados
-    if 'bot2_sinais_agendados' in globals() and bot2_sinais_agendados:
-        BOT2_LOGGER.info("Sinais já agendados. Pulando reagendamento.")
-        return
-    
-    # Criar horário de teste para envio imediato (5 segundos após iniciar)
-    agora = bot2_obter_hora_brasilia()
-    horario_teste = agora + timedelta(seconds=5)
-    horario_teste_str = horario_teste.strftime("%H:%M:%S")
-    BOT2_LOGGER.info(f"TESTE: Agendando sinal para o horário imediato: {horario_teste_str}")
-    schedule.every().day.at(horario_teste_str).do(lambda: bot2_send_message(ignorar_anti_duplicacao=True))
-    
-    # Definindo horários distribuídos ao longo da hora para 3 sinais
-    # Horários de envio devem terminar em 3 ou 7
-    for hora in range(24):
-        # Primeiro sinal da hora (termina em 3)
-        horario_envio = f"{hora:02d}:13:02"  # Envio às 13:02, entrada às 13:15
-        BOT2_LOGGER.info(f"Sinal 1 agendado para {horario_envio} (entrada às {hora:02d}:15)")
-        schedule.every().day.at(horario_envio).do(bot2_send_message)
+    """Agenda o envio de mensagens para o Bot 2."""
+    try:
+        # Verificar se já existe agendamento
+        if hasattr(bot2_schedule_messages, 'scheduled'):
+            BOT2_LOGGER.info("Agendamentos já existentes. Pulando...")
+            return
+            
+        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
         
-        # Segundo sinal da hora (termina em 7)
-        horario_envio = f"{hora:02d}:37:02"  # Envio às 37:02, entrada às 37:40
-        BOT2_LOGGER.info(f"Sinal 2 agendado para {horario_envio} (entrada às {hora:02d}:40)")
-        schedule.every().day.at(horario_envio).do(bot2_send_message)
+        # Agendar envio de sinais a cada hora
+        for hora in range(24):
+            # Primeiro sinal
+            schedule.every().day.at(f"{hora:02d}:03:02").do(bot2_enviar_aviso_pre_sinais)
+            schedule.every().day.at(f"{hora:02d}:13:02").do(bot2_send_message)
+            schedule.every().day.at(f"{hora:02d}:20:02").do(bot2_enviar_mensagem_fim_operacao)
+            
+            # Segundo sinal
+            schedule.every().day.at(f"{hora:02d}:27:02").do(bot2_enviar_aviso_pre_sinais)
+            schedule.every().day.at(f"{hora:02d}:37:02").do(bot2_send_message)
+            schedule.every().day.at(f"{hora:02d}:44:02").do(bot2_enviar_mensagem_fim_operacao)
+            
+            # Terceiro sinal
+            schedule.every().day.at(f"{hora:02d}:43:02").do(bot2_enviar_aviso_pre_sinais)
+            schedule.every().day.at(f"{hora:02d}:53:02").do(bot2_send_message)
+            schedule.every().day.at(f"{hora:02d}:00:02").do(bot2_enviar_mensagem_fim_operacao)
         
-        # Terceiro sinal da hora (termina em 3)
-        horario_envio = f"{hora:02d}:53:02"  # Envio às 53:02, entrada às 53:55
-        BOT2_LOGGER.info(f"Sinal 3 agendado para {horario_envio} (entrada às {hora:02d}:55)")
-        schedule.every().day.at(horario_envio).do(bot2_send_message)
-    
-    BOT2_LOGGER.info("Bot 2 agendado para enviar 3 sinais por hora:")
-    BOT2_LOGGER.info("1. Envio às XX:13:02 (entrada às XX:15)")
-    BOT2_LOGGER.info("2. Envio às XX:37:02 (entrada às XX:40)")
-    BOT2_LOGGER.info("3. Envio às XX:53:02 (entrada às XX:55)")
-    BOT2_LOGGER.info(f"Adicionalmente, um sinal de teste será enviado em 5 segundos ({horario_teste_str}).")
-    bot2_sinais_agendados = True
+        # Marcar como agendado
+        bot2_schedule_messages.scheduled = True
+        
+        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído com sucesso")
+        BOT2_LOGGER.info("Horários configurados:")
+        BOT2_LOGGER.info("1. Aviso pré-sinal: XX:03:02, XX:27:02, XX:43:02")
+        BOT2_LOGGER.info("2. Sinal: XX:13:02, XX:37:02, XX:53:02")
+        BOT2_LOGGER.info("3. Mensagem pós-sinal: XX:20:02, XX:44:02, XX:00:02")
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
+        traceback.print_exc()
 
 def bot2_keep_bot_running():
     """
@@ -1522,20 +1516,20 @@ if __name__ == "__main__":
 # --------------------------------------------------------------------------------
 
 def bot2_enviar_aviso_pre_sinais():
-    """Envia aviso pré-sinais com GIF e mensagem 10 minutos antes dos sinais"""
+    """Envia aviso pré-sinais com vídeo e mensagem 10 minutos antes dos sinais"""
     try:
         # Dicionário com avisos por idioma
         avisos_por_idioma = {
             'pt': {
-                'gif': 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExcTJvMjQ5MHJoMmg5djdpdXN4d3JvOGVxMTR2b3p0b2VkdzR1NGQ0eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/CkNRxNFrhyVmsVGlb3/giphy.gif',
+                'video': 'videos/cpu_pt.mp4',  # Vídeo em português
                 'mensagem': '⚠️ ATENÇÃO ⚠️\n\n🔔 SINAIS CHEGANDO EM 10 MINUTOS!\n\n✅ Cadastre-se agora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICANDO AQUI'
             },
             'en': {
-                'gif': 'https://giphy.com/gifs/CkNRxNFrhyVmsVGlb3',
+                'video': 'videos/cpu_en.mp4',  # Vídeo em inglês
                 'mensagem': '⚠️ ATTENTION ⚠️\n\n🔔 SIGNALS COMING IN 10 MINUTES!\n\n✅ Register now:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICKING HERE'
             },
             'es': {
-                'gif': 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExYTF0dGQxZ2gwYWI0bDVleHBsb2xhcjcwbHhxYmE4enUyajFyYzRwMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ML2Ms7MhPG8Da8VWWS/giphy.gif',
+                'video': 'videos/cpu_es.mp4',  # Vídeo em espanhol
                 'mensagem': '⚠️ ATENCIÓN ⚠️\n\n🔔 SEÑALES EN 10 MINUTOS!\n\n✅ Regístrate ahora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 HACIENDO CLIC AQUÍ'
             }
         }
@@ -1547,22 +1541,38 @@ def bot2_enviar_aviso_pre_sinais():
                 idioma = config_canal["idioma"]
                 aviso = avisos_por_idioma.get(idioma, avisos_por_idioma['pt'])
 
-                # Envia o GIF
+                # Envia o vídeo
                 try:
-                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                    payload = {
-                        'chat_id': chat_id,
-                        'animation': aviso['gif'],
-                        'caption': aviso['mensagem'],
-                        'parse_mode': 'HTML'
-                    }
-                    response = requests.post(url, data=payload)
+                    # Verifica se o arquivo de vídeo existe
+                    if not os.path.exists(aviso['video']):
+                        BOT2_LOGGER.error(f"Arquivo de vídeo não encontrado: {aviso['video']}")
+                        # Tenta enviar apenas a mensagem se o vídeo não existir
+                        raise FileNotFoundError(f"Vídeo não encontrado: {aviso['video']}")
+
+                    # Envia o vídeo
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+                    
+                    # Abre o arquivo de vídeo
+                    with open(aviso['video'], 'rb') as video_file:
+                        files = {
+                            'video': video_file
+                        }
+                        data = {
+                            'chat_id': chat_id,
+                            'caption': aviso['mensagem'],
+                            'parse_mode': 'HTML',
+                            'supports_streaming': True,  # Habilita streaming do vídeo
+                            'width': 480,  # Largura do vídeo
+                            'height': 360,  # Altura do vídeo
+                            'duration': 3  # Duração em segundos
+                        }
+                        response = requests.post(url, files=files, data=data)
                     
                     if response.status_code == 200:
-                        BOT2_LOGGER.info(f"GIF e mensagem enviados com sucesso para o canal {chat_id}")
+                        BOT2_LOGGER.info(f"Vídeo e mensagem enviados com sucesso para o canal {chat_id}")
                     else:
-                        BOT2_LOGGER.error(f"Erro ao enviar GIF para o canal {chat_id}: {response.text}")
-                        # Tenta enviar apenas a mensagem se o GIF falhar
+                        BOT2_LOGGER.error(f"Erro ao enviar vídeo para o canal {chat_id}: {response.text}")
+                        # Tenta enviar apenas a mensagem se o vídeo falhar
                         try:
                             url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
                             payload_msg = {
@@ -1578,7 +1588,7 @@ def bot2_enviar_aviso_pre_sinais():
                         except Exception as e:
                             BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {str(e)}")
                 except Exception as e:
-                    BOT2_LOGGER.error(f"Erro ao enviar GIF para o canal {chat_id}: {str(e)}")
+                    BOT2_LOGGER.error(f"Erro ao enviar vídeo para o canal {chat_id}: {str(e)}")
 
             except Exception as e:
                 BOT2_LOGGER.error(f"Erro ao processar canal {chat_id}: {str(e)}")
@@ -1650,39 +1660,3 @@ def bot2_enviar_mensagem_fim_operacao():
                 
     except Exception as e:
         BOT2_LOGGER.error(f"Erro geral ao enviar mensagens de fim de operação: {str(e)}")
-
-def bot2_schedule_messages():
-    """Agenda o envio de mensagens para o Bot 2."""
-    try:
-        # Limpar agendamentos existentes
-        schedule.clear()
-        
-        # Verificar se já existe agendamento
-        if hasattr(bot2_schedule_messages, 'scheduled'):
-            BOT2_LOGGER.info("Agendamentos já existentes. Pulando...")
-            return
-            
-        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
-        
-        # Agendar envio de sinais a cada hora
-        for hora in range(24):
-            # Agendar aviso 10 minutos antes dos sinais
-            schedule.every().day.at(f"{hora:02d}:03:02").do(bot2_enviar_aviso_pre_sinais)
-            schedule.every().day.at(f"{hora:02d}:13:02").do(bot2_send_message)
-            schedule.every().day.at(f"{hora:02d}:27:02").do(bot2_enviar_aviso_pre_sinais)
-            schedule.every().day.at(f"{hora:02d}:37:02").do(bot2_send_message)
-            schedule.every().day.at(f"{hora:02d}:43:02").do(bot2_enviar_aviso_pre_sinais)
-            schedule.every().day.at(f"{hora:02d}:53:02").do(bot2_send_message)
-            
-            # Agendar mensagem de fim de operação 7 minutos após cada sinal
-            schedule.every().day.at(f"{hora:02d}:20:02").do(bot2_enviar_mensagem_fim_operacao)
-            schedule.every().day.at(f"{hora:02d}:44:02").do(bot2_enviar_mensagem_fim_operacao)
-            schedule.every().day.at(f"{hora:02d}:00:02").do(bot2_enviar_mensagem_fim_operacao)
-        
-        # Marcar como agendado
-        bot2_schedule_messages.scheduled = True
-        
-        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído com sucesso")
-        
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
