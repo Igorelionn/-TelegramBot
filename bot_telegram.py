@@ -731,7 +731,7 @@ def send_message():
         if hasattr(send_message, 'ultimo_envio_timestamp'):
             tempo_desde_ultimo_envio = (agora - send_message.ultimo_envio_timestamp).total_seconds() / 60.0
             if tempo_desde_ultimo_envio < 5:
-                logging.warning(f"Ignorando sinal - último envio ocorreu há apenas {tempo_desde_ultimo_envio:.1f} minutos")
+                logging.warning(f"Bot 1: Ignorando sinal - último envio ocorreu há apenas {tempo_desde_ultimo_envio:.1f} minutos")
                 return
 
         # Restante do código original
@@ -746,7 +746,7 @@ def send_message():
             available_assets = [asset for asset in ATIVOS_FORNECIDOS 
                              if is_asset_available(asset, current_time, current_day)]
             if not available_assets:
-                logging.warning("Nenhum ativo disponível no horário atual.")
+                logging.warning("Bot 1: Nenhum ativo disponível no horário atual.")
                 return
 
         # Escolher um ativo e gerar o sinal
@@ -795,7 +795,7 @@ def send_message():
         gale2_time = fim_gale1 + timedelta(minutes=1)
 
         # Enviar mensagem
-        logging.info(f"Enviando sinal para o ativo {asset}: {action}")
+        logging.info(f"Bot 1: Enviando sinal para o ativo {asset}: {action}")
         envio_sucesso = False
         
         # Enviar para todos os canais configurados
@@ -827,8 +827,8 @@ def send_message():
                 }
                 
                 # Adicionar logs detalhados
-                logging.info(f"Tentando enviar mensagem para o canal {chat_id}")
-                logging.info(f"Link da corretora: {link_corretora}")
+                logging.info(f"Bot 1: Tentando enviar mensagem para o canal {chat_id}")
+                logging.info(f"Bot 1: Link da corretora: {link_corretora}")
                 
                 response = requests.post(
                     f"https://api.telegram.org/bot{TOKEN}/sendMessage",
@@ -842,20 +842,20 @@ def send_message():
                 )
                 
                 if response.status_code == 200:
-                    logging.info(f"Sinal enviado com sucesso para o canal {chat_id}")
+                    logging.info(f"Bot 1: Sinal enviado com sucesso para o canal {chat_id}")
                     envio_sucesso = True
                 else:
-                    logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Status: {response.status_code}")
-                    logging.error(f"Resposta do Telegram: {response.text}")
+                    logging.error(f"Bot 1: Falha ao enviar mensagem para o canal {chat_id}. Status: {response.status_code}")
+                    logging.error(f"Bot 1: Resposta do Telegram: {response.text}")
             except Exception as e:
-                logging.error(f"Erro ao enviar para o canal {chat_id}: {str(e)}")
-                logging.error(f"Detalhes do erro: {traceback.format_exc()}")
+                logging.error(f"Bot 1: Erro ao enviar para o canal {chat_id}: {str(e)}")
+                logging.error(f"Bot 1: Detalhes do erro: {traceback.format_exc()}")
                 continue
         
         if envio_sucesso:
-            logging.info(f"Operação realizada com sucesso! Ativo: {asset}")
+            logging.info(f"Bot 1: Operação realizada com sucesso! Ativo: {asset}")
             proximo_sinal = agora + timedelta(minutes=6)
-            logging.info(f"Esperando 6 minutos para o próximo sinal. Próximo sinal previsto para: {proximo_sinal.strftime('%H:%M:%S')}")
+            logging.info(f"Bot 1: Esperando 6 minutos para o próximo sinal. Próximo sinal previsto para: {proximo_sinal.strftime('%H:%M:%S')}")
             
             # Registrar timestamp deste envio
             send_message.ultimo_envio_timestamp = agora
@@ -864,11 +864,11 @@ def send_message():
             ultimo_ativo = asset
             ultimo_signal = signal
         else:
-            logging.error(f"Falha ao enviar o sinal para todos os canais.")
+            logging.error(f"Bot 1: Falha ao enviar o sinal para todos os canais.")
     
     except Exception as e:
-        logging.error(f"Erro durante o envio da mensagem: {str(e)}")
-        logging.error(f"Detalhes do erro: {traceback.format_exc()}")
+        logging.error(f"Bot 1: Erro durante o envio da mensagem: {str(e)}")
+        logging.error(f"Bot 1: Detalhes do erro: {traceback.format_exc()}")
 
 # Inicializar o timestamp de último envio
 send_message.ultimo_envio_timestamp = obter_hora_brasilia() - timedelta(minutes=10)  # Inicializar com um valor no passado
@@ -889,38 +889,38 @@ def schedule_messages():
             return
         
         # Log inicial
-        logging.info("Iniciando agendamento de sinais...")
+        logging.info("Iniciando agendamento de sinais do Bot 1...")
         
         # Definindo horários a cada 6 minutos ao longo do dia com 2 segundos de atraso
         for hora in range(24):  # 0 a 23 horas
             for minuto in range(0, 60, 6):  # 0, 6, 12, 18, 24, 30, 36, 42, 48, 54
                 horario_formatado = f"{hora:02d}:{minuto:02d}:02"
                 schedule.every().day.at(horario_formatado).do(send_message)
-                logging.info(f"Sinal agendado para {horario_formatado}")
+                logging.info(f"Bot 1: Sinal agendado para {horario_formatado}")
         
         # Lista todos os horários agendados para verificação
         horarios = [f"{hora:02d}:{minuto:02d}:02" 
                     for hora in range(24) 
                     for minuto in range(0, 60, 6)]
         
-        logging.info(f"Total de {len(horarios)} sinais agendados para as 24 horas")
-        logging.info("Horários agendados:")
+        logging.info(f"Bot 1: Total de {len(horarios)} sinais agendados para as 24 horas")
+        logging.info("Bot 1: Horários agendados:")
         for i, horario in enumerate(horarios[:10], 1):
-            logging.info(f"Sinal {i}: {horario}")
-        logging.info("... e assim por diante a cada 6 minutos")
+            logging.info(f"Bot 1: Sinal {i}: {horario}")
+        logging.info("Bot 1: ... e assim por diante a cada 6 minutos")
         
         # Agendar um sinal de teste para 5 segundos após a inicialização
         agora = obter_hora_brasilia()
         horario_teste = agora + timedelta(seconds=5)
         horario_teste_str = horario_teste.strftime("%H:%M:%S")
-        logging.info(f"Agendando sinal de teste para: {horario_teste_str}")
+        logging.info(f"Bot 1: Agendando sinal de teste para: {horario_teste_str}")
         schedule.every().day.at(horario_teste_str).do(lambda: send_message())
         
         sinais_agendados = True
-        logging.info("Agendamento de sinais concluído com sucesso!")
+        logging.info("Bot 1: Agendamento de sinais concluído com sucesso!")
         
     except Exception as e:
-        logging.error(f"Erro ao agendar mensagens: {str(e)}")
+        logging.error(f"Erro ao agendar mensagens do Bot 1: {str(e)}")
         logging.error(f"Detalhes do erro: {traceback.format_exc()}")
 
 # Função para manter o bot vivo em serviços de hospedagem gratuitos
@@ -1573,36 +1573,41 @@ def iniciar_ambos_bots():
     """
     Inicializa ambos os bots quando executado como script principal.
     """
-    # Inicializar o Bot 1 (original)
     try:
+        # Inicializar o Bot 1 (original)
         logging.info("Inicializando Bot 1...")
         # Verifica se já existe uma instância do bot rodando
         if is_bot_already_running():
             logging.error("O bot já está rodando em outra instância. Encerrando...")
             sys.exit(1)
-        schedule_messages()      # Função original do bot 1
-    except Exception as e:
-        logging.error(f"Erro ao inicializar Bot 1: {str(e)}")
-    
-    # Inicializar o Bot 2
-    try:
+            
+        # Limpar agendamentos existentes
+        schedule.clear()
+        
+        # Agendar mensagens do Bot 1
+        schedule_messages()
+        
+        # Inicializar o Bot 2
         BOT2_LOGGER.info("Inicializando Bot 2...")
         bot2_schedule_messages()
+        
+        logging.info("Ambos os bots estão em execução!")
+        BOT2_LOGGER.info("Ambos os bots estão em execução!")
+        
+        # Loop principal para verificar os agendamentos
+        while True:
+            try:
+                schedule.run_pending()
+                time.sleep(1)
+            except Exception as e:
+                logging.error(f"Erro no loop principal: {str(e)}")
+                BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
+                time.sleep(5)  # Pausa maior em caso de erro
+                
     except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
-    
-    logging.info("Ambos os bots estão em execução!")
-    BOT2_LOGGER.info("Ambos os bots estão em execução!")
-    
-    # Loop principal para verificar os agendamentos
-    while True:
-        try:
-            schedule.run_pending()
-            time.sleep(1)
-        except Exception as e:
-            logging.error(f"Erro no loop principal: {str(e)}")
-            BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
-            time.sleep(5)  # Pausa maior em caso de erro
+        logging.error(f"Erro ao inicializar os bots: {str(e)}")
+        BOT2_LOGGER.error(f"Erro ao inicializar os bots: {str(e)}")
+        traceback.print_exc()
 
 # Modificar a função keep_bot_running original para integrar com a nova lógica
 original_keep_bot_running = keep_bot_running
