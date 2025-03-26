@@ -86,7 +86,7 @@ CANAIS_CONFIG = {
     },
     '-1002658649212': {
         'nome': 'Canal 4',
-        'link_corretora': 'https://encurtador.com.br/uvuJ0'
+        'link_corretora': 'https://trade.xxbroker.com/register?aff=751626&aff_model=revenue&afftrack='
     }
 }
 
