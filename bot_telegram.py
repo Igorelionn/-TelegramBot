@@ -1567,13 +1567,6 @@ def iniciar_ambos_bots():
     try:
         BOT2_LOGGER.info("Inicializando Bot 2...")
         
-        # Executar teste inicial
-        BOT2_LOGGER.info("Executando teste inicial do Bot 2...")
-        bot2_testar_aviso_pre_sinais()
-        
-        # Aguardar 5 segundos após o teste
-        time.sleep(5)
-        
         # Iniciar operação normal
         BOT2_LOGGER.info("Iniciando operação normal do Bot 2...")
         bot2_schedule_messages()
