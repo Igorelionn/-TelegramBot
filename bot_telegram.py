@@ -1038,6 +1038,75 @@ BOT2_ATIVOS_CATEGORIAS = ATIVOS_CATEGORIAS
 # Mapeamento de ativos para padrões de horários do Bot 2 (usando os mesmos do Bot 1)
 BOT2_ASSETS = assets
 
+def bot2_enviar_aviso_pre_sinais():
+    """Envia GIF e mensagem de aviso 10 minutos antes dos sinais para cada canal."""
+    try:
+        # Configuração dos GIFs e textos por idioma
+        avisos_por_idioma = {
+            "pt": {
+                "gif_url": "blob:https://web.telegram.org/fc0e6273-c621-4bc9-9e0b-8ea758d208ea",
+                "texto": (
+                    "👉🏼Abram a corretora Pessoal\n\n"
+                    "⚠️FIQUEM ATENTOS⚠️\n\n"
+                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICANDO AQUI</a>"
+                )
+            },
+            "es": {
+                "gif_url": "blob:https://web.telegram.org/461efdfd-1411-4b7c-827a-66eb1ed19cdc",
+                "texto": (
+                    "👉🏼Abran la plataforma\n\n"
+                    "⚠️¡ESTÉN ATENTOS⚠️\n\n"
+                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLIC AQUÍ</a>"
+                )
+            },
+            "en": {
+                "gif_url": "blob:https://web.telegram.org/9840e01e-3209-47d1-bae2-c8e3b36126be",
+                "texto": (
+                    "👉🏼Open the platform\n\n"
+                    "⚠️STAY ALERT⚠️\n\n"
+                    "🔥Register on XXBROKER right now🔥\n\n"
+                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICK HERE</a>"
+                )
+            }
+        }
+
+        BOT2_LOGGER.info("Iniciando envio de avisos pré-sinais")
+        
+        # Enviar para cada canal configurado
+        for chat_id in BOT2_CHAT_IDS:
+            try:
+                # Pegar configuração do canal
+                config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                idioma = config_canal["idioma"]
+                
+                # Pegar configuração do aviso para o idioma
+                aviso = avisos_por_idioma[idioma]
+                
+                # Enviar GIF com mensagem
+                url_gif = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                payload_gif = {
+                    'chat_id': chat_id,
+                    'animation': aviso["gif_url"],
+                    'caption': aviso["texto"],
+                    'parse_mode': 'HTML',
+                    'disable_web_page_preview': True
+                }
+                resposta_gif = requests.post(url_gif, data=payload_gif)
+                
+                if resposta_gif.status_code == 200:
+                    BOT2_LOGGER.info(f"GIF e mensagem enviados com sucesso para o canal {chat_id} em {idioma}")
+                else:
+                    BOT2_LOGGER.error(f"Erro ao enviar GIF e mensagem para o canal {chat_id}: {resposta_gif.text}")
+                
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao enviar aviso para o canal {chat_id}: {str(e)}")
+                continue
+                
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro geral ao enviar avisos pré-sinais: {str(e)}")
+
 # Função para obter hora no fuso horário de Brasília (específica para Bot 2)
 def bot2_obter_hora_brasilia():
     """
