@@ -1064,23 +1064,23 @@ def bot2_enviar_aviso_pre_sinais():
     """Envia aviso pré-sinais com vídeo e mensagem 10 minutos antes dos sinais"""
     try:
         # Define o diretório base dos vídeos
-        videos_dir = os.path.join('C:', 'Users', 'igore', 'videos')
+        videos_dir = "C:\\Users\\igore\\videos"
         BOT2_LOGGER.info(f"Diretório de vídeos: {videos_dir}")
         BOT2_LOGGER.info(f"Diretório existe: {os.path.exists(videos_dir)}")
         
         # Dicionário com avisos por idioma
         avisos_por_idioma = {
             'pt': {
-                'video': os.path.join(videos_dir, 'cpu_pt.mp4'),  # Vídeo em português
-                'mensagem': '⚠️ ATENÇÃO ⚠️\n\n🔔 SINAIS CHEGANDO EM 10 MINUTOS!\n\n✅ Cadastre-se agora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICANDO AQUI'
+                'video': f"{videos_dir}\\cpu_pt.mp4",  # Vídeo em português
+                'mensagem': '👉🏼Abram a corretora Pessoal\n\n⚠️FIQUEM ATENTOS⚠️\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n<a href="https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=">➡️ CLICANDO AQUI</a>'
             },
             'en': {
-                'video': os.path.join(videos_dir, 'cpu_en.mp4'),  # Vídeo em inglês
-                'mensagem': '⚠️ ATTENTION ⚠️\n\n🔔 SIGNALS COMING IN 10 MINUTES!\n\n✅ Register now:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICKING HERE'
+                'video': f"{videos_dir}\\cpu_en.mp4",  # Vídeo em inglês
+                'mensagem': '👉🏼Open the broker Everyone\n\n⚠️PAY ATTENTION⚠️\n\n🔥Register on XXBROKER right now🔥\n\n<a href="https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=">➡️ CLICK HERE</a>'
             },
             'es': {
-                'video': os.path.join(videos_dir, 'cpu_es.mp4'),  # Vídeo em espanhol
-                'mensagem': '⚠️ ATENCIÓN ⚠️\n\n🔔 SEÑALES EN 10 MINUTOS!\n\n✅ Regístrate ahora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 HACIENDO CLIC AQUÍ'
+                'video': f"{videos_dir}\\cpu_es.mp4",  # Vídeo em espanhol
+                'mensagem': '👉🏼Abran el corredor Todos\n\n⚠️PRESTEN ATENCIÓN⚠️\n\n🔥Regístrese en XXBROKER ahora mismo🔥\n\n<a href="https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=">➡️ CLIC AQUÍ</a>'
             }
         }
 
@@ -1605,3 +1605,94 @@ if __name__ == "__main__":
 # --------------------------------------------------------------------------------
 # FIM DO CÓDIGO DO BOT 2 - NÃO MODIFICAR ESTA LINHA
 # --------------------------------------------------------------------------------
+
+def bot2_testar_aviso_pre_sinais():
+    """Função para testar o envio de aviso pré-sinais imediatamente"""
+    try:
+        # Define o diretório base dos vídeos
+        videos_dir = "C:\\Users\\igore\\videos"
+        BOT2_LOGGER.info(f"Diretório de vídeos: {videos_dir}")
+        BOT2_LOGGER.info(f"Diretório existe: {os.path.exists(videos_dir)}")
+        
+        # Dicionário com avisos por idioma
+        avisos_por_idioma = {
+            'pt': {
+                'video': f"{videos_dir}\\cpu_pt.mp4",  # Vídeo em português
+                'mensagem': '👉🏼Abram a corretora Pessoal\n\n⚠️FIQUEM ATENTOS⚠️\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n<a href="https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=">➡️ CLICANDO AQUI</a>'
+            },
+            'en': {
+                'video': f"{videos_dir}\\cpu_en.mp4",  # Vídeo em inglês
+                'mensagem': '👉🏼Open the broker Everyone\n\n⚠️PAY ATTENTION⚠️\n\n🔥Register on XXBROKER right now🔥\n\n<a href="https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=">➡️ CLICK HERE</a>'
+            },
+            'es': {
+                'video': f"{videos_dir}\\cpu_es.mp4",  # Vídeo em espanhol
+                'mensagem': '👉🏼Abran el corredor Todos\n\n⚠️PRESTEN ATENCIÓN⚠️\n\n🔥Regístrese en XXBROKER ahora mismo🔥\n\n<a href="https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=">➡️ CLIC AQUÍ</a>'
+            }
+        }
+
+        for chat_id in BOT2_CHAT_IDS:
+            try:
+                # Obtém a configuração do canal
+                config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                idioma = config_canal["idioma"]
+                aviso = avisos_por_idioma.get(idioma, avisos_por_idioma['pt'])
+
+                # Envia o vídeo
+                try:
+                    # Verifica se o arquivo de vídeo existe
+                    video_path = aviso['video']
+                    BOT2_LOGGER.info(f"Tentando acessar vídeo: {video_path}")
+                    BOT2_LOGGER.info(f"Arquivo existe: {os.path.exists(video_path)}")
+                    
+                    if not os.path.exists(video_path):
+                        BOT2_LOGGER.error(f"Arquivo de vídeo não encontrado: {video_path}")
+                        # Tenta enviar apenas a mensagem se o vídeo não existir
+                        raise FileNotFoundError(f"Vídeo não encontrado: {video_path}")
+
+                    # Envia o vídeo
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+                    
+                    # Abre o arquivo de vídeo
+                    with open(aviso['video'], 'rb') as video_file:
+                        files = {
+                            'video': video_file
+                        }
+                        data = {
+                            'chat_id': chat_id,
+                            'caption': aviso['mensagem'],
+                            'parse_mode': 'HTML',
+                            'supports_streaming': True,
+                            'width': 480,
+                            'height': 360,
+                            'duration': 3
+                        }
+                        response = requests.post(url, files=files, data=data)
+                    
+                    if response.status_code == 200:
+                        BOT2_LOGGER.info(f"Vídeo e mensagem enviados com sucesso para o canal {chat_id}")
+                    else:
+                        BOT2_LOGGER.error(f"Erro ao enviar vídeo para o canal {chat_id}: {response.text}")
+                        # Tenta enviar apenas a mensagem se o vídeo falhar
+                        try:
+                            url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                            payload_msg = {
+                                'chat_id': chat_id,
+                                'text': aviso['mensagem'],
+                                'parse_mode': 'HTML'
+                            }
+                            response_msg = requests.post(url_msg, data=payload_msg)
+                            if response_msg.status_code == 200:
+                                BOT2_LOGGER.info(f"Mensagem enviada com sucesso para o canal {chat_id}")
+                            else:
+                                BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {response_msg.text}")
+                        except Exception as e:
+                            BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {str(e)}")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"Erro ao enviar vídeo para o canal {chat_id}: {str(e)}")
+
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao processar canal {chat_id}: {str(e)}")
+                continue
+
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao enviar avisos pré-sinais: {str(e)}")
