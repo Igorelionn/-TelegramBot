@@ -86,7 +86,7 @@ CANAIS_CONFIG = {
     },
     '-1002658649212': {
         'nome': 'Canal 4',
-        'link_corretora': 'https://encurtador.com.br/uvuJ0'
+        'link_corretora': 'https://trade.xxbroker.com/register?aff=751626&aff_model=revenue&afftrack='
     }
 }
 
@@ -1633,3 +1633,53 @@ def bot2_schedule_messages():
         
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
+
+def bot2_enviar_mensagem_pre_sinal():
+    try:
+        # Mensagens em diferentes idiomas
+        mensagens = {
+            'pt': "👉🏼Abram a corretora Pessoal\n\n⚠️FIQUEM ATENTOS⚠️\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n➡️ CLICANDO AQUI",
+            'en': "👉🏼Open your broker account, everyone\n\n⚠️PAY ATTENTION⚠️\n\n🔥Register at XXBROKER right now🔥\n\n➡️ CLICK HERE",
+            'es': "👉🏼Abran su cuenta de corretaje, todos\n\n⚠️PRESTEN ATENCIÓN⚠️\n\n🔥Regístrese en XXBROKER ahora mismo🔥\n\n➡️ HAGA CLIC AQUÍ"
+        }
+        
+        # GIFs para diferentes idiomas
+        gifs = {
+            'pt': "blob:https://web.telegram.org/fcbe176c-752d-44db-8d6b-5fcc3d53529b",
+            'en': "blob:https://web.telegram.org/664e9a12-3cb2-4dd9-9e56-4901f1558e03",
+            'es': "blob:https://web.telegram.org/1a69f188-b176-4c25-ae4c-97edeb28ca3a"
+        }
+        
+        # Enviar para cada canal configurado
+        for chat_id in CHAT_IDS:
+            try:
+                # Determinar o idioma do canal
+                idioma = 'pt'  # padrão
+                if chat_id in CANAIS_CONFIG:
+                    if 'es' in CANAIS_CONFIG[chat_id]['nome'].lower():
+                        idioma = 'es'
+                    elif 'en' in CANAIS_CONFIG[chat_id]['nome'].lower():
+                        idioma = 'en'
+                
+                # Primeiro enviar o GIF
+                response_gif = requests.post(
+                    f"https://api.telegram.org/bot{TOKEN}/sendAnimation",
+                    json={
+                        "chat_id": chat_id,
+                        "animation": gifs[idioma],
+                        "caption": mensagens[idioma],
+                        "parse_mode": "HTML"
+                    }
+                )
+                
+                if response_gif.status_code == 200:
+                    logging.info(f"GIF e mensagem pré-sinal enviados com sucesso para o canal {chat_id} em {idioma}")
+                else:
+                    logging.error(f"Falha ao enviar GIF e mensagem pré-sinal para o canal {chat_id}. Erro: {response_gif.status_code} - {response_gif.text}")
+                
+            except Exception as e:
+                logging.error(f"Erro ao enviar para o canal {chat_id}: {e}")
+                continue
+                
+    except Exception as e:
+        logging.error(f"Erro ao enviar mensagem pré-sinal: {e}")
