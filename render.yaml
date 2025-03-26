@@ -1,0 +1,213 @@
+services:
+  - type: web
+    name: telegram-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot_telegram.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: BOT_TOKEN
+        sync: false
+      - key: BOT2_TOKEN
+        sync: false
+      - key: CHANNEL_ID
+        sync: false
+      - key: CHANNEL_ID2
+        sync: false
+      - key: CHANNEL_ID3
+        sync: false
+      - key: CHANNEL_ID4
+        sync: false
+      - key: CHANNEL_ID5
+        sync: false
+      - key: CHANNEL_ID6
+        sync: false
+      - key: CHANNEL_ID7
+        sync: false
+      - key: CHANNEL_ID8
+        sync: false
+      - key: CHANNEL_ID9
+        sync: false
+      - key: CHANNEL_ID10
+        sync: false
+      - key: CHANNEL_ID11
+        sync: false
+      - key: CHANNEL_ID12
+        sync: false
+      - key: CHANNEL_ID13
+        sync: false
+      - key: CHANNEL_ID14
+        sync: false
+      - key: CHANNEL_ID15
+        sync: false
+      - key: CHANNEL_ID16
+        sync: false
+      - key: CHANNEL_ID17
+        sync: false
+      - key: CHANNEL_ID18
+        sync: false
+      - key: CHANNEL_ID19
+        sync: false
+      - key: CHANNEL_ID20
+        sync: false
+      - key: CHANNEL_ID21
+        sync: false
+      - key: CHANNEL_ID22
+        sync: false
+      - key: CHANNEL_ID23
+        sync: false
+      - key: CHANNEL_ID24
+        sync: false
+      - key: CHANNEL_ID25
+        sync: false
+      - key: CHANNEL_ID26
+        sync: false
+      - key: CHANNEL_ID27
+        sync: false
+      - key: CHANNEL_ID28
+        sync: false
+      - key: CHANNEL_ID29
+        sync: false
+      - key: CHANNEL_ID30
+        sync: false
+      - key: CHANNEL_ID31
+        sync: false
+      - key: CHANNEL_ID32
+        sync: false
+      - key: CHANNEL_ID33
+        sync: false
+      - key: CHANNEL_ID34
+        sync: false
+      - key: CHANNEL_ID35
+        sync: false
+      - key: CHANNEL_ID36
+        sync: false
+      - key: CHANNEL_ID37
+        sync: false
+      - key: CHANNEL_ID38
+        sync: false
+      - key: CHANNEL_ID39
+        sync: false
+      - key: CHANNEL_ID40
+        sync: false
+      - key: CHANNEL_ID41
+        sync: false
+      - key: CHANNEL_ID42
+        sync: false
+      - key: CHANNEL_ID43
+        sync: false
+      - key: CHANNEL_ID44
+        sync: false
+      - key: CHANNEL_ID45
+        sync: false
+      - key: CHANNEL_ID46
+        sync: false
+      - key: CHANNEL_ID47
+        sync: false
+      - key: CHANNEL_ID48
+        sync: false
+      - key: CHANNEL_ID49
+        sync: false
+      - key: CHANNEL_ID50
+        sync: false
+      - key: CHANNEL_ID51
+        sync: false
+      - key: CHANNEL_ID52
+        sync: false
+      - key: CHANNEL_ID53
+        sync: false
+      - key: CHANNEL_ID54
+        sync: false
+      - key: CHANNEL_ID55
+        sync: false
+      - key: CHANNEL_ID56
+        sync: false
+      - key: CHANNEL_ID57
+        sync: false
+      - key: CHANNEL_ID58
+        sync: false
+      - key: CHANNEL_ID59
+        sync: false
+      - key: CHANNEL_ID60
+        sync: false
+      - key: CHANNEL_ID61
+        sync: false
+      - key: CHANNEL_ID62
+        sync: false
+      - key: CHANNEL_ID63
+        sync: false
+      - key: CHANNEL_ID64
+        sync: false
+      - key: CHANNEL_ID65
+        sync: false
+      - key: CHANNEL_ID66
+        sync: false
+      - key: CHANNEL_ID67
+        sync: false
+      - key: CHANNEL_ID68
+        sync: false
+      - key: CHANNEL_ID69
+        sync: false
+      - key: CHANNEL_ID70
+        sync: false
+      - key: CHANNEL_ID71
+        sync: false
+      - key: CHANNEL_ID72
+        sync: false
+      - key: CHANNEL_ID73
+        sync: false
+      - key: CHANNEL_ID74
+        sync: false
+      - key: CHANNEL_ID75
+        sync: false
+      - key: CHANNEL_ID76
+        sync: false
+      - key: CHANNEL_ID77
+        sync: false
+      - key: CHANNEL_ID78
+        sync: false
+      - key: CHANNEL_ID79
+        sync: false
+      - key: CHANNEL_ID80
+        sync: false
+      - key: CHANNEL_ID81
+        sync: false
+      - key: CHANNEL_ID82
+        sync: false
+      - key: CHANNEL_ID83
+        sync: false
+      - key: CHANNEL_ID84
+        sync: false
+      - key: CHANNEL_ID85
+        sync: false
+      - key: CHANNEL_ID86
+        sync: false
+      - key: CHANNEL_ID87
+        sync: false
+      - key: CHANNEL_ID88
+        sync: false
+      - key: CHANNEL_ID89
+        sync: false
+      - key: CHANNEL_ID90
+        sync: false
+      - key: CHANNEL_ID91
+        sync: false
+      - key: CHANNEL_ID92
+        sync: false
+      - key: CHANNEL_ID93
+        sync: false
+      - key: CHANNEL_ID94
+        sync: false
+      - key: CHANNEL_ID95
+        sync: false
+      - key: CHANNEL_ID96
+        sync: false
+      - key: CHANNEL_ID97
+        sync: false
+      - key: CHANNEL_ID98
+        sync: false
+      - key: CHANNEL_ID99
+        sync: false
+      - key: CHANNEL_ID100
+        sync: false 
