@@ -1066,15 +1066,15 @@ def bot2_enviar_aviso_pre_sinais():
         # Dicionário com avisos por idioma
         avisos_por_idioma = {
             'pt': {
-                'video': 'videos/cpu_pt.mp4',  # Vídeo em português
+                'video': 'C:\\Users\\igore\\videos\\cpu_pt.mp4',  # Vídeo em português
                 'mensagem': '⚠️ ATENÇÃO ⚠️\n\n🔔 SINAIS CHEGANDO EM 10 MINUTOS!\n\n✅ Cadastre-se agora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICANDO AQUI'
             },
             'en': {
-                'video': 'videos/cpu_en.mp4',  # Vídeo em inglês
+                'video': 'C:\\Users\\igore\\videos\\cpu_en.mp4',  # Vídeo em inglês
                 'mensagem': '⚠️ ATTENTION ⚠️\n\n🔔 SIGNALS COMING IN 10 MINUTES!\n\n✅ Register now:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICKING HERE'
             },
             'es': {
-                'video': 'videos/cpu_es.mp4',  # Vídeo em espanhol
+                'video': 'C:\\Users\\igore\\videos\\cpu_es.mp4',  # Vídeo em espanhol
                 'mensagem': '⚠️ ATENCIÓN ⚠️\n\n🔔 SEÑALES EN 10 MINUTOS!\n\n✅ Regístrate ahora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 HACIENDO CLIC AQUÍ'
             }
         }
