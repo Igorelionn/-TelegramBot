@@ -1099,31 +1099,29 @@ def bot2_enviar_mensagem_fim_operacao():
 def bot2_enviar_aviso_pre_sinais():
     """Envia aviso pré-sinais com vídeo e mensagem"""
     try:
-        # Define o diretório base dos vídeos (agora relativo ao script)
-        videos_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "videos")
+        # Define o diretório base dos vídeos (usando caminho absoluto)
+        videos_dir = "C:\\Users\\igore\\Downloads\\videos"
         BOT2_LOGGER.info(f"Diretório de vídeos: {videos_dir}")
         
-        # Criar o diretório se não existir
+        # Verificar se o diretório existe
         if not os.path.exists(videos_dir):
-            os.makedirs(videos_dir)
-            BOT2_LOGGER.info(f"Diretório de vídeos criado: {videos_dir}")
-        
-        BOT2_LOGGER.info(f"Diretório existe: {os.path.exists(videos_dir)}")
-        
+            BOT2_LOGGER.error(f"Diretório de vídeos não encontrado: {videos_dir}")
+            return
+            
         BOT2_LOGGER.info(f"Diretório existe: {os.path.exists(videos_dir)}")
         
         # Dicionário com avisos por idioma
         avisos_por_idioma = {
             'pt': {
-                'video': f"{videos_dir}\\cpu_pt.mp4",  # Vídeo em português
+                'video': os.path.join(videos_dir, "cpu_pt.mp4"),  # Vídeo em português
                 'mensagem': '👉🏼Abram a corretora Pessoal\n\n⚠️FIQUEM ATENTOS⚠️\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n<a href="https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=">➡️ CLICANDO AQUI</a>'
             },
             'en': {
-                'video': f"{videos_dir}\\cpu_en.mp4",  # Vídeo em inglês
+                'video': os.path.join(videos_dir, "cpu_en.mp4"),  # Vídeo em inglês
                 'mensagem': '👉🏼Open the broker Everyone\n\n⚠️PAY ATTENTION⚠️\n\n🔥Register on XXBROKER right now🔥\n\n<a href="https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=">➡️ CLICK HERE</a>'
             },
             'es': {
-                'video': f"{videos_dir}\\cpu_es.mp4",  # Vídeo em espanhol
+                'video': os.path.join(videos_dir, "cpu_es.mp4"),  # Vídeo em espanhol
                 'mensagem': '👉🏼Abran el corredor Todos\n\n⚠️PRESTEN ATENCIÓN⚠️\n\n🔥Regístrese en XXBROKER ahora mismo🔥\n\n<a href="https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=">➡️ CLIC AQUÍ</a>'
             }
         }
