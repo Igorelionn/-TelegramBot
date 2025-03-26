@@ -1099,14 +1099,14 @@ def bot2_enviar_mensagem_fim_operacao():
 def bot2_enviar_aviso_pre_sinais():
     """Envia aviso pré-sinais com vídeo e mensagem"""
     try:
-        # Define o diretório base dos vídeos (usando caminho absoluto)
-        videos_dir = "C:\\Users\\igore\\Downloads\\videos"
+        # Define o diretório base dos vídeos (usando caminho relativo ao script)
+        videos_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "videos")
         BOT2_LOGGER.info(f"Diretório de vídeos: {videos_dir}")
         
-        # Verificar se o diretório existe
+        # Criar o diretório se não existir
         if not os.path.exists(videos_dir):
-            BOT2_LOGGER.error(f"Diretório de vídeos não encontrado: {videos_dir}")
-            return
+            os.makedirs(videos_dir)
+            BOT2_LOGGER.info(f"Diretório de vídeos criado: {videos_dir}")
             
         BOT2_LOGGER.info(f"Diretório existe: {os.path.exists(videos_dir)}")
         
