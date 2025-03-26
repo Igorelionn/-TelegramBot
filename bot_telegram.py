@@ -1063,18 +1063,23 @@ def bot2_verificar_disponibilidade():
 def bot2_enviar_aviso_pre_sinais():
     """Envia aviso pré-sinais com vídeo e mensagem 10 minutos antes dos sinais"""
     try:
+        # Define o diretório base dos vídeos
+        videos_dir = os.path.join('C:', 'Users', 'igore', 'videos')
+        BOT2_LOGGER.info(f"Diretório de vídeos: {videos_dir}")
+        BOT2_LOGGER.info(f"Diretório existe: {os.path.exists(videos_dir)}")
+        
         # Dicionário com avisos por idioma
         avisos_por_idioma = {
             'pt': {
-                'video': 'C:\\Users\\igore\\videos\\cpu_pt.mp4',  # Vídeo em português
+                'video': os.path.join(videos_dir, 'cpu_pt.mp4'),  # Vídeo em português
                 'mensagem': '⚠️ ATENÇÃO ⚠️\n\n🔔 SINAIS CHEGANDO EM 10 MINUTOS!\n\n✅ Cadastre-se agora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICANDO AQUI'
             },
             'en': {
-                'video': 'C:\\Users\\igore\\videos\\cpu_en.mp4',  # Vídeo em inglês
+                'video': os.path.join(videos_dir, 'cpu_en.mp4'),  # Vídeo em inglês
                 'mensagem': '⚠️ ATTENTION ⚠️\n\n🔔 SIGNALS COMING IN 10 MINUTES!\n\n✅ Register now:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICKING HERE'
             },
             'es': {
-                'video': 'C:\\Users\\igore\\videos\\cpu_es.mp4',  # Vídeo em espanhol
+                'video': os.path.join(videos_dir, 'cpu_es.mp4'),  # Vídeo em espanhol
                 'mensagem': '⚠️ ATENCIÓN ⚠️\n\n🔔 SEÑALES EN 10 MINUTOS!\n\n✅ Regístrate ahora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 HACIENDO CLIC AQUÍ'
             }
         }
@@ -1089,10 +1094,14 @@ def bot2_enviar_aviso_pre_sinais():
                 # Envia o vídeo
                 try:
                     # Verifica se o arquivo de vídeo existe
-                    if not os.path.exists(aviso['video']):
-                        BOT2_LOGGER.error(f"Arquivo de vídeo não encontrado: {aviso['video']}")
+                    video_path = aviso['video']
+                    BOT2_LOGGER.info(f"Tentando acessar vídeo: {video_path}")
+                    BOT2_LOGGER.info(f"Arquivo existe: {os.path.exists(video_path)}")
+                    
+                    if not os.path.exists(video_path):
+                        BOT2_LOGGER.error(f"Arquivo de vídeo não encontrado: {video_path}")
                         # Tenta enviar apenas a mensagem se o vídeo não existir
-                        raise FileNotFoundError(f"Vídeo não encontrado: {aviso['video']}")
+                        raise FileNotFoundError(f"Vídeo não encontrado: {video_path}")
 
                     # Envia o vídeo
                     url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
