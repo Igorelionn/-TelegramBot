@@ -793,7 +793,7 @@ def send_message():
         logging.info(f"Enviando sinal para o ativo {asset}: {action}")
         envio_sucesso = False
         
-        # Enviar apenas para o primeiro canal disponível
+        # Enviar para todos os canais configurados
         for chat_id in CHAT_IDS:
             try:
                 link_corretora = CANAIS_CONFIG[chat_id]['link_corretora']
@@ -835,7 +835,6 @@ def send_message():
                 if response.status_code == 200:
                     logging.info(f"Sinal enviado com sucesso para o canal {chat_id}")
                     envio_sucesso = True
-                    break  # Sai do loop após enviar com sucesso para um canal
                 else:
                     logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Erro: {response.status_code} - {response.text}")
             except Exception as e:
