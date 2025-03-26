@@ -93,6 +93,11 @@ CANAIS_CONFIG = {
 # Lista de canais para enviar os sinais
 CHAT_IDS = list(CANAIS_CONFIG.keys())
 
+# Adicionar log para verificar a configuração dos canais
+logging.info(f"Configuração dos canais carregada. Total de canais: {len(CHAT_IDS)}")
+for chat_id in CHAT_IDS:
+    logging.info(f"Canal configurado: {chat_id} - Nome: {CANAIS_CONFIG[chat_id]['nome']}")
+
 # Estado global para evitar repetições
 ultimo_ativo = None
 ultimo_signal = None
@@ -821,6 +826,10 @@ def send_message():
                     ]
                 }
                 
+                # Adicionar logs detalhados
+                logging.info(f"Tentando enviar mensagem para o canal {chat_id}")
+                logging.info(f"Link da corretora: {link_corretora}")
+                
                 response = requests.post(
                     f"https://api.telegram.org/bot{TOKEN}/sendMessage",
                     json={
@@ -836,9 +845,11 @@ def send_message():
                     logging.info(f"Sinal enviado com sucesso para o canal {chat_id}")
                     envio_sucesso = True
                 else:
-                    logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Erro: {response.status_code} - {response.text}")
+                    logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Status: {response.status_code}")
+                    logging.error(f"Resposta do Telegram: {response.text}")
             except Exception as e:
-                logging.error(f"Erro ao enviar para o canal {chat_id}: {e}")
+                logging.error(f"Erro ao enviar para o canal {chat_id}: {str(e)}")
+                logging.error(f"Detalhes do erro: {traceback.format_exc()}")
                 continue
         
         if envio_sucesso:
@@ -856,7 +867,8 @@ def send_message():
             logging.error(f"Falha ao enviar o sinal para todos os canais.")
     
     except Exception as e:
-        logging.error(f"Erro durante o envio da mensagem: {e}")
+        logging.error(f"Erro durante o envio da mensagem: {str(e)}")
+        logging.error(f"Detalhes do erro: {traceback.format_exc()}")
 
 # Inicializar o timestamp de último envio
 send_message.ultimo_envio_timestamp = obter_hora_brasilia() - timedelta(minutes=10)  # Inicializar com um valor no passado
@@ -866,34 +878,50 @@ def schedule_messages():
     Agenda o envio de sinais a cada 6 minutos durante 24 horas, com 2 segundos de delay.
     Horários: 00:00:02, 00:06:02, 00:12:02, ..., 23:54:02
     """
-    # Limpa todos os agendamentos existentes para evitar duplicação
-    schedule.clear()
-    
-    # Flag global para controlar se os sinais já foram agendados
-    global sinais_agendados
-    if sinais_agendados:
-        logging.info("Sinais já agendados. Pulando reagendamento.")
-        return
-    
-    # Definindo horários a cada 6 minutos ao longo do dia com 2 segundos de atraso
-    for hora in range(24):  # 0 a 23 horas
-        for minuto in range(0, 60, 6):  # 0, 6, 12, 18, 24, 30, 36, 42, 48, 54
-            horario_formatado = f"{hora:02d}:{minuto:02d}:02"
-            schedule.every().day.at(horario_formatado).do(send_message)
-            logging.info(f"Sinal agendado para {horario_formatado}")
-    
-    # Lista todos os horários agendados para verificação
-    horarios = [f"{hora:02d}:{minuto:02d}:02" 
-                for hora in range(24) 
-                for minuto in range(0, 60, 6)]
-    
-    logging.info(f"Total de {len(horarios)} sinais agendados para as 24 horas")
-    logging.info("Horários agendados:")
-    for i, horario in enumerate(horarios[:10], 1):
-        logging.info(f"Sinal {i}: {horario}")
-    logging.info("... e assim por diante a cada 6 minutos")
-    
-    sinais_agendados = True
+    try:
+        # Limpa todos os agendamentos existentes para evitar duplicação
+        schedule.clear()
+        
+        # Flag global para controlar se os sinais já foram agendados
+        global sinais_agendados
+        if sinais_agendados:
+            logging.info("Sinais já agendados. Pulando reagendamento.")
+            return
+        
+        # Log inicial
+        logging.info("Iniciando agendamento de sinais...")
+        
+        # Definindo horários a cada 6 minutos ao longo do dia com 2 segundos de atraso
+        for hora in range(24):  # 0 a 23 horas
+            for minuto in range(0, 60, 6):  # 0, 6, 12, 18, 24, 30, 36, 42, 48, 54
+                horario_formatado = f"{hora:02d}:{minuto:02d}:02"
+                schedule.every().day.at(horario_formatado).do(send_message)
+                logging.info(f"Sinal agendado para {horario_formatado}")
+        
+        # Lista todos os horários agendados para verificação
+        horarios = [f"{hora:02d}:{minuto:02d}:02" 
+                    for hora in range(24) 
+                    for minuto in range(0, 60, 6)]
+        
+        logging.info(f"Total de {len(horarios)} sinais agendados para as 24 horas")
+        logging.info("Horários agendados:")
+        for i, horario in enumerate(horarios[:10], 1):
+            logging.info(f"Sinal {i}: {horario}")
+        logging.info("... e assim por diante a cada 6 minutos")
+        
+        # Agendar um sinal de teste para 5 segundos após a inicialização
+        agora = obter_hora_brasilia()
+        horario_teste = agora + timedelta(seconds=5)
+        horario_teste_str = horario_teste.strftime("%H:%M:%S")
+        logging.info(f"Agendando sinal de teste para: {horario_teste_str}")
+        schedule.every().day.at(horario_teste_str).do(lambda: send_message())
+        
+        sinais_agendados = True
+        logging.info("Agendamento de sinais concluído com sucesso!")
+        
+    except Exception as e:
+        logging.error(f"Erro ao agendar mensagens: {str(e)}")
+        logging.error(f"Detalhes do erro: {traceback.format_exc()}")
 
 # Função para manter o bot vivo em serviços de hospedagem gratuitos
 def keep_alive():
