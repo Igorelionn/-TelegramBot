@@ -1,12 +1,7 @@
 #!/bin/bash
 
-# Ativa o ambiente virtual se existir
-if [ -d "venv" ]; then
-    source venv/bin/activate
-fi
-
-# Instala as dependências se necessário
-pip install -r requirements.txt
+# Define o diretório do projeto
+cd /opt/render/project/src
 
 # Cria o diretório de vídeos se não existir
 mkdir -p videos
