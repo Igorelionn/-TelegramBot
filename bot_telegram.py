@@ -1067,73 +1067,58 @@ BOT2_ATIVOS_CATEGORIAS = ATIVOS_CATEGORIAS
 BOT2_ASSETS = assets
 
 def bot2_enviar_aviso_pre_sinais():
-    """Envia GIF e mensagem de aviso 10 minutos antes dos sinais para cada canal."""
     try:
-        # Configuração dos GIFs e textos por idioma
+        logging.info("Bot 2: Iniciando envio de avisos pré-sinais")
+        
+        # Dicionário com os GIFs e mensagens para cada idioma
         avisos_por_idioma = {
-            "pt": {
-                "gif_url": "blob:https://web.telegram.org/fc0e6273-c621-4bc9-9e0b-8ea758d208ea",
-                "texto": (
-                    "👉🏼Abram a corretora Pessoal\n\n"
-                    "⚠️FIQUEM ATENTOS⚠️\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICANDO AQUI</a>"
-                )
+            'pt': {
+                'gif': 'https://telegra.ph/file/8c8c8c8c8c8c8c8c8c8c8c.gif',
+                'mensagem': "⚠️ ATENÇÃO ⚠️\n\n🔔 Sinal de entrada em 10 minutos!\n\nPrepare-se para a próxima operação."
             },
-            "es": {
-                "gif_url": "blob:https://web.telegram.org/461efdfd-1411-4b7c-827a-66eb1ed19cdc",
-                "texto": (
-                    "👉🏼Abran la plataforma\n\n"
-                    "⚠️¡ESTÉN ATENTOS⚠️\n\n"
-                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLIC AQUÍ</a>"
-                )
+            'es': {
+                'gif': 'https://telegra.ph/file/9d9d9d9d9d9d9d9d9d9d9d.gif',
+                'mensagem': "⚠️ ATENCIÓN ⚠️\n\n🔔 Señal de entrada en 10 minutos!\n\nPrepárate para la próxima operación."
             },
-            "en": {
-                "gif_url": "blob:https://web.telegram.org/9840e01e-3209-47d1-bae2-c8e3b36126be",
-                "texto": (
-                    "👉🏼Open the platform\n\n"
-                    "⚠️STAY ALERT⚠️\n\n"
-                    "🔥Register on XXBROKER right now🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICK HERE</a>"
-                )
+            'en': {
+                'gif': 'https://telegra.ph/file/7e7e7e7e7e7e7e7e7e7e7e.gif',
+                'mensagem': "⚠️ ATTENTION ⚠️\n\n🔔 Entry signal in 10 minutes!\n\nGet ready for the next operation."
             }
         }
-
-        BOT2_LOGGER.info("Iniciando envio de avisos pré-sinais")
         
         # Enviar para cada canal configurado
-        for chat_id in BOT2_CHAT_IDS:
+        for chat_id in BOT2_CANAIS_CONFIG:
             try:
-                # Pegar configuração do canal
-                config_canal = BOT2_CANAIS_CONFIG[chat_id]
-                idioma = config_canal["idioma"]
+                idioma = BOT2_CANAIS_CONFIG[chat_id]['idioma']
+                if idioma not in avisos_por_idioma:
+                    logging.error(f"Bot 2: Idioma não suportado para o canal {chat_id}: {idioma}")
+                    continue
                 
-                # Pegar configuração do aviso para o idioma
-                aviso = avisos_por_idioma[idioma]
+                gif_url = avisos_por_idioma[idioma]['gif']
+                mensagem = avisos_por_idioma[idioma]['mensagem']
                 
                 # Enviar GIF com mensagem
-                url_gif = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                payload_gif = {
-                    'chat_id': chat_id,
-                    'animation': aviso["gif_url"],
-                    'caption': aviso["texto"],
-                    'parse_mode': 'HTML',
-                    'disable_web_page_preview': True
-                }
-                resposta_gif = requests.post(url_gif, data=payload_gif)
+                response_gif = requests.post(
+                    f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation",
+                    json={
+                        "chat_id": chat_id,
+                        "animation": gif_url,
+                        "caption": mensagem,
+                        "parse_mode": "HTML"
+                    }
+                )
                 
-                if resposta_gif.status_code == 200:
-                    BOT2_LOGGER.info(f"GIF e mensagem enviados com sucesso para o canal {chat_id} em {idioma}")
+                if response_gif.status_code == 200:
+                    logging.info(f"Bot 2: GIF e mensagem pré-sinal enviados com sucesso para o canal {chat_id} em {idioma}")
                 else:
-                    BOT2_LOGGER.error(f"Erro ao enviar GIF e mensagem para o canal {chat_id}: {resposta_gif.text}")
+                    logging.error(f"Bot 2: Falha ao enviar GIF e mensagem pré-sinal para o canal {chat_id}. Erro: {response_gif.status_code} - {response_gif.text}")
                 
             except Exception as e:
-                BOT2_LOGGER.error(f"Erro ao enviar aviso para o canal {chat_id}: {str(e)}")
+                logging.error(f"Bot 2: Erro ao enviar para o canal {chat_id}: {e}")
                 continue
                 
     except Exception as e:
-        BOT2_LOGGER.error(f"Erro geral ao enviar avisos pré-sinais: {str(e)}")
+        logging.error(f"Bot 2: Erro ao enviar mensagem pré-sinal: {e}")
 
 # Função para obter hora no fuso horário de Brasília (específica para Bot 2)
 def bot2_obter_hora_brasilia():
