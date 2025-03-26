@@ -1400,7 +1400,7 @@ def bot2_schedule_messages():
     Horários de envio terminam em 3 ou 7, e horários de entrada terminam em 5 ou 0.
     """
     # Limpa todos os agendamentos existentes para evitar duplicação
-    # NÃO podemos limpar todos, pois isso afetaria o bot 1
+    schedule.clear()
     
     # Variável global para controlar se os sinais já foram agendados
     global bot2_sinais_agendados
@@ -1416,27 +1416,35 @@ def bot2_schedule_messages():
     schedule.every().day.at(horario_teste_str).do(lambda: bot2_send_message(ignorar_anti_duplicacao=True))
     
     # Definindo horários distribuídos ao longo da hora para 3 sinais
-    # Horários de envio devem terminar em 3 ou 7
     for hora in range(24):
-        # Primeiro sinal da hora (termina em 3)
-        horario_envio = f"{hora:02d}:13:02"  # Envio às 13:02, entrada às 13:15
-        BOT2_LOGGER.info(f"Sinal 1 agendado para {horario_envio} (entrada às {hora:02d}:15)")
-        schedule.every().day.at(horario_envio).do(bot2_send_message)
+        # Primeiro sinal da hora
+        horario_aviso1 = f"{hora:02d}:03:02"  # Aviso às 03:02
+        horario_envio1 = f"{hora:02d}:13:02"  # Envio às 13:02, entrada às 13:15
+        BOT2_LOGGER.info(f"Aviso 1 agendado para {horario_aviso1}")
+        BOT2_LOGGER.info(f"Sinal 1 agendado para {horario_envio1}")
+        schedule.every().day.at(horario_aviso1).do(bot2_enviar_aviso_pre_sinais)
+        schedule.every().day.at(horario_envio1).do(bot2_send_message)
         
-        # Segundo sinal da hora (termina em 7)
-        horario_envio = f"{hora:02d}:37:02"  # Envio às 37:02, entrada às 37:40
-        BOT2_LOGGER.info(f"Sinal 2 agendado para {horario_envio} (entrada às {hora:02d}:40)")
-        schedule.every().day.at(horario_envio).do(bot2_send_message)
+        # Segundo sinal da hora
+        horario_aviso2 = f"{hora:02d}:27:02"  # Aviso às 27:02
+        horario_envio2 = f"{hora:02d}:37:02"  # Envio às 37:02, entrada às 37:40
+        BOT2_LOGGER.info(f"Aviso 2 agendado para {horario_aviso2}")
+        BOT2_LOGGER.info(f"Sinal 2 agendado para {horario_envio2}")
+        schedule.every().day.at(horario_aviso2).do(bot2_enviar_aviso_pre_sinais)
+        schedule.every().day.at(horario_envio2).do(bot2_send_message)
         
-        # Terceiro sinal da hora (termina em 3)
-        horario_envio = f"{hora:02d}:53:02"  # Envio às 53:02, entrada às 53:55
-        BOT2_LOGGER.info(f"Sinal 3 agendado para {horario_envio} (entrada às {hora:02d}:55)")
-        schedule.every().day.at(horario_envio).do(bot2_send_message)
+        # Terceiro sinal da hora
+        horario_aviso3 = f"{hora:02d}:43:02"  # Aviso às 43:02
+        horario_envio3 = f"{hora:02d}:53:02"  # Envio às 53:02, entrada às 53:55
+        BOT2_LOGGER.info(f"Aviso 3 agendado para {horario_aviso3}")
+        BOT2_LOGGER.info(f"Sinal 3 agendado para {horario_envio3}")
+        schedule.every().day.at(horario_aviso3).do(bot2_enviar_aviso_pre_sinais)
+        schedule.every().day.at(horario_envio3).do(bot2_send_message)
     
     BOT2_LOGGER.info("Bot 2 agendado para enviar 3 sinais por hora:")
-    BOT2_LOGGER.info("1. Envio às XX:13:02 (entrada às XX:15)")
-    BOT2_LOGGER.info("2. Envio às XX:37:02 (entrada às XX:40)")
-    BOT2_LOGGER.info("3. Envio às XX:53:02 (entrada às XX:55)")
+    BOT2_LOGGER.info("1. Aviso às XX:03:02, Sinal às XX:13:02")
+    BOT2_LOGGER.info("2. Aviso às XX:27:02, Sinal às XX:37:02")
+    BOT2_LOGGER.info("3. Aviso às XX:43:02, Sinal às XX:53:02")
     BOT2_LOGGER.info(f"Adicionalmente, um sinal de teste será enviado em 5 segundos ({horario_teste_str}).")
     bot2_sinais_agendados = True
 
@@ -1527,7 +1535,7 @@ def bot2_enviar_aviso_pre_sinais():
         # Configuração dos GIFs e textos por idioma
         avisos_por_idioma = {
             "pt": {
-                "gif_url": "blob:https://web.telegram.org/fcbe176c-752d-44db-8d6b-5fcc3d53529b",
+                "gif_url": "blob:https://web.telegram.org/fc0e6273-c621-4bc9-9e0b-8ea758d208ea",
                 "texto": (
                     "👉🏼Abram a corretora Pessoal\n\n"
                     "⚠️FIQUEM ATENTOS⚠️\n\n"
@@ -1536,7 +1544,7 @@ def bot2_enviar_aviso_pre_sinais():
                 )
             },
             "es": {
-                "gif_url": "blob:https://web.telegram.org/1a69f188-b176-4c25-ae4c-97edeb28ca3a",
+                "gif_url": "blob:https://web.telegram.org/461efdfd-1411-4b7c-827a-66eb1ed19cdc",
                 "texto": (
                     "👉🏼Abran la plataforma\n\n"
                     "⚠️¡ESTÉN ATENTOS⚠️\n\n"
@@ -1545,7 +1553,7 @@ def bot2_enviar_aviso_pre_sinais():
                 )
             },
             "en": {
-                "gif_url": "blob:https://web.telegram.org/664e9a12-3cb2-4dd9-9e56-4901f1558e03",
+                "gif_url": "blob:https://web.telegram.org/9840e01e-3209-47d1-bae2-c8e3b36126be",
                 "texto": (
                     "👉🏼Open the platform\n\n"
                     "⚠️STAY ALERT⚠️\n\n"
@@ -1567,34 +1575,21 @@ def bot2_enviar_aviso_pre_sinais():
                 # Pegar configuração do aviso para o idioma
                 aviso = avisos_por_idioma[idioma]
                 
-                # Enviar GIF
+                # Enviar GIF com mensagem
                 url_gif = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
                 payload_gif = {
                     'chat_id': chat_id,
                     'animation': aviso["gif_url"],
-                    'parse_mode': 'HTML'
+                    'caption': aviso["texto"],
+                    'parse_mode': 'HTML',
+                    'disable_web_page_preview': True
                 }
                 resposta_gif = requests.post(url_gif, data=payload_gif)
                 
                 if resposta_gif.status_code == 200:
-                    BOT2_LOGGER.info(f"GIF enviado com sucesso para o canal {chat_id} em {idioma}")
+                    BOT2_LOGGER.info(f"GIF e mensagem enviados com sucesso para o canal {chat_id} em {idioma}")
                 else:
-                    BOT2_LOGGER.error(f"Erro ao enviar GIF para o canal {chat_id}: {resposta_gif.text}")
-                
-                # Enviar mensagem de texto
-                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                payload_msg = {
-                    'chat_id': chat_id,
-                    'text': aviso["texto"],
-                    'parse_mode': 'HTML',
-                    'disable_web_page_preview': True
-                }
-                resposta_msg = requests.post(url_msg, data=payload_msg)
-                
-                if resposta_msg.status_code == 200:
-                    BOT2_LOGGER.info(f"Mensagem enviada com sucesso para o canal {chat_id} em {idioma}")
-                else:
-                    BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {resposta_msg.text}")
+                    BOT2_LOGGER.error(f"Erro ao enviar GIF e mensagem para o canal {chat_id}: {resposta_gif.text}")
                 
             except Exception as e:
                 BOT2_LOGGER.error(f"Erro ao enviar aviso para o canal {chat_id}: {str(e)}")
