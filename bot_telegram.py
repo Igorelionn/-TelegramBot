@@ -1060,6 +1060,88 @@ def bot2_verificar_disponibilidade():
     
     return available_assets
 
+def bot2_enviar_aviso_pre_sinais():
+    """Envia aviso pré-sinais com vídeo e mensagem 10 minutos antes dos sinais"""
+    try:
+        # Dicionário com avisos por idioma
+        avisos_por_idioma = {
+            'pt': {
+                'video': 'videos/cpu_pt.mp4',  # Vídeo em português
+                'mensagem': '⚠️ ATENÇÃO ⚠️\n\n🔔 SINAIS CHEGANDO EM 10 MINUTOS!\n\n✅ Cadastre-se agora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICANDO AQUI'
+            },
+            'en': {
+                'video': 'videos/cpu_en.mp4',  # Vídeo em inglês
+                'mensagem': '⚠️ ATTENTION ⚠️\n\n🔔 SIGNALS COMING IN 10 MINUTES!\n\n✅ Register now:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICKING HERE'
+            },
+            'es': {
+                'video': 'videos/cpu_es.mp4',  # Vídeo em espanhol
+                'mensagem': '⚠️ ATENCIÓN ⚠️\n\n🔔 SEÑALES EN 10 MINUTOS!\n\n✅ Regístrate ahora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 HACIENDO CLIC AQUÍ'
+            }
+        }
+
+        for chat_id in BOT2_CHAT_IDS:
+            try:
+                # Obtém a configuração do canal
+                config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                idioma = config_canal["idioma"]
+                aviso = avisos_por_idioma.get(idioma, avisos_por_idioma['pt'])
+
+                # Envia o vídeo
+                try:
+                    # Verifica se o arquivo de vídeo existe
+                    if not os.path.exists(aviso['video']):
+                        BOT2_LOGGER.error(f"Arquivo de vídeo não encontrado: {aviso['video']}")
+                        # Tenta enviar apenas a mensagem se o vídeo não existir
+                        raise FileNotFoundError(f"Vídeo não encontrado: {aviso['video']}")
+
+                    # Envia o vídeo
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+                    
+                    # Abre o arquivo de vídeo
+                    with open(aviso['video'], 'rb') as video_file:
+                        files = {
+                            'video': video_file
+                        }
+                        data = {
+                            'chat_id': chat_id,
+                            'caption': aviso['mensagem'],
+                            'parse_mode': 'HTML',
+                            'supports_streaming': True,  # Habilita streaming do vídeo
+                            'width': 480,  # Largura do vídeo
+                            'height': 360,  # Altura do vídeo
+                            'duration': 3  # Duração em segundos
+                        }
+                        response = requests.post(url, files=files, data=data)
+                    
+                    if response.status_code == 200:
+                        BOT2_LOGGER.info(f"Vídeo e mensagem enviados com sucesso para o canal {chat_id}")
+                    else:
+                        BOT2_LOGGER.error(f"Erro ao enviar vídeo para o canal {chat_id}: {response.text}")
+                        # Tenta enviar apenas a mensagem se o vídeo falhar
+                        try:
+                            url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                            payload_msg = {
+                                'chat_id': chat_id,
+                                'text': aviso['mensagem'],
+                                'parse_mode': 'HTML'
+                            }
+                            response_msg = requests.post(url_msg, data=payload_msg)
+                            if response_msg.status_code == 200:
+                                BOT2_LOGGER.info(f"Mensagem enviada com sucesso para o canal {chat_id}")
+                            else:
+                                BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {response_msg.text}")
+                        except Exception as e:
+                            BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {str(e)}")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"Erro ao enviar vídeo para o canal {chat_id}: {str(e)}")
+
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao processar canal {chat_id}: {str(e)}")
+                continue
+
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao enviar avisos pré-sinais: {str(e)}")
+
 def bot2_gerar_sinal_aleatorio():
     """
     Gera um sinal aleatório para enviar.
@@ -1514,149 +1596,3 @@ if __name__ == "__main__":
 # --------------------------------------------------------------------------------
 # FIM DO CÓDIGO DO BOT 2 - NÃO MODIFICAR ESTA LINHA
 # --------------------------------------------------------------------------------
-
-def bot2_enviar_aviso_pre_sinais():
-    """Envia aviso pré-sinais com vídeo e mensagem 10 minutos antes dos sinais"""
-    try:
-        # Dicionário com avisos por idioma
-        avisos_por_idioma = {
-            'pt': {
-                'video': 'videos/cpu_pt.mp4',  # Vídeo em português
-                'mensagem': '⚠️ ATENÇÃO ⚠️\n\n🔔 SINAIS CHEGANDO EM 10 MINUTOS!\n\n✅ Cadastre-se agora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICANDO AQUI'
-            },
-            'en': {
-                'video': 'videos/cpu_en.mp4',  # Vídeo em inglês
-                'mensagem': '⚠️ ATTENTION ⚠️\n\n🔔 SIGNALS COMING IN 10 MINUTES!\n\n✅ Register now:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 CLICKING HERE'
-            },
-            'es': {
-                'video': 'videos/cpu_es.mp4',  # Vídeo em espanhol
-                'mensagem': '⚠️ ATENCIÓN ⚠️\n\n🔔 SEÑALES EN 10 MINUTOS!\n\n✅ Regístrate ahora:\nhttps://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack=\n\n👉 HACIENDO CLIC AQUÍ'
-            }
-        }
-
-        for chat_id in BOT2_CHAT_IDS:
-            try:
-                # Obtém a configuração do canal
-                config_canal = BOT2_CANAIS_CONFIG[chat_id]
-                idioma = config_canal["idioma"]
-                aviso = avisos_por_idioma.get(idioma, avisos_por_idioma['pt'])
-
-                # Envia o vídeo
-                try:
-                    # Verifica se o arquivo de vídeo existe
-                    if not os.path.exists(aviso['video']):
-                        BOT2_LOGGER.error(f"Arquivo de vídeo não encontrado: {aviso['video']}")
-                        # Tenta enviar apenas a mensagem se o vídeo não existir
-                        raise FileNotFoundError(f"Vídeo não encontrado: {aviso['video']}")
-
-                    # Envia o vídeo
-                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-                    
-                    # Abre o arquivo de vídeo
-                    with open(aviso['video'], 'rb') as video_file:
-                        files = {
-                            'video': video_file
-                        }
-                        data = {
-                            'chat_id': chat_id,
-                            'caption': aviso['mensagem'],
-                            'parse_mode': 'HTML',
-                            'supports_streaming': True,  # Habilita streaming do vídeo
-                            'width': 480,  # Largura do vídeo
-                            'height': 360,  # Altura do vídeo
-                            'duration': 3  # Duração em segundos
-                        }
-                        response = requests.post(url, files=files, data=data)
-                    
-                    if response.status_code == 200:
-                        BOT2_LOGGER.info(f"Vídeo e mensagem enviados com sucesso para o canal {chat_id}")
-                    else:
-                        BOT2_LOGGER.error(f"Erro ao enviar vídeo para o canal {chat_id}: {response.text}")
-                        # Tenta enviar apenas a mensagem se o vídeo falhar
-                        try:
-                            url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                            payload_msg = {
-                                'chat_id': chat_id,
-                                'text': aviso['mensagem'],
-                                'parse_mode': 'HTML'
-                            }
-                            response_msg = requests.post(url_msg, data=payload_msg)
-                            if response_msg.status_code == 200:
-                                BOT2_LOGGER.info(f"Mensagem enviada com sucesso para o canal {chat_id}")
-                            else:
-                                BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {response_msg.text}")
-                        except Exception as e:
-                            BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {str(e)}")
-                except Exception as e:
-                    BOT2_LOGGER.error(f"Erro ao enviar vídeo para o canal {chat_id}: {str(e)}")
-
-            except Exception as e:
-                BOT2_LOGGER.error(f"Erro ao processar canal {chat_id}: {str(e)}")
-                continue
-
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao enviar avisos pré-sinais: {str(e)}")
-
-def bot2_enviar_mensagem_fim_operacao():
-    """Envia mensagem de fim de operação após o término do último sinal."""
-    try:
-        # Configuração das mensagens por idioma
-        mensagens_por_idioma = {
-            "pt": {
-                "texto": (
-                    "Seguimos com as operações ✅\n\n"
-                    "Mantenham a corretora aberta!!\n\n"
-                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
-                    "<a href='https://t.me/trendingbrazil/215'>CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICANDO AQUI</a>"
-                )
-            },
-            "en": {
-                "texto": (
-                    "We continue with operations ✅\n\n"
-                    "Keep the broker platform open!!\n\n"
-                    "For those who haven't started making money with us yet👇🏻\n\n"
-                    "<a href='https://t.me/trendingbrazil/215'>CLICK HERE AND WATCH THE VIDEO</a>\n\n"
-                    "🔥Register on XXBROKER right now🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICK HERE</a>"
-                )
-            },
-            "es": {
-                "texto": (
-                    "¡Seguimos con las operaciones ✅\n\n"
-                    "¡Mantengan la plataforma abierta!!\n\n"
-                    "Para quienes aún no han empezado a ganhar dinero con nosotros👇🏻\n\n"
-                    "<a href='https://t.me/trendingbrazil/215'>HAZ CLIC AQUÍ Y MIRA EL VIDEO</a>\n\n"
-                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLIC AQUÍ</a>"
-                )
-            }
-        }
-
-        for chat_id in BOT2_CHAT_IDS:
-            try:
-                config_canal = BOT2_CANAIS_CONFIG[chat_id]
-                idioma = config_canal["idioma"]
-                mensagem = mensagens_por_idioma[idioma]
-                
-                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                payload_msg = {
-                    'chat_id': chat_id,
-                    'text': mensagem["texto"],
-                    'parse_mode': 'HTML',
-                    'disable_web_page_preview': True
-                }
-                resposta_msg = requests.post(url_msg, data=payload_msg)
-                
-                if resposta_msg.status_code == 200:
-                    BOT2_LOGGER.info(f"Mensagem de fim de operação enviada com sucesso para o canal {chat_id} em {idioma}")
-                else:
-                    BOT2_LOGGER.error(f"Erro ao enviar mensagem de fim de operação para o canal {chat_id}: {resposta_msg.text}")
-                
-            except Exception as e:
-                BOT2_LOGGER.error(f"Erro ao enviar mensagem de fim de operação para o canal {chat_id}: {str(e)}")
-                continue
-                
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro geral ao enviar mensagens de fim de operação: {str(e)}")
