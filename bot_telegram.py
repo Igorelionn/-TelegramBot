@@ -18,29 +18,11 @@ import traceback
 FUSO_HORARIO_BRASILIA = pytz.timezone('America/Sao_Paulo')
 obter_hora_brasilia = lambda: datetime.now(FUSO_HORARIO_BRASILIA)
 
-# Configuração do logger principal
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[logging.FileHandler("bot_telegram_logs.log"), logging.StreamHandler()]
 )
-
-# Configuração do logger específico para o Bot 2
-BOT2_LOGGER = logging.getLogger('bot2')
-BOT2_LOGGER.setLevel(logging.INFO)
-
-# Remover handlers existentes do BOT2_LOGGER para evitar duplicação
-for handler in BOT2_LOGGER.handlers[:]:
-    BOT2_LOGGER.removeHandler(handler)
-
-# Adicionar handlers específicos para o BOT2_LOGGER
-bot2_formatter = logging.Formatter('%(asctime)s - BOT2 - %(levelname)s - %(message)s')
-bot2_file_handler = logging.FileHandler("bot_telegram_bot2_logs.log")
-bot2_file_handler.setFormatter(bot2_formatter)
-BOT2_LOGGER.addHandler(bot2_file_handler)
-
-# Desabilitar propagação para o logger raiz
-BOT2_LOGGER.propagate = False
 
 # Arquivo de bloqueio para impedir múltiplas instâncias
 LOCK_FILE = "bot_telegram.lock"
@@ -734,96 +716,126 @@ def verificar_disponibilidade():
     
     return available_assets
 
-# Variáveis globais para controle
-BOT_TOKEN = TOKEN  # Usando o TOKEN já definido anteriormente
-ignorar_anti_duplicacao = False
-
-def gerar_sinal_aleatorio():
-    """Gera um sinal aleatório para enviar."""
-    try:
-        # Verificar disponibilidade
-        ativos_disponiveis = verificar_disponibilidade()
-        if not ativos_disponiveis:
-            logging.warning("Nenhum ativo disponível para gerar sinal")
-            return None, None, None
-            
-        # Escolher um ativo aleatório
-        ativo = random.choice(ativos_disponiveis)
-        
-        # Gerar direção aleatória
-        direcao = random.choice(['buy', 'sell'])
-        
-        # Obter categoria do ativo
-        categoria = ATIVOS_CATEGORIAS.get(ativo, "Não categorizado")
-        
-        return ativo, direcao, categoria
-        
-    except Exception as e:
-        logging.error(f"Erro ao gerar sinal aleatório: {str(e)}")
-        return None, None, None
-
-def registrar_envio(ativo, direcao, categoria):
-    """
-    Registra o envio de um sinal para evitar duplicações.
-    Retorna True se o sinal pode ser enviado, False caso contrário.
-    """
-    try:
-        # Implementação futura: Aqui você pode adicionar a lógica para registrar
-        # os sinais enviados em um banco de dados ou arquivo
-        return True
-        
-    except Exception as e:
-        logging.error(f"Erro ao registrar envio: {str(e)}")
-        return False
-
 # Função principal para enviar mensagens
 def send_message():
-    """Função para enviar mensagem para todos os canais configurados."""
+    global ultimo_ativo, ultimo_signal, ultimo_envio_timestamp
+    
     try:
-        # Verificar disponibilidade
-        if not verificar_disponibilidade():
-            logging.info("Fora do horário de operação. Aguardando próximo horário.")
-            return
+        # Verificar se o último envio ocorreu há menos de 5 minutos
+        agora = obter_hora_brasilia()
+        if hasattr(send_message, 'ultimo_envio_timestamp'):
+            tempo_desde_ultimo_envio = (agora - send_message.ultimo_envio_timestamp).total_seconds() / 60.0
+            if tempo_desde_ultimo_envio < 5:
+                logging.warning(f"Ignorando sinal - último envio ocorreu há apenas {tempo_desde_ultimo_envio:.1f} minutos")
+                return
 
-        # Gerar sinal aleatório
-        asset, direcao, categoria = gerar_sinal_aleatorio()
-        
-        # Verificar se já foi enviado
-        if not ignorar_anti_duplicacao and not registrar_envio(ativo=asset, direcao=direcao, categoria=categoria):
-            logging.info(f"Sinal já foi enviado anteriormente para {asset}")
-            return
+        # Restante do código original
+        current_time = agora.strftime("%H:%M")
+        current_day = agora.strftime("%A")
 
-        # Obter hora atual formatada
-        hora_atual = datetime.now().strftime("%H:%M:%S")
+        # Filtrar ativos disponíveis
+        available_assets = [asset for asset in ATIVOS_FORNECIDOS 
+                          if asset != ultimo_ativo and is_asset_available(asset, current_time, current_day)]
+
+        if not available_assets:
+            available_assets = [asset for asset in ATIVOS_FORNECIDOS 
+                             if is_asset_available(asset, current_time, current_day)]
+            if not available_assets:
+                logging.warning("Nenhum ativo disponível no horário atual.")
+                return
+
+        # Escolher um ativo e gerar o sinal
+        asset = random.choice(available_assets)
+        signal = 'sell' if ultimo_signal == 'buy' else 'buy' if ultimo_signal is not None else random.choice(['buy', 'sell'])
+        action = "COMPRA" if signal == 'buy' else "VENDA"
+        emoji = "🟢" if signal == 'buy' else "🛑"
+
+        # Calcular horários
+        entry_time = agora + timedelta(minutes=2)
+        categoria = ATIVOS_CATEGORIAS.get(asset, "Não categorizado")
         
-        # Enviar para todos os canais configurados
+        nome_ativo_exibicao = asset.replace("Digital_", "") if asset.startswith("Digital_") else asset
+        
+        if "(OTC)" in nome_ativo_exibicao and not " (OTC)" in nome_ativo_exibicao:
+            nome_ativo_exibicao = nome_ativo_exibicao.replace("(OTC)", " (OTC)")
+        
+        tempo_expiracao_minutos = 1
+        
+        if "NEAR (OTC)" in nome_ativo_exibicao or asset == "NEAR (OTC)":
+            tempo_expiracao_minutos = 2
+            expiracao_time = entry_time + timedelta(minutes=tempo_expiracao_minutos)
+            expiracao_texto = f"⏳ Expiração: {tempo_expiracao_minutos} minutos ({expiracao_time.strftime('%H:%M')})"
+        elif categoria == "Blitz":
+            expiracao_segundos = random.choice([5, 10, 15, 30])
+            tempo_expiracao_minutos = expiracao_segundos / 60
+            expiracao_texto = f"⏳ Expiração: {expiracao_segundos} segundos"
+        elif categoria == "Digital":
+            tempo_expiracao_minutos = random.choice([1, 3, 5])
+            expiracao_time = entry_time + timedelta(minutes=tempo_expiracao_minutos)
+            if tempo_expiracao_minutos == 1:
+                expiracao_texto = f"⏳ Expiração: 1 minuto ({expiracao_time.strftime('%H:%M')})"
+            else:
+                expiracao_texto = f"⏳ Expiração: {tempo_expiracao_minutos} minutos ({expiracao_time.strftime('%H:%M')})"
+        elif categoria == "Binary":
+            tempo_expiracao_minutos = 1
+            expiracao_time = entry_time + timedelta(minutes=tempo_expiracao_minutos)
+            expiracao_texto = f"⏳ Expiração: 1 minuto ({expiracao_time.strftime('%H:%M')})"
+        else:
+            tempo_expiracao_minutos = 5
+            expiracao_texto = "⏳ Expiração: até 5 minutos"
+
+        fim_operacao = entry_time + timedelta(minutes=tempo_expiracao_minutos)
+        gale1_time = fim_operacao + timedelta(minutes=1)
+        fim_gale1 = gale1_time + timedelta(minutes=tempo_expiracao_minutos)
+        gale2_time = fim_gale1 + timedelta(minutes=1)
+
+        # Enviar mensagem
+        logging.info(f"Enviando sinal para o ativo {asset}: {action}")
         envio_sucesso = False
+        
+        # Enviar apenas para o primeiro canal disponível
         for chat_id in CHAT_IDS:
             try:
                 link_corretora = CANAIS_CONFIG[chat_id]['link_corretora']
                 
                 canal_message = (
-                    f"🎯 SINAL CONFIRMADO\n\n"
-                    f"⏰ Horário: {hora_atual}\n"
-                    f"💎 Ativo: {asset}\n"
-                    f"📊 Direção: {direcao}\n"
-                    f"📈 Categoria: {categoria}\n\n"
-                    f"🔗 <a href='{link_corretora}'>CLIQUE AQUI PARA OPERAR</a>"
+                    f"⚠️TRADE RÁPIDO⚠️\n\n"
+                    f"💵 Ativo: {nome_ativo_exibicao}\n"
+                    f"🏷️ Categoria: {categoria}\n"
+                    f"{emoji} {action}\n"
+                    f"➡ Entrada: {entry_time.strftime('%H:%M')}\n"
+                    f"{expiracao_texto}\n"
+                    f"Reentrada 1 - {gale1_time.strftime('%H:%M')}\n"
+                    f"Reentrada 2 - {gale2_time.strftime('%H:%M')}"
                 )
                 
-                url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-                payload = {
-                    'chat_id': chat_id,
-                    'text': canal_message,
-                    'parse_mode': 'HTML',
-                    'disable_web_page_preview': True
+                # Configura o teclado inline com o link da corretora
+                teclado_inline = {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": "👉🏻 Abrir corretora",
+                                "url": link_corretora
+                            }
+                        ]
+                    ]
                 }
                 
-                response = requests.post(url, json=payload)
+                response = requests.post(
+                    f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+                    json={
+                        "chat_id": chat_id,
+                        "text": canal_message,
+                        "parse_mode": "HTML",
+                        "disable_web_page_preview": True,
+                        "reply_markup": json.dumps(teclado_inline)
+                    }
+                )
                 
                 if response.status_code == 200:
                     logging.info(f"Sinal enviado com sucesso para o canal {chat_id}")
                     envio_sucesso = True
+                    break  # Sai do loop após enviar com sucesso para um canal
                 else:
                     logging.error(f"Falha ao enviar mensagem para o canal {chat_id}. Erro: {response.status_code} - {response.text}")
             except Exception as e:
@@ -832,9 +844,20 @@ def send_message():
         
         if envio_sucesso:
             logging.info(f"Operação realizada com sucesso! Ativo: {asset}")
+            proximo_sinal = agora + timedelta(minutes=6)
+            logging.info(f"Esperando 6 minutos para o próximo sinal. Próximo sinal previsto para: {proximo_sinal.strftime('%H:%M:%S')}")
             
+            # Registrar timestamp deste envio
+            send_message.ultimo_envio_timestamp = agora
+            
+            # Atualizar valores para controle
+            ultimo_ativo = asset
+            ultimo_signal = signal
+        else:
+            logging.error(f"Falha ao enviar o sinal para todos os canais.")
+    
     except Exception as e:
-        logging.error(f"Erro ao enviar mensagem: {str(e)}")
+        logging.error(f"Erro durante o envio da mensagem: {e}")
 
 # Inicializar o timestamp de último envio
 send_message.ultimo_envio_timestamp = obter_hora_brasilia() - timedelta(minutes=10)  # Inicializar com um valor no passado
@@ -963,6 +986,21 @@ if 'requests' not in globals():
     import requests
 if 'logging' not in globals():
     import logging
+
+# Configuração do logger específico para o Bot 2 - IMPORTANTE: Definição antes do uso
+BOT2_LOGGER = logging.getLogger('bot2')
+BOT2_LOGGER.setLevel(logging.INFO)
+bot2_formatter = logging.Formatter('%(asctime)s - BOT2 - %(levelname)s - %(message)s')
+
+# Evitar duplicação de handlers
+if not BOT2_LOGGER.handlers:
+    bot2_file_handler = logging.FileHandler("bot_telegram_bot_logs.log")
+    bot2_file_handler.setFormatter(bot2_formatter)
+    BOT2_LOGGER.addHandler(bot2_file_handler)
+    
+    bot2_console_handler = logging.StreamHandler()
+    bot2_console_handler.setFormatter(bot2_formatter)
+    BOT2_LOGGER.addHandler(bot2_console_handler)
 
 # Credenciais Telegram
 BOT2_TOKEN = '7997585882:AAFDyG-BYskj1gyAbh17X5jd6DDClXdluww'
@@ -1490,7 +1528,7 @@ def bot2_enviar_aviso_pre_sinais():
         # Configuração dos GIFs e textos por idioma
         avisos_por_idioma = {
             "pt": {
-                "gif_url": "https://i.imgur.com/ozKU3Fc.gif",
+                "gif_url": "blob:https://web.telegram.org/fcbe176c-752d-44db-8d6b-5fcc3d53529b",
                 "texto": (
                     "👉🏼Abram a corretora Pessoal\n\n"
                     "⚠️FIQUEM ATENTOS⚠️\n\n"
@@ -1499,7 +1537,7 @@ def bot2_enviar_aviso_pre_sinais():
                 )
             },
             "es": {
-                "gif_url": "https://i.imgur.com/ST6Wu1w.gif",
+                "gif_url": "blob:https://web.telegram.org/1a69f188-b176-4c25-ae4c-97edeb28ca3a",
                 "texto": (
                     "👉🏼Abran la plataforma\n\n"
                     "⚠️¡ESTÉN ATENTOS⚠️\n\n"
@@ -1508,7 +1546,7 @@ def bot2_enviar_aviso_pre_sinais():
                 )
             },
             "en": {
-                "gif_url": "https://i.imgur.com/OULmo5l.gif",
+                "gif_url": "blob:https://web.telegram.org/664e9a12-3cb2-4dd9-9e56-4901f1558e03",
                 "texto": (
                     "👉🏼Open the platform\n\n"
                     "⚠️STAY ALERT⚠️\n\n"
@@ -1530,22 +1568,19 @@ def bot2_enviar_aviso_pre_sinais():
                 # Pegar configuração do aviso para o idioma
                 aviso = avisos_por_idioma[idioma]
                 
-                # Enviar GIF primeiro
+                # Enviar GIF
                 url_gif = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
                 payload_gif = {
                     'chat_id': chat_id,
                     'animation': aviso["gif_url"],
                     'parse_mode': 'HTML'
                 }
-                resposta_gif = requests.post(url_gif, json=payload_gif)
+                resposta_gif = requests.post(url_gif, data=payload_gif)
                 
                 if resposta_gif.status_code == 200:
                     BOT2_LOGGER.info(f"GIF enviado com sucesso para o canal {chat_id} em {idioma}")
                 else:
                     BOT2_LOGGER.error(f"Erro ao enviar GIF para o canal {chat_id}: {resposta_gif.text}")
-                
-                # Pequena pausa entre o GIF e a mensagem
-                time.sleep(1)
                 
                 # Enviar mensagem de texto
                 url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
@@ -1555,15 +1590,12 @@ def bot2_enviar_aviso_pre_sinais():
                     'parse_mode': 'HTML',
                     'disable_web_page_preview': True
                 }
-                resposta_msg = requests.post(url_msg, json=payload_msg)
+                resposta_msg = requests.post(url_msg, data=payload_msg)
                 
                 if resposta_msg.status_code == 200:
                     BOT2_LOGGER.info(f"Mensagem enviada com sucesso para o canal {chat_id} em {idioma}")
                 else:
                     BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {resposta_msg.text}")
-                
-                # Pequena pausa entre canais
-                time.sleep(1)
                 
             except Exception as e:
                 BOT2_LOGGER.error(f"Erro ao enviar aviso para o canal {chat_id}: {str(e)}")
@@ -1594,11 +1626,6 @@ def bot2_schedule_messages():
             schedule.every().day.at(f"{hora:02d}:37:02").do(bot2_send_message)
             schedule.every().day.at(f"{hora:02d}:43:02").do(bot2_enviar_aviso_pre_sinais)
             schedule.every().day.at(f"{hora:02d}:53:02").do(bot2_send_message)
-            
-            # Agendar mensagem de fim de operação 6 minutos após cada sinal
-            schedule.every().day.at(f"{hora:02d}:19:02").do(bot2_enviar_mensagem_fim_operacao)
-            schedule.every().day.at(f"{hora:02d}:43:02").do(bot2_enviar_mensagem_fim_operacao)
-            schedule.every().day.at(f"{hora:02d}:59:02").do(bot2_enviar_mensagem_fim_operacao)
         
         # Marcar como agendado
         bot2_schedule_messages.scheduled = True
@@ -1607,180 +1634,3 @@ def bot2_schedule_messages():
         
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
-
-def testar_envio_pre_sinais():
-    """Função para testar o envio de GIFs e mensagens pré-sinais."""
-    try:
-        BOT2_LOGGER.info("Iniciando teste de envio de GIFs e mensagens pré-sinais...")
-        
-        # Configuração dos GIFs e textos por idioma
-        avisos_por_idioma = {
-            "pt": {
-                "gif_url": "https://i.imgur.com/ozKU3Fc.gif",
-                "texto": (
-                    "👉🏼Abram a corretora Pessoal\n\n"
-                    "⚠️FIQUEM ATENTOS⚠️\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICANDO AQUI</a>"
-                )
-            },
-            "es": {
-                "gif_url": "https://i.imgur.com/ST6Wu1w.gif",
-                "texto": (
-                    "👉🏼Abran la plataforma\n\n"
-                    "⚠️¡ESTÉN ATENTOS⚠️\n\n"
-                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLIC AQUÍ</a>"
-                )
-            },
-            "en": {
-                "gif_url": "https://i.imgur.com/OULmo5l.gif",
-                "texto": (
-                    "👉🏼Open the platform\n\n"
-                    "⚠️STAY ALERT⚠️\n\n"
-                    "🔥Register on XXBROKER right now🔥\n\n"
-                    "<a href='https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack='>➡️ CLICK HERE</a>"
-                )
-            }
-        }
-
-        # 1. Primeiro enviar GIF e mensagem pré-sinal
-        BOT2_LOGGER.info("Enviando GIFs e mensagens pré-sinais...")
-        for chat_id in BOT2_CHAT_IDS:
-            try:
-                config_canal = BOT2_CANAIS_CONFIG[chat_id]
-                idioma = config_canal["idioma"]
-                aviso = avisos_por_idioma[idioma]
-                
-                # Enviar GIF
-                url_gif = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                payload_gif = {
-                    'chat_id': chat_id,
-                    'animation': aviso["gif_url"],
-                    'parse_mode': 'HTML'
-                }
-                resposta_gif = requests.post(url_gif, json=payload_gif)
-                
-                if resposta_gif.status_code == 200:
-                    BOT2_LOGGER.info(f"GIF enviado com sucesso para o canal {chat_id}")
-                else:
-                    BOT2_LOGGER.error(f"Erro ao enviar GIF: {resposta_gif.text}")
-                
-                time.sleep(1)
-                
-                # Enviar mensagem de texto
-                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                payload_msg = {
-                    'chat_id': chat_id,
-                    'text': aviso["texto"],
-                    'parse_mode': 'HTML',
-                    'disable_web_page_preview': True
-                }
-                resposta_msg = requests.post(url_msg, json=payload_msg)
-                
-                if resposta_msg.status_code == 200:
-                    BOT2_LOGGER.info(f"Mensagem pré-sinal enviada com sucesso para o canal {chat_id}")
-                else:
-                    BOT2_LOGGER.error(f"Erro ao enviar mensagem pré-sinal: {resposta_msg.text}")
-                
-                time.sleep(1)
-                
-            except Exception as e:
-                BOT2_LOGGER.error(f"Erro ao enviar pré-sinal para o canal {chat_id}: {str(e)}")
-                continue
-
-        # 2. Aguardar 10 minutos antes de enviar o sinal
-        BOT2_LOGGER.info("Aguardando 10 minutos antes de enviar o sinal...")
-        time.sleep(600)  # 10 minutos em segundos
-
-        # 3. Enviar o sinal
-        BOT2_LOGGER.info("Enviando sinal...")
-        bot2_send_message(ignorar_anti_duplicacao=True)
-        
-        # 4. Aguardar 1 minuto antes de enviar a mensagem pós-sinal
-        BOT2_LOGGER.info("Aguardando 1 minuto antes de enviar a mensagem pós-sinal...")
-        time.sleep(60)  # 1 minuto em segundos
-        
-        # 5. Enviar mensagem pós-sinal
-        BOT2_LOGGER.info("Enviando mensagem pós-sinal...")
-        hora_reentrada2 = bot2_obter_hora_brasilia() + timedelta(minutes=5)  # Exemplo de 5 minutos
-        bot2_enviar_mensagem_fim_operacao(hora_reentrada2=hora_reentrada2, tempo_expiracao_minutos=1)
-                
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro geral no teste: {str(e)}")
-
-def verificar_instancia_rodando():
-    """Verifica se já existe uma instância do bot rodando."""
-    try:
-        if os.path.exists(LOCK_FILE):
-            with open(LOCK_FILE, 'r') as f:
-                pid = f.read().strip()
-            try:
-                os.kill(int(pid), 0)
-                return True
-            except (OSError, ValueError):
-                return False
-        return False
-    except Exception as e:
-        logging.error(f"Erro ao verificar instância: {e}")
-        return False
-
-def criar_arquivo_lock():
-    """Cria o arquivo de lock para indicar que o bot está rodando."""
-    try:
-        with open(LOCK_FILE, 'w') as f:
-            f.write(str(os.getpid()))
-        logging.info("Arquivo de lock criado com sucesso")
-    except Exception as e:
-        logging.error(f"Erro ao criar arquivo de lock: {e}")
-
-def remover_arquivo_lock():
-    """Remove o arquivo de lock quando o bot é encerrado."""
-    try:
-        if os.path.exists(LOCK_FILE):
-            os.remove(LOCK_FILE)
-            logging.info("Arquivo de lock removido com sucesso")
-    except Exception as e:
-        logging.error(f"Erro ao remover arquivo de lock: {e}")
-
-if __name__ == "__main__":
-    try:
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s'
-        )
-        
-        # Executar o teste imediatamente
-        logging.info("Iniciando teste de envio...")
-        testar_envio_pre_sinais()
-        
-        # Aguardar 5 segundos antes de continuar
-        time.sleep(5)
-        
-        logging.info("Iniciando Bot 1...")
-        
-        # Verificar se já existe uma instância rodando
-        if verificar_instancia_rodando():
-            logging.error("Já existe uma instância do bot rodando.")
-            sys.exit(1)
-            
-        logging.info("Bot inicializado - não há outras instâncias rodando.")
-        
-        # Agendar sinais a cada 6 minutos
-        for hora in range(24):
-            for minuto in range(0, 60, 6):
-                schedule.every().day.at(f"{hora:02d}:{minuto:02d}:02").do(send_message)
-                logging.info(f"Sinal agendado para {hora:02d}:{minuto:02d}:02")
-        
-        # Marcar esta instância como rodando
-        criar_arquivo_lock()
-        
-        # Loop principal
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
-            
-    except Exception as e:
-        logging.error(f"Erro na execução principal: {str(e)}")
-    finally:
-        remover_arquivo_lock()
