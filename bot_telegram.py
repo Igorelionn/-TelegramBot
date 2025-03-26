@@ -1568,6 +1568,11 @@ def iniciar_ambos_bots():
     try:
         BOT2_LOGGER.info("Inicializando Bot 2...")
         bot2_schedule_messages()
+        
+        # Executar teste imediato
+        BOT2_LOGGER.info("Executando teste de aviso pré-sinal...")
+        bot2_testar_aviso_pre_sinais()
+        
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
     
@@ -1600,6 +1605,16 @@ def keep_bot_running():
 
 # Executar se este arquivo for o script principal
 if __name__ == "__main__":
+    import sys
+    
+    # Verifica se é modo de teste
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        BOT2_LOGGER.info("Iniciando teste de aviso pré-sinal...")
+        bot2_testar_aviso_pre_sinais()
+        BOT2_LOGGER.info("Teste concluído!")
+        sys.exit(0)
+    
+    # Modo normal
     iniciar_ambos_bots()
 
 # --------------------------------------------------------------------------------
