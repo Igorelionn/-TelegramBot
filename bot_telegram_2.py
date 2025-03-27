@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Bot Telegram 2 para envio de sinais em canais em português.
+Bot Telegram 2 para envio de sinais em canais separados por idioma.
 Versão independente que não depende mais do Bot 1.
-Os sinais serão enviados para os seguintes canais:
-- Sala ChamaNaAlta: -1002658649212
-- Sala do Np.bo: -1002538423500
-- Minha sala: -1002317995059
+Os sinais serão enviados da seguinte forma:
+- Canal Português: -1002424874613
+- Canal Inglês: -1002453956387
+- Canal Espanhol: -1002446547846
 O bot enviará 3 sinais por hora nos minutos 10, 30 e 50.
 """
 
@@ -42,18 +42,18 @@ if not BOT2_LOGGER.handlers:
 # Credenciais Telegram
 BOT2_TOKEN = '7997585882:AAFDyG-BYskj1gyAbh17X5jd6DDClXdluww'
 
-# Configuração dos canais em português
+# Configuração dos canais para cada idioma
 BOT2_CANAIS_CONFIG = {
-    "-1002658649212": {  # Sala ChamaNaAlta
+    "-1002424874613": {  # Canal para mensagens em português
         "idioma": "pt",
-        "link_corretora": "https://trade.xxbroker.com/register?aff=751626&aff_model=revenue&afftrack="
+        "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
     },
-    "-1002538423500": {  # Sala do Np.bo
-        "idioma": "pt",
-        "link_corretora": "https://trade.xxbroker.com/register?aff=751924&aff_model=revenue&afftrack="
+    "-1002453956387": {  # Canal para mensagens em inglês
+        "idioma": "en",
+        "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
     },
-    "-1002317995059": {  # Minha sala
-        "idioma": "pt",
+    "-1002446547846": {  # Canal para mensagens em espanhol
+        "idioma": "es",
         "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
     }
 }
@@ -76,42 +76,84 @@ ATIVOS_CATEGORIAS = {
     "Google (OTC)": "Blitz",
     "EUR/JPY (OTC)": "Blitz",
     "ETH/USD (OTC)": "Blitz",
-    "MELANIA COIN (OTC)": "Blitz",
+    "MELANIA Coin (OTC)": "Binary",
     "EUR/GBP (OTC)": "Blitz",
     "Apple (OTC)": "Blitz",
     "Amazon (OTC)": "Blitz",
-    "TRUM Coin (OTC)": "Blitz",
+    "TRUMP Coin (OTC)": "Binary",
     "Nike, Inc. (OTC)": "Blitz",
     "DOGECOIN (OTC)": "Blitz",
     "Tesla (OTC)": "Blitz",
     "SOL/USD (OTC)": "Blitz",
-    "1000Sats (OTC)": "Blitz",
-    "XAUUSD (OTC)": "Blitz",
+    "1000Sats (OTC)": "Binary",
+    "XAUUSD (OTC)": "Digital",
     "McDonald´s Corporation (OTC)": "Blitz",
     "Meta (OTC)": "Blitz",
     "Coca-Cola Company (OTC)": "Blitz",
     "CARDANO (OTC)": "Blitz",
     "EUR/USD (OTC)": "Blitz",
     "PEN/USD (OTC)": "Blitz",
-    "Bitcoin Cash (OTC)": "Blitz",
+    "Bitcoin Cash (OTC)": "Binary",
     "AUD/CAD (OTC)": "Blitz",
     "Tesla/Ford (OTC)": "Blitz",
-    "US 100 (OTC)": "Blitz",
+    "US 100 (OTC)": "Binary",
     "TRON/USD (OTC)": "Blitz",
     "USD/CAD (OTC)": "Blitz",
     "AUD/USD (OTC)": "Blitz",
-    "AIG (OTC)": "Blitz",
+    "AIG (OTC)": "Binary",
     "Alibaba Group Holding (OTC)": "Blitz",
     "Snap Inc. (OTC)": "Blitz",
-    "US 500 (OTC)": "Blitz",
+    "US 500 (OTC)": "Digital",
     "AUD/CHF (OTC)": "Blitz",
     "Amazon/Alibaba (OTC)": "Blitz",
-    "Pepe (OTC)": "Blitz",
-    "Chainlink (OTC)": "Blitz",
+    "Pepe (OTC)": "Binary",
+    "Chainlink (OTC)": "Binary",
     "USD/ZAR (OTC)": "Blitz",
+    "Worldcoin (OTC)": "Binary",
+    # Ativos Binary serão adicionados a seguir
+    "Litecoin (OTC)": "Binary",
+    "Injective (OTC)": "Binary",
+    "ORDI (OTC)": "Binary",
+    "ICP (OTC)": "Binary",
+    "Cosmos (OTC)": "Binary",
+    "Polkadot (OTC)": "Binary",
+    "TON (OTC)": "Binary",
+    "Celestia (OTC)": "Binary",
+    "NEAR (OTC)": "Binary",
+    "Ripple (OTC)": "Binary",
+    "Ronin (OTC)": "Binary",
+    "Stacks (OTC)": "Binary",
+    "Immutable (OTC)": "Binary",
+    "EOS (OTC)": "Binary",
+    "Jupiter (OTC)": "Binary",
+    "Polygon (OTC)": "Binary",
+    "Arbitrum (OTC)": "Binary",
+    "Sandbox (OTC)": "Binary",
+    "Decentraland (OTC)": "Binary",
+    "Sei (OTC)": "Binary",
+    "IOTA (OTC)": "Binary",
+    "Pyth (OTC)": "Binary",
+    "Graph (OTC)": "Binary",
+    "Floki (OTC)": "Binary",
+    "Gala (OTC)": "Binary",
+    "Bonk (OTC)": "Binary",
+    "Beam (OTC)": "Binary",
+    "Hamster Kombat (OTC)": "Binary",
+    "NOT (OTC)": "Binary",
+    "US 30 (OTC)": "Binary",
+    "JP 225 (OTC)": "Binary",
+    "HK 33 (OTC)": "Binary",
+    "GER 30 (OTC)": "Binary",
+    "SP 35 (OTC)": "Binary",
+    "UK 100 (OTC)": "Binary",
+    # Ativos Digital
+    "EUR/THB (OTC)": "Digital",
+    "JPY Currency Index": "Digital",
+    "USD Currency Index": "Digital",
+    "AUS 200 (OTC)": "Digital"
 }
 
-# Configurações de horários específicos para cada ativo
+# Configurações de horários (serão personalizadas de acordo com os ativos enviados)
 HORARIOS_PADRAO = {
     "USD/BRL_OTC": {
         "Monday": ["00:00-23:59"],
@@ -203,7 +245,7 @@ HORARIOS_PADRAO = {
         "Saturday": ["00:00-23:59"],
         "Sunday": ["00:00-23:59"]
     },
-    "TRUM_Coin_OTC": {
+    "TRUMP_Coin_OTC": {
         "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
         "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
         "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
@@ -418,51 +460,6 @@ HORARIOS_PADRAO = {
         "Friday": ["00:00-23:59"],
         "Saturday": ["00:00-23:59"],
         "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"]
-    },
-    "AUD/CHF_OTC": {
-        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
-    },
-    "Amazon/Alibaba_OTC": {
-        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-    },
-    "Pepe_OTC": {
-        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
-    },
-    "Chainlink_OTC": {
-        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
-        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
-    },
-    "USD/ZAR_OTC": {
-        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
     }
 }
 
@@ -474,11 +471,11 @@ assets = {
     "Google (OTC)": HORARIOS_PADRAO["Google_OTC"],
     "EUR/JPY (OTC)": HORARIOS_PADRAO["EUR/JPY_OTC"],
     "ETH/USD (OTC)": HORARIOS_PADRAO["ETH/USD_OTC"],
-    "MELANIA COIN (OTC)": HORARIOS_PADRAO["MELANIA_COIN_OTC"],
+    "MELANIA Coin (OTC)": HORARIOS_PADRAO["MELANIA_COIN_OTC"],
     "EUR/GBP (OTC)": HORARIOS_PADRAO["EUR/GBP_OTC"],
     "Apple (OTC)": HORARIOS_PADRAO["Apple_OTC"],
     "Amazon (OTC)": HORARIOS_PADRAO["Amazon_OTC"],
-    "TRUM Coin (OTC)": HORARIOS_PADRAO["TRUM_Coin_OTC"],
+    "TRUMP Coin (OTC)": HORARIOS_PADRAO["TRUMP_Coin_OTC"],
     "Nike, Inc. (OTC)": HORARIOS_PADRAO["Nike_Inc_OTC"],
     "DOGECOIN (OTC)": HORARIOS_PADRAO["DOGECOIN_OTC"],
     "Tesla (OTC)": HORARIOS_PADRAO["Tesla_OTC"],
@@ -506,7 +503,47 @@ assets = {
     "Amazon/Alibaba (OTC)": HORARIOS_PADRAO["Amazon/Alibaba_OTC"],
     "Pepe (OTC)": HORARIOS_PADRAO["Pepe_OTC"],
     "Chainlink (OTC)": HORARIOS_PADRAO["Chainlink_OTC"],
-    "USD/ZAR (OTC)": HORARIOS_PADRAO["USD/ZAR_OTC"]
+    "USD/ZAR (OTC)": HORARIOS_PADRAO["USD/ZAR_OTC"],
+    "Worldcoin (OTC)": HORARIOS_PADRAO["Worldcoin_OTC"],
+    "Litecoin (OTC)": HORARIOS_PADRAO["Litecoin_OTC"],
+    "Injective (OTC)": HORARIOS_PADRAO["Injective_OTC"],
+    "ORDI (OTC)": HORARIOS_PADRAO["ORDI_OTC"],
+    "ICP (OTC)": HORARIOS_PADRAO["ICP_OTC"],
+    "Cosmos (OTC)": HORARIOS_PADRAO["Cosmos_OTC"],
+    "Polkadot (OTC)": HORARIOS_PADRAO["Polkadot_OTC"],
+    "TON (OTC)": HORARIOS_PADRAO["TON_OTC"],
+    "Celestia (OTC)": HORARIOS_PADRAO["Celestia_OTC"],
+    "NEAR (OTC)": HORARIOS_PADRAO["NEAR_OTC"],
+    "Ripple (OTC)": HORARIOS_PADRAO["Ripple_OTC"],
+    "Ronin (OTC)": HORARIOS_PADRAO["Ronin_OTC"],
+    "Stacks (OTC)": HORARIOS_PADRAO["Stacks_OTC"],
+    "Immutable (OTC)": HORARIOS_PADRAO["Immutable_OTC"],
+    "EOS (OTC)": HORARIOS_PADRAO["EOS_OTC"],
+    "Jupiter (OTC)": HORARIOS_PADRAO["Jupiter_OTC"],
+    "Polygon (OTC)": HORARIOS_PADRAO["Polygon_OTC"],
+    "Arbitrum (OTC)": HORARIOS_PADRAO["Arbitrum_OTC"],
+    "Sandbox (OTC)": HORARIOS_PADRAO["Sandbox_OTC"],
+    "Decentraland (OTC)": HORARIOS_PADRAO["Decentraland_OTC"],
+    "Sei (OTC)": HORARIOS_PADRAO["Sei_OTC"],
+    "IOTA (OTC)": HORARIOS_PADRAO["IOTA_OTC"],
+    "Pyth (OTC)": HORARIOS_PADRAO["Pyth_OTC"],
+    "Graph (OTC)": HORARIOS_PADRAO["Graph_OTC"],
+    "Floki (OTC)": HORARIOS_PADRAO["Floki_OTC"],
+    "Gala (OTC)": HORARIOS_PADRAO["Gala_OTC"],
+    "Bonk (OTC)": HORARIOS_PADRAO["Bonk_OTC"],
+    "Beam (OTC)": HORARIOS_PADRAO["Beam_OTC"],
+    "Hamster Kombat (OTC)": HORARIOS_PADRAO["Hamster_Kombat_OTC"],
+    "NOT (OTC)": HORARIOS_PADRAO["NOT_OTC"],
+    "US 30 (OTC)": HORARIOS_PADRAO["US_30_OTC"],
+    "JP 225 (OTC)": HORARIOS_PADRAO["JP_225_OTC"],
+    "HK 33 (OTC)": HORARIOS_PADRAO["HK_33_OTC"],
+    "GER 30 (OTC)": HORARIOS_PADRAO["GER_30_OTC"],
+    "SP 35 (OTC)": HORARIOS_PADRAO["SP_35_OTC"],
+    "UK 100 (OTC)": HORARIOS_PADRAO["UK_100_OTC"],
+    "EUR/THB (OTC)": HORARIOS_PADRAO["EUR_THB_OTC"],
+    "JPY Currency Index": HORARIOS_PADRAO["JPY_Currency_Index"],
+    "USD Currency Index": HORARIOS_PADRAO["USD_Currency_Index"],
+    "AUS 200 (OTC)": HORARIOS_PADRAO["AUS_200_OTC"]
 }
 
 # Lista de ativos disponíveis para negociação
@@ -618,8 +655,8 @@ def bot2_gerar_sinal_aleatorio():
 
 def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     """
-    Formata a mensagem do sinal em português.
-    Retorna a mensagem formatada.
+    Formata a mensagem do sinal para o idioma especificado.
+    Retorna a mensagem formatada no idioma correto (pt, en ou es).
     """
     ativo = sinal['ativo']
     direcao = sinal['direcao']
@@ -627,7 +664,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
 
     # Debug: registrar os dados sendo usados para formatar a mensagem
-    BOT2_LOGGER.info(f"Formatando mensagem com: ativo={ativo}, direção={direcao}, categoria={categoria}, tempo={tempo_expiracao_minutos}")
+    BOT2_LOGGER.info(f"Formatando mensagem com: ativo={ativo}, direção={direcao}, categoria={categoria}, tempo={tempo_expiracao_minutos}, idioma={idioma}")
 
     # Formatação do nome do ativo para exibição
     nome_ativo_exibicao = ativo.replace("Digital_", "") if ativo.startswith("Digital_") else ativo
@@ -636,6 +673,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
 
     # Configura ações e emojis conforme a direção
     action_pt = "COMPRA" if direcao == 'buy' else "VENDA"
+    action_en = "BUY" if direcao == 'buy' else "SELL"
+    action_es = "COMPRA" if direcao == 'buy' else "VENTA"
     emoji = "🟢" if direcao == 'buy' else "🔴"
 
     # Hora de entrada convertida para datetime
@@ -670,8 +709,10 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_reentrada1_formatada = hora_reentrada1.strftime("%H:%M")
     hora_reentrada2_formatada = hora_reentrada2.strftime("%H:%M")
 
-    # Texto de expiração
+    # Textos de expiração em diferentes idiomas
     expiracao_texto_pt = f"⏳ Expiração: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
+    expiracao_texto_en = f"⏳ Expiration: {tempo_expiracao_minutos} minute{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
+    expiracao_texto_es = f"⏳ Expiración: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
     
     # Mensagem em PT
     mensagem_pt = (f"⚠️TRADE RÁPIDO⚠️\n\n"
@@ -683,8 +724,38 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"Reentrada 1 - {hora_reentrada1_formatada}\n"
             f"Reentrada 2 - {hora_reentrada2_formatada}")
             
-    BOT2_LOGGER.info(f"Mensagem formatada final: {mensagem_pt}")
-    return mensagem_pt
+    # Mensagem em EN
+    mensagem_en = (f"⚠️QUICK TRADE⚠️\n\n"
+            f"💵 Asset: {nome_ativo_exibicao}\n"
+            f"🏷️ Options: {categoria}\n"
+            f"{emoji} {action_en}\n"
+            f"➡ Entry: {hora_entrada_formatada}\n"
+            f"{expiracao_texto_en}\n"
+            f"Re-entry 1 - {hora_reentrada1_formatada}\n"
+            f"Re-entry 2 - {hora_reentrada2_formatada}")
+            
+    # Mensagem em ES
+    mensagem_es = (f"⚠️COMERCIO RÁPIDO⚠️\n\n"
+            f"💵 Activo: {nome_ativo_exibicao}\n"
+            f"🏷️ Opciones: {categoria}\n"
+            f"{emoji} {action_es}\n"
+            f"➡ Entrada: {hora_entrada_formatada}\n"
+            f"{expiracao_texto_es}\n"
+            f"Reentrada 1 - {hora_reentrada1_formatada}\n"
+            f"Reentrada 2 - {hora_reentrada2_formatada}")
+            
+    # Verificar se há algum texto não esperado antes de retornar a mensagem
+    if idioma == "pt":
+        mensagem_final = mensagem_pt
+    elif idioma == "en":
+        mensagem_final = mensagem_en
+    elif idioma == "es":
+        mensagem_final = mensagem_es
+    else:  # Padrão para qualquer outro idioma (português)
+        mensagem_final = mensagem_pt
+        
+    BOT2_LOGGER.info(f"Mensagem formatada final para idioma {idioma}: {mensagem_final}")
+    return mensagem_final
 
 def bot2_registrar_envio(ativo, direcao, categoria):
     """
@@ -710,81 +781,163 @@ VIDEOS_POS_SINAL_DIR = os.path.join(VIDEOS_DIR, "pos_sinal")
 VIDEOS_ESPECIAL_DIR = os.path.join(VIDEOS_DIR, "especial")
 VIDEOS_PROMO_DIR = os.path.join(VIDEOS_DIR, "promo")
 
-# Criar os subdiretórios dos idiomas para vídeos pós-sinal (apenas PT)
+# Criar os subdiretórios dos idiomas para vídeos pós-sinal
 VIDEOS_POS_SINAL_PT_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "pt")
-os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
+VIDEOS_POS_SINAL_EN_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "en")
+VIDEOS_POS_SINAL_ES_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "es")
 
-# Atualização dos diretórios e arquivos para os vídeos especiais (apenas PT)
+# Atualização dos diretórios e arquivos para os vídeos especiais por idioma
 VIDEOS_ESPECIAL_PT_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
+VIDEOS_ESPECIAL_EN_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "en")
+VIDEOS_ESPECIAL_ES_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "es")
+
+# Criar os subdiretórios se não existirem
+os.makedirs(VIDEOS_POS_SINAL_DIR, exist_ok=True)
+os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
+os.makedirs(VIDEOS_PROMO_DIR, exist_ok=True)
+os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
+os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
+os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
 os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
+os.makedirs(VIDEOS_ESPECIAL_EN_DIR, exist_ok=True)
+os.makedirs(VIDEOS_ESPECIAL_ES_DIR, exist_ok=True)
 
-# Arquivos para vídeos promocionais (apenas PT)
-VIDEO_PROMO_PT = os.path.join(VIDEOS_PROMO_DIR, "promo_pt.mp4")
-
-# Dicionário com os caminhos dos vídeos promocionais (apenas PT)
-VIDEOS_PROMO = {
-    "pt": VIDEO_PROMO_PT
-}
-
-# Dicionário com os caminhos dos vídeos especiais (apenas PT)
-VIDEOS_ESPECIAIS = {
-    "pt": os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial_pt.mp4")
-}
-
-# Dicionário com os caminhos dos vídeos pós-sinal (apenas PT)
+# Configurar vídeos pós-sinal específicos para cada idioma 
 VIDEOS_POS_SINAL = {
-    "pt": os.path.join(VIDEOS_POS_SINAL_PT_DIR, "pos_sinal_pt.mp4")
+    "pt": [
+        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "padrão.mp4"),  # Vídeo padrão em português (9/10)
+        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "especial.mp4")  # Vídeo especial em português (1/10)
+    ],
+    "en": [
+        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "padrao.mp4"),  # Vídeo padrão em inglês (9/10)
+        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "especial.mp4")  # Vídeo especial em inglês (1/10)
+    ],
+    "es": [
+        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "padrao.mp4"),  # Vídeo padrão em espanhol (9/10)
+        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "especial.mp4")  # Vídeo especial em espanhol (1/10)
+    ]
 }
 
-# Caminho do GIF especial para o canal português
-GIF_ESPECIAL_PT = "gif_especial_pt.mp4"  # No diretório principal
+# Vídeo especial a cada 3 sinais (por idioma)
+VIDEOS_ESPECIAIS = {
+    "pt": os.path.join(VIDEOS_ESPECIAL_DIR, "especial.mp4"),
+    "en": os.path.join(VIDEOS_ESPECIAL_EN_DIR, "especial.mp4"),
+    "es": os.path.join(VIDEOS_ESPECIAL_ES_DIR, "especial.mp4")
+}
+
+# Vídeos promocionais por idioma
+VIDEOS_PROMO = {
+    "pt": os.path.join(VIDEOS_PROMO_DIR, "pt.mp4"),
+    "en": os.path.join(VIDEOS_PROMO_DIR, "en.mp4"),
+    "es": os.path.join(VIDEOS_PROMO_DIR, "es.mp4")
+}
+
+# Vídeo GIF especial que vai ser enviado a cada 3 sinais (apenas no canal português)
+VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_DIR, "gif_especial_pt.mp4")
 
 # Contador para controle dos GIFs pós-sinal
 contador_pos_sinal = 0
 contador_desde_ultimo_especial = 0
 
-# Função para enviar GIF após o sinal
+# Função para enviar GIF pós-sinal (1 minuto após cada sinal)
 def bot2_enviar_gif_pos_sinal():
     """
-    Envia um GIF após cada sinal (5 minutos depois).
+    Envia um vídeo 1 minuto após cada sinal.
+    Escolhe entre dois vídeos: o primeiro é enviado em 9 de 10 sinais, o segundo em 1 de 10 sinais.
+    A escolha do vídeo especial (segundo) é aleatória, garantindo apenas a proporção de 1 a cada 10.
+    O vídeo enviado é específico para o idioma de cada canal.
     """
+    global contador_pos_sinal, contador_desde_ultimo_especial
+    
     try:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO GIF PÓS-SINAL...")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO VÍDEO PÓS-SINAL (1 minuto após o sinal)...")
         
-        # Garantir que as pastas existam
-        os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
+        # Incrementar os contadores
+        contador_pos_sinal += 1
+        contador_desde_ultimo_especial += 1
         
-        # Para cada canal, enviar o GIF correspondente
+        # Decidir qual vídeo enviar (9/10 o primeiro, 1/10 o segundo)
+        escolha_video = 0  # Índice do primeiro vídeo por padrão
+        
+        # Lógica para seleção aleatória do vídeo especial
+        if contador_desde_ultimo_especial >= 10:
+            # Forçar o vídeo especial se já passaram 10 sinais desde o último
+            escolha_video = 1
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO ESPECIAL (forçado após 10 sinais)")
+            contador_desde_ultimo_especial = 0
+        elif contador_desde_ultimo_especial > 1:
+            # A probabilidade de enviar o vídeo especial aumenta conforme
+            # mais sinais passam sem que o especial seja enviado
+            probabilidade = (contador_desde_ultimo_especial - 1) / 10.0
+            if random.random() < probabilidade:
+                escolha_video = 1
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO ESPECIAL (aleatório com probabilidade {probabilidade:.2f})")
+                contador_desde_ultimo_especial = 0
+            else:
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO PADRÃO (probabilidade de especial era {probabilidade:.2f})")
+        else:
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO PADRÃO (muito cedo para especial)")
+        
+        # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
-            # Obter o vídeo pós-sinal para português
-            video_path = VIDEOS_POS_SINAL["pt"]
+            # Pegar configuração do canal
+            config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            idioma = config_canal["idioma"]
             
+            # Obter o caminho do vídeo escolhido de acordo com o idioma
+            # Se o idioma não existir, usa o português como fallback
+            if idioma in VIDEOS_POS_SINAL:
+                video_path = VIDEOS_POS_SINAL[idioma][escolha_video]
+            else:
+                video_path = VIDEOS_POS_SINAL["pt"][escolha_video]
+                
+            BOT2_LOGGER.info(f"[{horario_atual}] Caminho do vídeo escolhido para {idioma}: {video_path}")
+            
+            # Verificar se o arquivo existe
             if not os.path.exists(video_path):
-                BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo pós-sinal não encontrado: {video_path}")
-                continue
-                
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO PÓS-SINAL para o canal {chat_id}...")
-            
-            # Enviar o vídeo
-            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-            
-            with open(video_path, 'rb') as video_file:
-                files = {
-                    'video': video_file
-                }
-                
-                payload = {
-                    'chat_id': chat_id,
-                    'parse_mode': 'HTML'
-                }
-                
-                resposta = requests.post(url_base, data=payload, files=files)
-                
-                if resposta.status_code != 200:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pós-sinal para o canal {chat_id}: {resposta.text}")
+                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo não encontrado: {video_path}")
+                # Listar os arquivos na pasta para debug
+                pasta_videos = os.path.dirname(video_path)
+                BOT2_LOGGER.info(f"[{horario_atual}] Arquivos na pasta {pasta_videos}: {os.listdir(pasta_videos) if os.path.exists(pasta_videos) else 'PASTA NÃO EXISTE'}")
+                # Tentar usar o vídeo em português como backup se o idioma não for PT
+                if idioma != "pt":
+                    video_path = VIDEOS_POS_SINAL["pt"][escolha_video]
+                    BOT2_LOGGER.info(f"[{horario_atual}] Tentando usar vídeo em português como backup: {video_path}")
+                    if not os.path.exists(video_path):
+                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo backup também não encontrado: {video_path}")
+                        continue
                 else:
-                    BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
+                    continue
+            
+            BOT2_LOGGER.info(f"[{horario_atual}] Arquivo de vídeo encontrado: {video_path}")
+            
+            # Enviar o vídeo escolhido
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando vídeo para o canal {chat_id} em {idioma}...")
+            url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+            
+            try:
+                with open(video_path, 'rb') as video_file:
+                    files = {
+                        'video': video_file
+                    }
+                    
+                    payload_video = {
+                        'chat_id': chat_id,
+                        'parse_mode': 'HTML'
+                    }
+                    
+                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando requisição para API do Telegram...")
+                    resposta_video = requests.post(url_base_video, data=payload_video, files=files)
+                    BOT2_LOGGER.info(f"[{horario_atual}] Resposta da API: {resposta_video.status_code}")
+                    
+                    if resposta_video.status_code != 200:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pós-sinal para o canal {chat_id}: {resposta_video.text}")
+                    else:
+                        tipo_video = "ESPECIAL (1/10)" if escolha_video == 1 else "PADRÃO (9/10)"
+                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL {tipo_video} ENVIADO COM SUCESSO para o canal {chat_id} em {idioma}")
+            except Exception as e:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao abrir ou enviar arquivo de vídeo: {str(e)}")
     
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
@@ -800,28 +953,50 @@ def bot2_enviar_promo_pre_sinal():
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PROMOCIONAL PRÉ-SINAL...")
         
-        # Loop para enviar ao canal configurado
+        # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
-            # Obter link específico para este canal
+            # Pegar configuração do canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            link_corretora = config_canal["link_corretora"]
+            idioma = config_canal["idioma"]
             
-            # Preparar texto em português com o link específico
-            texto_mensagem = (
-                "👉🏼Abram a corretora Pessoal\n\n"
-                "⚠️FIQUEM ATENTOS⚠️\n\n"
-                "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
-            )
+            # Preparar textos baseados no idioma com link diretamente no texto
+            if idioma == "pt":
+                texto_mensagem = (
+                    "👉🏼Abram a corretora Pessoal\n\n"
+                    "⚠️FIQUEM ATENTOS⚠️\n\n"
+                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
+                )
+            elif idioma == "en":
+                texto_mensagem = (
+                    "👉🏼Open the broker now\n\n"
+                    "⚠️STAY ALERT⚠️\n\n"
+                    "🔥Register on XXBROKER right now🔥\n\n"
+                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICK HERE</a>"
+                )
+            elif idioma == "es":
+                texto_mensagem = (
+                    "👉🏼Abran el corredor ahora\n\n"
+                    "⚠️ESTÉN ATENTOS⚠️\n\n"
+                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
+                    f"➡️ <a href=\"{XXBROKER_URL}\">CLIC AQUÍ</a>"
+                )
+            else:
+                texto_mensagem = (
+                    "👉🏼Abram a corretora Pessoal\n\n"
+                    "⚠️FIQUEM ATENTOS⚠️\n\n"
+                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
+                )
             
-            # Obter caminho do vídeo para português
-            video_path = VIDEOS_PROMO["pt"]
+            # Obter caminho do vídeo específico para este idioma
+            video_path = VIDEOS_PROMO.get(idioma, VIDEOS_PROMO["pt"])  # Usa o vídeo PT como fallback
             
             # Verificar se o arquivo existe
             if not os.path.exists(video_path):
                 BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo promocional não encontrado: {video_path}")
             else:
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO PROMOCIONAL PRÉ-SINAL para o canal {chat_id}...")
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO PROMOCIONAL PRÉ-SINAL para o canal {chat_id} em {idioma}...")
                 # Enviar vídeo
                 url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
                 
@@ -842,7 +1017,7 @@ def bot2_enviar_promo_pre_sinal():
                         BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PROMOCIONAL PRÉ-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
             
             # Enviar mensagem com link (agora incorporado diretamente no texto, não como botão)
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL PRÉ-SINAL para o canal {chat_id}...")
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL PRÉ-SINAL para o canal {chat_id} em {idioma}...")
             url_base_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
             
             payload_msg = {
@@ -867,35 +1042,82 @@ def bot2_enviar_promo_pre_sinal():
 def bot2_enviar_promo_especial():
     """
     Envia uma mensagem promocional especial a cada 3 sinais enviados.
+    Para todos os canais: envia o vídeo específico do idioma e depois a mensagem.
     """
     try:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) - Contador: {bot2_contador_sinais}...")
         
-        # Loop para enviar ao canal configurado
+        # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
-            # Obter link específico para este canal
+            # Pegar configuração do canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            link_corretora = config_canal["link_corretora"]
+            idioma = config_canal["idioma"]
             
-            # Preparar texto em português com o link específico
-            texto_mensagem = (
-                "Seguimos com as operações ✅\n\n"
-                "Mantenham a corretora aberta!!\n\n\n"
-                "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
-                "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
-            )
+            # Preparar textos baseados no idioma com links diretamente no texto
+            if idioma == "pt":
+                texto_mensagem = (
+                    "Seguimos com as operações ✅\n\n"
+                    "Mantenham a corretora aberta!!\n\n\n"
+                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
+                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
+                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
+                )
+            elif idioma == "en":
+                texto_mensagem = (
+                    "We continue with operations ✅\n\n"
+                    "Keep the broker open!!\n\n\n"
+                    "For those who haven't started making money with us yet👇🏻\n\n"
+                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLICK HERE AND WATCH THE VIDEO</a>\n\n"
+                    "🔥Register on XXBROKER right now🔥\n\n"
+                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICK HERE</a>"
+                )
+            elif idioma == "es":
+                texto_mensagem = (
+                    "Continuamos con las operaciones ✅\n\n"
+                    "¡Mantengan el corredor abierto!\n\n\n"
+                    "Para quienes aún no han comenzado a ganar dinero con nosotros👇🏻\n\n"
+                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">HAZ CLIC AQUÍ Y MIRA EL VIDEO</a>\n\n"
+                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
+                    f"➡️ <a href=\"{XXBROKER_URL}\">CLIC AQUÍ</a>"
+                )
+            else:
+                texto_mensagem = (
+                    "Seguimos com as operações ✅\n\n"
+                    "Mantenham a corretora aberta!!\n\n\n"
+                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
+                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
+                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
+                )
             
-            # Obter o caminho do vídeo especial
-            video_path = VIDEOS_ESPECIAIS["pt"]
+            # Obter o caminho do vídeo especial específico para este idioma
+            if idioma in VIDEOS_ESPECIAIS:
+                video_path = VIDEOS_ESPECIAIS[idioma]
+            else:
+                video_path = VIDEOS_ESPECIAIS["pt"]  # Fallback para português
                 
             # Verificar se o arquivo existe
             if not os.path.exists(video_path):
                 BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo especial não encontrado: {video_path}")
+                # Tentar usar o vídeo em português como backup se o idioma não for PT
+                if idioma != "pt":
+                    video_path = VIDEOS_ESPECIAIS["pt"]
+                    BOT2_LOGGER.info(f"[{horario_atual}] Tentando usar vídeo especial em português como backup: {video_path}")
+                    if not os.path.exists(video_path):
+                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo especial backup também não encontrado: {video_path}")
+                        # Prosseguir para enviar apenas a mensagem de texto
+                    else:
+                        # Enviar vídeo
+                        BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em português para o canal {chat_id}...")
+                        bot2_enviar_video_especial(video_path, chat_id, horario_atual)
+                else:
+                    # Prosseguir para enviar apenas a mensagem de texto
+                    pass
             else:
                 # Enviar vídeo
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) para o canal {chat_id}...")
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em {idioma} para o canal {chat_id}...")
                 bot2_enviar_video_especial(video_path, chat_id, horario_atual)
             
             # Enviar mensagem com links (agora incorporados diretamente no texto)
@@ -972,8 +1194,8 @@ def bot2_enviar_gif_especial_pt():
             # Enviar apenas para o canal em português
             if idioma == "pt":
                 # Verificar se o arquivo existe
-                if not os.path.exists(GIF_ESPECIAL_PT):
-                    BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {GIF_ESPECIAL_PT}")
+                if not os.path.exists(VIDEO_GIF_ESPECIAL_PT):
+                    BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {VIDEO_GIF_ESPECIAL_PT}")
                     BOT2_LOGGER.info(f"[{horario_atual}] Listando arquivos na pasta {VIDEOS_ESPECIAL_DIR}: {os.listdir(VIDEOS_ESPECIAL_DIR) if os.path.exists(VIDEOS_ESPECIAL_DIR) else 'PASTA NÃO EXISTE'}")
                     return
                 
@@ -981,7 +1203,7 @@ def bot2_enviar_gif_especial_pt():
                 # Usar sendVideo em vez de sendAnimation para maior compatibilidade
                 url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
                 
-                with open(GIF_ESPECIAL_PT, 'rb') as gif_file:
+                with open(VIDEO_GIF_ESPECIAL_PT, 'rb') as gif_file:
                     files = {
                         'video': gif_file
                     }
@@ -996,7 +1218,7 @@ def bot2_enviar_gif_especial_pt():
                         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {resposta_video.text}")
                         # Tentar método alternativo se o primeiro falhar
                         url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                        with open(GIF_ESPECIAL_PT, 'rb') as alt_file:
+                        with open(VIDEO_GIF_ESPECIAL_PT, 'rb') as alt_file:
                             files_alt = {'animation': alt_file}
                             resp_alt = requests.post(url_alt, data=payload_video, files=files_alt)
                             if resp_alt.status_code == 200:
@@ -1012,83 +1234,125 @@ def bot2_enviar_gif_especial_pt():
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial: {str(e)}")
         traceback.print_exc()
 
+# Modificar a função bot2_send_message para alterar os tempos de agendamento
 def bot2_send_message(ignorar_anti_duplicacao=False):
-    """
-    Função principal para enviar uma mensagem de sinal para o canal do Telegram.
-    Executa todo o processo de geração e envio de sinal.
-    """
+    global bot2_contador_sinais
+    
     try:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        hora_formatada = bot2_obter_hora_brasilia().strftime("%H:%M")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DE SINAL...")
-
-        # Verificação anti-duplicação (menos de 15 minutos entre envios)
-        if not ignorar_anti_duplicacao:
-            tempo_desde_ultimo_envio = (bot2_obter_hora_brasilia() - bot2_send_message.ultimo_envio_timestamp).total_seconds() / 60
-            if tempo_desde_ultimo_envio < 10:  # Ajustado para 10 minutos
-                BOT2_LOGGER.warning(f"[{horario_atual}] Tentativa de envio muito próxima ao último envio ({tempo_desde_ultimo_envio:.1f} minutos). Pulando.")
+        # Verifica se já enviou muito recentemente (anti-duplicação)
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
+        
+        if not ignorar_anti_duplicacao and hasattr(bot2_send_message, 'ultimo_envio_timestamp'):
+            ultimo_envio = bot2_send_message.ultimo_envio_timestamp
+            diferenca = (agora - ultimo_envio).total_seconds()
+            if diferenca < 60:  # Se a última mensagem foi enviada há menos de 1 minuto
+                BOT2_LOGGER.info(f"[{horario_atual}] Anti-duplicação: Mensagem ignorada. Última enviada há {diferenca:.1f} segundos.")
                 return
 
-        # Escolher aleatoriamente um sinal para enviar
+        # Atualiza o timestamp da última mensagem enviada para evitar duplicações
+        bot2_send_message.ultimo_envio_timestamp = agora
+
+        # Verifica se não excedeu o limite por hora
+        hora_atual = agora.replace(minute=0, second=0, microsecond=0)
+        if hora_atual not in bot2_send_message.contagem_por_hora:
+            bot2_send_message.contagem_por_hora = {hora_atual: 0}
+
+        if not ignorar_anti_duplicacao and bot2_send_message.contagem_por_hora[hora_atual] >= BOT2_LIMITE_SINAIS_POR_HORA:
+            BOT2_LOGGER.info(f"[{horario_atual}] Limite de {BOT2_LIMITE_SINAIS_POR_HORA} sinais por hora atingido. Ignorando este sinal.")
+            return
+
+        # Gera um sinal aleatório para enviar
         sinal = bot2_gerar_sinal_aleatorio()
         if not sinal:
-            BOT2_LOGGER.error(f"[{horario_atual}] Não foi possível gerar um sinal. Nenhum ativo disponível.")
+            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao gerar sinal. Abortando envio.")
             return
-        
-        # Extrair dados do sinal
+
+        # Incrementa o contador de mensagens enviadas nesta hora
+        bot2_send_message.contagem_por_hora[hora_atual] += 1
+
+        # Registra a hora de geração do sinal
+        BOT2_LOGGER.info(f"[{horario_atual}] SINAL GERADO. Enviando para todos os canais configurados...")
+
+        # Obter dados do sinal
         ativo = sinal['ativo']
         direcao = sinal['direcao']
         categoria = sinal['categoria']
-        
-        BOT2_LOGGER.info(f"[{horario_atual}] Sinal gerado: Ativo={ativo}, Direção={direcao}, Categoria={categoria}")
+        tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
 
-        # Para cada canal configurado, enviar o sinal no idioma correto
+        # Calcular horários para a operação
+        hora_entrada = agora + timedelta(minutes=2)
+        hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
+        hora_reentrada1 = hora_expiracao + timedelta(minutes=1)
+        hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos)
+        
+        BOT2_LOGGER.info(f"[{horario_atual}] Detalhes do sinal: Ativo={ativo}, Direção={direcao}, Categoria={categoria}, Expiração={tempo_expiracao_minutos}min")
+        BOT2_LOGGER.info(f"[{horario_atual}] Horários: Entrada={hora_entrada.strftime('%H:%M:%S')}, Expiração={hora_expiracao.strftime('%H:%M:%S')}, Reentrada1={hora_reentrada1.strftime('%H:%M:%S')}, Reentrada2={hora_reentrada2.strftime('%H:%M:%S')}")
+
+        # Obtém a hora atual para formatação na mensagem
+        hora_formatada = agora.strftime("%H:%M")
+
+        # Loop para enviar aos canais configurados com base no idioma
         for chat_id in BOT2_CHAT_IDS:
-            # Obter configuração e link específico para este canal
+            # Pegar configuração do canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            idioma = config_canal["idioma"]
             link_corretora = config_canal["link_corretora"]
+
+            # Enviar apenas no idioma configurado para este canal
+            mensagem = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
             
-            # Formatação da mensagem em português
-            mensagem = bot2_formatar_mensagem(sinal, hora_formatada, "pt")
-            
-            # Configurar teclado inline com o link específico da corretora
+            # IMPORTANTE: Log detalhado do conteúdo exato da mensagem para debug
+            BOT2_LOGGER.info(f"[{horario_atual}] CONTEÚDO EXATO DA MENSAGEM DO SINAL: {mensagem}")
+
+            # Texto do botão de acordo com o idioma
+            texto_botao = "🔗 Abrir corretora"  # Padrão em português
+
+            if idioma == "en":
+                texto_botao = "🔗 Open broker"
+            elif idioma == "es":
+                texto_botao = "🔗 Abrir corredor"
+
+            # Configura o teclado inline com o link da corretora
             teclado_inline = {
                 "inline_keyboard": [
                     [
                         {
-                            "text": "🔗 Abrir corretora",
+                            "text": texto_botao,
                             "url": link_corretora
                         }
                     ]
                 ]
             }
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM para o canal {chat_id}...")
+
+            # Envia a mensagem para o canal específico
             url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-            
+
             payload = {
                 'chat_id': chat_id,
                 'text': mensagem,
                 'parse_mode': 'HTML',
+                'disable_web_page_preview': True,
                 'reply_markup': json.dumps(teclado_inline)
             }
-            
+
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM DO SINAL em {idioma} para o canal {chat_id}...")
             resposta = requests.post(url_base, data=payload)
 
             if resposta.status_code != 200:
                 BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar sinal para o canal {chat_id}: {resposta.text}")
             else:
-                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM DO SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
+                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM DO SINAL ENVIADA COM SUCESSO para o canal {chat_id} no idioma {idioma}")
 
         # Registra estatísticas de envio
         bot2_registrar_envio(ativo, direcao, categoria)
         
         # Incrementa o contador global de sinais
-        global bot2_contador_sinais
         bot2_contador_sinais += 1
         BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado: {bot2_contador_sinais}")
         
-        # Agendar o envio do GIF pós-sinal para 5 minutos depois
+        # Agendar o envio do GIF pós-sinal para 5 minutos depois (alterado de 1 minuto)
         BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF pós-sinal para daqui a 5 minutos...")
         import threading
         timer_pos_sinal = threading.Timer(300.0, bot2_enviar_gif_pos_sinal)  # 300 segundos = 5 minutos
@@ -1096,7 +1360,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         
         # Verifica se deve enviar a mensagem promocional especial (a cada 3 sinais)
         if bot2_contador_sinais % 3 == 0:
-            # Agendar o envio do GIF especial para 6 minutos - 1 segundo depois
+            # Agendar o envio do GIF especial para 6 minutos - 1 segundo depois (apenas canal PT)
             BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF especial PT para daqui a {359} segundos...")
             timer_gif_especial = threading.Timer(359.0, bot2_enviar_gif_especial_pt)  # 359 segundos = 5 minutos e 59 segundos
             timer_gif_especial.start()
@@ -1105,9 +1369,6 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
             BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio da mensagem promocional especial para daqui a 6 minutos (sinal #{bot2_contador_sinais}, divisível por 3)...")
             timer_promo_especial = threading.Timer(360.0, bot2_enviar_promo_especial)  # 360 segundos = 6 minutos
             timer_promo_especial.start()
-
-        # Atualiza o timestamp do último envio
-        bot2_send_message.ultimo_envio_timestamp = bot2_obter_hora_brasilia()
 
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
