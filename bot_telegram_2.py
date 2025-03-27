@@ -732,8 +732,7 @@ def bot2_enviar_gif_pos_sinal():
                     
                     payload_video = {
                         'chat_id': chat_id,
-                        'parse_mode': 'HTML',
-                        'caption': "Seguimos com as operações ✅"
+                        'parse_mode': 'HTML'
                     }
                     
                     BOT2_LOGGER.info(f"[{horario_atual}] Enviando requisição para API do Telegram...")
