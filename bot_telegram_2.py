@@ -640,16 +640,34 @@ VIDEOS_POS_SINAL_DIR = os.path.join(VIDEOS_DIR, "pos_sinal")
 VIDEOS_ESPECIAL_DIR = os.path.join(VIDEOS_DIR, "especial")
 VIDEOS_PROMO_DIR = os.path.join(VIDEOS_DIR, "promo")
 
+# Criar os subdiretórios dos idiomas para vídeos pós-sinal
+VIDEOS_POS_SINAL_PT_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "pt")
+VIDEOS_POS_SINAL_EN_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "en")
+VIDEOS_POS_SINAL_ES_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "es")
+
 # Criar os subdiretórios se não existirem
 os.makedirs(VIDEOS_POS_SINAL_DIR, exist_ok=True)
 os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
 os.makedirs(VIDEOS_PROMO_DIR, exist_ok=True)
+os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
+os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
+os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
 
-# Definir os caminhos dos vídeos pós-sinal
-VIDEOS_POS_SINAL = [
-    os.path.join(VIDEOS_POS_SINAL_DIR, "padrão.mp4"),  # Vídeo que será enviado em 9 de 10 sinais
-    os.path.join(VIDEOS_POS_SINAL_DIR, "especial.mp4")  # Vídeo que será enviado em 1 de 10 sinais
-]
+# Configurar vídeos pós-sinal específicos para cada idioma 
+VIDEOS_POS_SINAL = {
+    "pt": [
+        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "padrão.mp4"),  # Vídeo padrão em português (9/10)
+        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "especial.mp4")  # Vídeo especial em português (1/10)
+    ],
+    "en": [
+        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "padrao.mp4"),  # Vídeo padrão em inglês (9/10)
+        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "especial.mp4")  # Vídeo especial em inglês (1/10)
+    ],
+    "es": [
+        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "padrao.mp4"),  # Vídeo padrão em espanhol (9/10)
+        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "especial.mp4")  # Vídeo especial em espanhol (1/10)
+    ]
+}
 
 # Vídeo especial a cada 3 sinais
 VIDEO_ESPECIAL = os.path.join(VIDEOS_ESPECIAL_DIR, "especial.mp4")
@@ -671,6 +689,7 @@ def bot2_enviar_gif_pos_sinal():
     Envia um vídeo 1 minuto após cada sinal.
     Escolhe entre dois vídeos: o primeiro é enviado em 9 de 10 sinais, o segundo em 1 de 10 sinais.
     A escolha do vídeo especial (segundo) é aleatória, garantindo apenas a proporção de 1 a cada 10.
+    O vídeo enviado é específico para o idioma de cada canal.
     """
     global contador_pos_sinal, contador_desde_ultimo_especial
     
@@ -704,24 +723,41 @@ def bot2_enviar_gif_pos_sinal():
         else:
             BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO PADRÃO (muito cedo para especial)")
         
-        # Obter o caminho do vídeo escolhido
-        video_path = VIDEOS_POS_SINAL[escolha_video]
-        BOT2_LOGGER.info(f"[{horario_atual}] Caminho do vídeo escolhido: {video_path}")
-        
-        # Verificar se o arquivo existe
-        if not os.path.exists(video_path):
-            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo não encontrado: {video_path}")
-            # Listar os arquivos na pasta para debug
-            pasta_videos = os.path.dirname(video_path)
-            BOT2_LOGGER.info(f"[{horario_atual}] Arquivos na pasta {pasta_videos}: {os.listdir(pasta_videos) if os.path.exists(pasta_videos) else 'PASTA NÃO EXISTE'}")
-            return
-        else:
-            BOT2_LOGGER.info(f"[{horario_atual}] Arquivo de vídeo encontrado: {video_path}")
-        
         # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando vídeo para o canal {chat_id}...")
+            # Pegar configuração do canal
+            config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            idioma = config_canal["idioma"]
+            
+            # Obter o caminho do vídeo escolhido de acordo com o idioma
+            # Se o idioma não existir, usa o português como fallback
+            if idioma in VIDEOS_POS_SINAL:
+                video_path = VIDEOS_POS_SINAL[idioma][escolha_video]
+            else:
+                video_path = VIDEOS_POS_SINAL["pt"][escolha_video]
+                
+            BOT2_LOGGER.info(f"[{horario_atual}] Caminho do vídeo escolhido para {idioma}: {video_path}")
+            
+            # Verificar se o arquivo existe
+            if not os.path.exists(video_path):
+                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo não encontrado: {video_path}")
+                # Listar os arquivos na pasta para debug
+                pasta_videos = os.path.dirname(video_path)
+                BOT2_LOGGER.info(f"[{horario_atual}] Arquivos na pasta {pasta_videos}: {os.listdir(pasta_videos) if os.path.exists(pasta_videos) else 'PASTA NÃO EXISTE'}")
+                # Tentar usar o vídeo em português como backup se o idioma não for PT
+                if idioma != "pt":
+                    video_path = VIDEOS_POS_SINAL["pt"][escolha_video]
+                    BOT2_LOGGER.info(f"[{horario_atual}] Tentando usar vídeo em português como backup: {video_path}")
+                    if not os.path.exists(video_path):
+                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo backup também não encontrado: {video_path}")
+                        continue
+                else:
+                    continue
+            
+            BOT2_LOGGER.info(f"[{horario_atual}] Arquivo de vídeo encontrado: {video_path}")
+            
             # Enviar o vídeo escolhido
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando vídeo para o canal {chat_id} em {idioma}...")
             url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
             
             try:
@@ -743,7 +779,7 @@ def bot2_enviar_gif_pos_sinal():
                         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pós-sinal para o canal {chat_id}: {resposta_video.text}")
                     else:
                         tipo_video = "ESPECIAL (1/10)" if escolha_video == 1 else "PADRÃO (9/10)"
-                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL {tipo_video} ENVIADO COM SUCESSO para o canal {chat_id}")
+                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL {tipo_video} ENVIADO COM SUCESSO para o canal {chat_id} em {idioma}")
             except Exception as e:
                 BOT2_LOGGER.error(f"[{horario_atual}] Erro ao abrir ou enviar arquivo de vídeo: {str(e)}")
     
@@ -846,12 +882,29 @@ def bot2_enviar_promo_pre_sinal():
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional pré-sinal: {str(e)}")
         traceback.print_exc()
 
+# Atualização dos diretórios e arquivos para os vídeos especiais por idioma
+VIDEOS_ESPECIAL_DIR = os.path.join(VIDEOS_DIR, "especial")
+VIDEOS_ESPECIAL_PT_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
+VIDEOS_ESPECIAL_EN_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "en")
+VIDEOS_ESPECIAL_ES_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "es")
+
+# Criar os subdiretórios para os vídeos especiais
+os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
+os.makedirs(VIDEOS_ESPECIAL_EN_DIR, exist_ok=True)
+os.makedirs(VIDEOS_ESPECIAL_ES_DIR, exist_ok=True)
+
+# Vídeo especial a cada 3 sinais (por idioma)
+VIDEOS_ESPECIAIS = {
+    "pt": os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.mp4"),
+    "en": os.path.join(VIDEOS_ESPECIAL_EN_DIR, "especial.mp4"),
+    "es": os.path.join(VIDEOS_ESPECIAL_ES_DIR, "especial.mp4")
+}
+
 # Função para enviar mensagem promocional a cada 3 sinais
 def bot2_enviar_promo_especial():
     """
     Envia uma mensagem promocional especial a cada 3 sinais enviados.
-    Para o canal em português: envia o vídeo e depois a mensagem.
-    Para os outros canais: envia apenas a mensagem.
+    Para todos os canais: envia o vídeo específico do idioma e depois a mensagem.
     """
     try:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
@@ -901,31 +954,33 @@ def bot2_enviar_promo_especial():
                     f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
                 )
             
-            # Enviar o vídeo especial apenas no canal em português
-            if idioma == "pt":
-                # Verificar se o arquivo existe
-                if not os.path.exists(VIDEO_ESPECIAL):
-                    BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo especial não encontrado: {VIDEO_ESPECIAL}")
+            # Obter o caminho do vídeo especial específico para este idioma
+            if idioma in VIDEOS_ESPECIAIS:
+                video_path = VIDEOS_ESPECIAIS[idioma]
+            else:
+                video_path = VIDEOS_ESPECIAIS["pt"]  # Fallback para português
+                
+            # Verificar se o arquivo existe
+            if not os.path.exists(video_path):
+                BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo especial não encontrado: {video_path}")
+                # Tentar usar o vídeo em português como backup se o idioma não for PT
+                if idioma != "pt":
+                    video_path = VIDEOS_ESPECIAIS["pt"]
+                    BOT2_LOGGER.info(f"[{horario_atual}] Tentando usar vídeo especial em português como backup: {video_path}")
+                    if not os.path.exists(video_path):
+                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo especial backup também não encontrado: {video_path}")
+                        # Prosseguir para enviar apenas a mensagem de texto
+                    else:
+                        # Enviar vídeo
+                        BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em português para o canal {chat_id}...")
+                        bot2_enviar_video_especial(video_path, chat_id, horario_atual)
                 else:
-                    # Enviar vídeo
-                    BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) para o canal {chat_id}...")
-                    url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-                    
-                    with open(VIDEO_ESPECIAL, 'rb') as video_file:
-                        files = {
-                            'video': video_file
-                        }
-                        
-                        payload_video = {
-                            'chat_id': chat_id,
-                            'parse_mode': 'HTML'
-                        }
-                        
-                        resposta_video = requests.post(url_base_video, data=payload_video, files=files)
-                        if resposta_video.status_code != 200:
-                            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo especial para o canal {chat_id}: {resposta_video.text}")
-                        else:
-                            BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO ESPECIAL (A CADA 3 SINAIS) ENVIADO COM SUCESSO para o canal em português {chat_id}")
+                    # Prosseguir para enviar apenas a mensagem de texto
+                    pass
+            else:
+                # Enviar vídeo
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em {idioma} para o canal {chat_id}...")
+                bot2_enviar_video_especial(video_path, chat_id, horario_atual)
             
             # Enviar mensagem com links (agora incorporados diretamente no texto)
             BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) para o canal {chat_id}...")
@@ -948,6 +1003,35 @@ def bot2_enviar_promo_especial():
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional especial: {str(e)}")
         traceback.print_exc()
+
+# Função auxiliar para enviar o vídeo especial
+def bot2_enviar_video_especial(video_path, chat_id, horario_atual):
+    """
+    Função auxiliar para enviar o vídeo especial.
+    """
+    try:
+        url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+        
+        with open(video_path, 'rb') as video_file:
+            files = {
+                'video': video_file
+            }
+            
+            payload_video = {
+                'chat_id': chat_id,
+                'parse_mode': 'HTML'
+            }
+            
+            resposta_video = requests.post(url_base_video, data=payload_video, files=files)
+            if resposta_video.status_code != 200:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo especial para o canal {chat_id}: {resposta_video.text}")
+                return False
+            else:
+                BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO ESPECIAL (A CADA 3 SINAIS) ENVIADO COM SUCESSO para o canal {chat_id}")
+                return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao abrir ou enviar arquivo de vídeo especial: {str(e)}")
+        return False
 
 # Modificar a função bot2_send_message para alterar os tempos de agendamento
 def bot2_send_message(ignorar_anti_duplicacao=False):
