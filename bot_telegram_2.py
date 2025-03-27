@@ -1098,6 +1098,10 @@ def bot2_enviar_promo_pre_sinal():
                         BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PROMOCIONAL PRÉ-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
             
             # Enviar mensagem com link (agora incorporado diretamente no texto, não como botão)
+            BOT2_LOGGER.info(f"[{horario_atual}] ESPERANDO 2 SEGUNDOS ANTES DE ENVIAR MENSAGEM PROMOCIONAL PRÉ-SINAL...")
+            # Adicionar um delay de 2 segundos antes de enviar a mensagem
+            time.sleep(2)
+            
             BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL PRÉ-SINAL para o canal {chat_id} em {idioma}...")
             url_base_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
             
