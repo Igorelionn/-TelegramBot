@@ -114,37 +114,7 @@ ATIVOS_CATEGORIAS = {
     "BTC/UAH": "Binary",
     "BTC/EUR": "Binary",
     
-    # Stock
-    "TSLA": "Binary",
-    "AAPL": "Binary",
-    "AMZN": "Binary",
-    "MSFT": "Binary",
-    "FB": "Binary",
-    "NFLX": "Binary",
-    "GOOGL": "Binary",
-    "BABA": "Binary",
-    "UBER": "Binary",
-    "PFE": "Binary",
-    "TWTR": "Binary",
-    "SBUX": "Binary",
-    "BA": "Binary",
-    "WMT": "Binary",
-    "KO": "Binary",
-    "DIS": "Binary",
-    "INTC": "Binary",
-    "QCOM": "Binary",
-    "CSCO": "Binary",
-    "NVDA": "Binary",
-    "AMD": "Binary",
-    "PYPL": "Binary",
-    "EBAY": "Binary",
-    "MU": "Binary",
-    "SNAP": "Binary",
-    "GM": "Binary",
-    "F": "Binary",
-    
     # Índices
-    "OTC FTSE 100 Index": "Binary",
     "OTC US 30 Index": "Binary",
     "OTC US 100 NAS": "Binary",
     "OTC US 500 Index": "Binary",
@@ -380,15 +350,12 @@ for ativo in ["BTC/USD", "ETH/USD", "XRP/USD", "LTC/USD", "EOS/USD", "BTC/UAH", 
     assets[ativo] = HORARIOS_PADRAO["crypto_padrao"]
 
 # Configuração para ativos Stocks
-for ativo in [
-    "TSLA", "AAPL", "AMZN", "MSFT", "FB", "NFLX", "GOOGL", "BABA", "UBER", "PFE", "TWTR", "SBUX", "BA", "WMT", "KO", "DIS", "INTC", "QCOM", "CSCO", "NVDA",
-    "AMD", "PYPL", "EBAY", "MU", "SNAP", "GM", "F"
-]:
+for ativo in []:
     assets[ativo] = HORARIOS_PADRAO["stock_padrao"]
 
 # Configuração para ativos Índices
 for ativo in [
-    "OTC FTSE 100 Index", "OTC US 30 Index", "OTC US 100 NAS", "OTC US 500 Index", "OTC HK 50 Index", "OTC DE 40 Index", "OTC DE 30 Index", "OTC EUR 50 Index",
+    "OTC US 30 Index", "OTC US 100 NAS", "OTC US 500 Index", "OTC HK 50 Index", "OTC DE 40 Index", "OTC DE 30 Index", "OTC EUR 50 Index",
     "OTC UK 100 Index", "OTC JP 225 Index", "OTC CHN 50 Index", "OTC AUS 200 Index", "OTC FR 40 Index", "OTC NED 25 Index", "OTC AUS SPI", "OTC IT 40 Index",
     "OTC SP 35 Index", "OTC 500 INDU"
 ]:
@@ -640,6 +607,9 @@ VIDEOS_POS_SINAL_DIR = os.path.join(VIDEOS_DIR, "pos_sinal")
 VIDEOS_ESPECIAL_DIR = os.path.join(VIDEOS_DIR, "especial")
 VIDEOS_PROMO_DIR = os.path.join(VIDEOS_DIR, "promo")
 
+# Novo diretório para o GIF especial que vai ser enviado a cada 3 sinais
+VIDEOS_GIF_ESPECIAL_DIR = os.path.join(VIDEOS_DIR, "especial")  # Modificado para usar a pasta "especial" existente
+
 # Criar os subdiretórios dos idiomas para vídeos pós-sinal
 VIDEOS_POS_SINAL_PT_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "pt")
 VIDEOS_POS_SINAL_EN_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "en")
@@ -652,6 +622,7 @@ os.makedirs(VIDEOS_PROMO_DIR, exist_ok=True)
 os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
 os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
 os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
+# Removida a linha que criava o diretório VIDEOS_GIF_ESPECIAL_DIR
 
 # Configurar vídeos pós-sinal específicos para cada idioma 
 VIDEOS_POS_SINAL = {
@@ -678,6 +649,9 @@ VIDEOS_PROMO = {
     "en": os.path.join(VIDEOS_PROMO_DIR, "en.mp4"),
     "es": os.path.join(VIDEOS_PROMO_DIR, "es.mp4")
 }
+
+# Vídeo GIF especial que vai ser enviado a cada 3 sinais (apenas no canal português)
+VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_DIR, "gif_especial_pt.mp4")  # Usando o diretório "especial"
 
 # Contador para controle dos GIFs pós-sinal
 contador_pos_sinal = 0
@@ -1033,6 +1007,55 @@ def bot2_enviar_video_especial(video_path, chat_id, horario_atual):
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao abrir ou enviar arquivo de vídeo especial: {str(e)}")
         return False
 
+# Função para enviar o GIF especial a cada 3 sinais (apenas para o canal português)
+def bot2_enviar_gif_especial_pt():
+    """
+    Envia um GIF especial a cada 3 sinais, apenas para o canal português.
+    Este GIF é enviado 1 segundo antes da mensagem promocional especial.
+    """
+    try:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO GIF ESPECIAL (A CADA 3 SINAIS) - Apenas canal PT...")
+        
+        # Obter o chat_id do canal português
+        for chat_id in BOT2_CHAT_IDS:
+            config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            idioma = config_canal["idioma"]
+            
+            # Enviar apenas para o canal em português
+            if idioma == "pt":
+                # Verificar se o arquivo existe
+                if not os.path.exists(VIDEO_GIF_ESPECIAL_PT):
+                    BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {VIDEO_GIF_ESPECIAL_PT}")
+                    return
+                
+                BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF especial para o canal português {chat_id}...")
+                url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                
+                with open(VIDEO_GIF_ESPECIAL_PT, 'rb') as gif_file:
+                    files = {
+                        'animation': gif_file
+                    }
+                    
+                    payload_video = {
+                        'chat_id': chat_id,
+                        'parse_mode': 'HTML'
+                    }
+                    
+                    resposta_video = requests.post(url_base_video, data=payload_video, files=files)
+                    if resposta_video.status_code != 200:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {resposta_video.text}")
+                    else:
+                        BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL ENVIADO COM SUCESSO para o canal português {chat_id}")
+                
+                # Só enviar para o canal PT, então podemos interromper a iteração
+                break
+    
+    except Exception as e:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial: {str(e)}")
+        traceback.print_exc()
+
 # Modificar a função bot2_send_message para alterar os tempos de agendamento
 def bot2_send_message(ignorar_anti_duplicacao=False):
     global bot2_contador_sinais
@@ -1159,13 +1182,15 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         
         # Verifica se deve enviar a mensagem promocional especial (a cada 3 sinais)
         if bot2_contador_sinais % 3 == 0:
-            # Agendar o envio da mensagem promocional especial para 6 minutos depois (alterado de 2 minutos)
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF e mensagem promocional especial para daqui a 6 minutos (sinal #{bot2_contador_sinais}, divisível por 3)...")
+            # Agendar o envio do GIF especial para 6 minutos - 1 segundo depois (apenas canal PT)
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF especial PT para daqui a {359} segundos...")
+            timer_gif_especial = threading.Timer(359.0, bot2_enviar_gif_especial_pt)  # 359 segundos = 5 minutos e 59 segundos
+            timer_gif_especial.start()
             
-            # Usar threading para criar um timer que executará a função após 6 minutos (360 segundos)
-            import threading
-            timer = threading.Timer(360.0, bot2_enviar_promo_especial)  # 360 segundos = 6 minutos
-            timer.start()
+            # Agendar o envio da mensagem promocional especial para 6 minutos depois
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio da mensagem promocional especial para daqui a 6 minutos (sinal #{bot2_contador_sinais}, divisível por 3)...")
+            timer_promo_especial = threading.Timer(360.0, bot2_enviar_promo_especial)  # 360 segundos = 6 minutos
+            timer_promo_especial.start()
 
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
