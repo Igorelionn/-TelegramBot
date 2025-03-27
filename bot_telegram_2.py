@@ -677,8 +677,12 @@ VIDEOS_POS_SINAL = {
     ]
 }
 
-# Vídeo especial a cada 3 sinais
-VIDEO_ESPECIAL = os.path.join(VIDEOS_ESPECIAL_DIR, "especial.mp4")
+# Vídeo especial a cada 3 sinais (por idioma)
+VIDEOS_ESPECIAIS = {
+    "pt": os.path.join(VIDEOS_ESPECIAL_DIR, "especial.mp4"),
+    "en": os.path.join(VIDEOS_ESPECIAL_EN_DIR, "especial.mp4"),
+    "es": os.path.join(VIDEOS_ESPECIAL_ES_DIR, "especial.mp4")
+}
 
 # Vídeos promocionais por idioma
 VIDEOS_PROMO = {
