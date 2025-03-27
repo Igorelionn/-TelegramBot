@@ -576,7 +576,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     # Mensagem em PT
     mensagem_pt = (f"⚠️TRADE RÁPIDO⚠️\n\n"
             f"💵 Ativo: {nome_ativo_exibicao}\n"
-            f"🏷️ Categoria: {categoria}\n"
+            f"🏷️ Opções: {categoria}\n"
             f"{emoji} {action_pt}\n"
             f"➡ Entrada: {hora_entrada_formatada}\n"
             f"{expiracao_texto_pt}\n"
