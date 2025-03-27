@@ -114,7 +114,37 @@ ATIVOS_CATEGORIAS = {
     "BTC/UAH": "Binary",
     "BTC/EUR": "Binary",
     
+    # Stock
+    "TSLA": "Binary",
+    "AAPL": "Binary",
+    "AMZN": "Binary",
+    "MSFT": "Binary",
+    "FB": "Binary",
+    "NFLX": "Binary",
+    "GOOGL": "Binary",
+    "BABA": "Binary",
+    "UBER": "Binary",
+    "PFE": "Binary",
+    "TWTR": "Binary",
+    "SBUX": "Binary",
+    "BA": "Binary",
+    "WMT": "Binary",
+    "KO": "Binary",
+    "DIS": "Binary",
+    "INTC": "Binary",
+    "QCOM": "Binary",
+    "CSCO": "Binary",
+    "NVDA": "Binary",
+    "AMD": "Binary",
+    "PYPL": "Binary",
+    "EBAY": "Binary",
+    "MU": "Binary",
+    "SNAP": "Binary",
+    "GM": "Binary",
+    "F": "Binary",
+    
     # Índices
+    "OTC FTSE 100 Index": "Binary",
     "OTC US 30 Index": "Binary",
     "OTC US 100 NAS": "Binary",
     "OTC US 500 Index": "Binary",
@@ -350,12 +380,15 @@ for ativo in ["BTC/USD", "ETH/USD", "XRP/USD", "LTC/USD", "EOS/USD", "BTC/UAH", 
     assets[ativo] = HORARIOS_PADRAO["crypto_padrao"]
 
 # Configuração para ativos Stocks
-for ativo in []:
+for ativo in [
+    "TSLA", "AAPL", "AMZN", "MSFT", "FB", "NFLX", "GOOGL", "BABA", "UBER", "PFE", "TWTR", "SBUX", "BA", "WMT", "KO", "DIS", "INTC", "QCOM", "CSCO", "NVDA",
+    "AMD", "PYPL", "EBAY", "MU", "SNAP", "GM", "F"
+]:
     assets[ativo] = HORARIOS_PADRAO["stock_padrao"]
 
 # Configuração para ativos Índices
 for ativo in [
-    "OTC US 30 Index", "OTC US 100 NAS", "OTC US 500 Index", "OTC HK 50 Index", "OTC DE 40 Index", "OTC DE 30 Index", "OTC EUR 50 Index",
+    "OTC FTSE 100 Index", "OTC US 30 Index", "OTC US 100 NAS", "OTC US 500 Index", "OTC HK 50 Index", "OTC DE 40 Index", "OTC DE 30 Index", "OTC EUR 50 Index",
     "OTC UK 100 Index", "OTC JP 225 Index", "OTC CHN 50 Index", "OTC AUS 200 Index", "OTC FR 40 Index", "OTC NED 25 Index", "OTC AUS SPI", "OTC IT 40 Index",
     "OTC SP 35 Index", "OTC 500 INDU"
 ]:
@@ -607,9 +640,6 @@ VIDEOS_POS_SINAL_DIR = os.path.join(VIDEOS_DIR, "pos_sinal")
 VIDEOS_ESPECIAL_DIR = os.path.join(VIDEOS_DIR, "especial")
 VIDEOS_PROMO_DIR = os.path.join(VIDEOS_DIR, "promo")
 
-# Novo diretório para o GIF especial que vai ser enviado a cada 3 sinais
-VIDEOS_GIF_ESPECIAL_DIR = os.path.join(VIDEOS_DIR, "especial")  # Modificado para usar a pasta "especial" existente
-
 # Criar os subdiretórios dos idiomas para vídeos pós-sinal
 VIDEOS_POS_SINAL_PT_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "pt")
 VIDEOS_POS_SINAL_EN_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "en")
@@ -622,7 +652,6 @@ os.makedirs(VIDEOS_PROMO_DIR, exist_ok=True)
 os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
 os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
 os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
-# Removida a linha que criava o diretório VIDEOS_GIF_ESPECIAL_DIR
 
 # Configurar vídeos pós-sinal específicos para cada idioma 
 VIDEOS_POS_SINAL = {
@@ -651,7 +680,7 @@ VIDEOS_PROMO = {
 }
 
 # Vídeo GIF especial que vai ser enviado a cada 3 sinais (apenas no canal português)
-VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_DIR, "gif_especial_pt.mp4")  # Usando o diretório "especial"
+VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_DIR, "gif_especial_pt.mp4")
 
 # Contador para controle dos GIFs pós-sinal
 contador_pos_sinal = 0
@@ -1027,6 +1056,7 @@ def bot2_enviar_gif_especial_pt():
                 # Verificar se o arquivo existe
                 if not os.path.exists(VIDEO_GIF_ESPECIAL_PT):
                     BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {VIDEO_GIF_ESPECIAL_PT}")
+                    BOT2_LOGGER.info(f"[{horario_atual}] Listando arquivos na pasta {VIDEOS_ESPECIAL_DIR}: {os.listdir(VIDEOS_ESPECIAL_DIR) if os.path.exists(VIDEOS_ESPECIAL_DIR) else 'PASTA NÃO EXISTE'}")
                     return
                 
                 BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF especial para o canal português {chat_id}...")
