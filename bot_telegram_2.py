@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Bot Telegram 2 para envio de sinais em canais separados por idioma.
+Bot Telegram 2 para envio de sinais em canais em português.
 Versão independente que não depende mais do Bot 1.
-Os sinais serão enviados da seguinte forma:
-- Canal Português: -1002424874613
-- Canal Inglês: -1002453956387
-- Canal Espanhol: -1002446547846
+Os sinais serão enviados para os seguintes canais:
+- Sala ChamaNaAlta: -1002658649212
+- Sala do Np.bo: -1002538423500
+- Minha sala: -1002317995059
 O bot enviará 3 sinais por hora nos minutos 10, 30 e 50.
 """
 
@@ -42,18 +42,18 @@ if not BOT2_LOGGER.handlers:
 # Credenciais Telegram
 BOT2_TOKEN = '7997585882:AAFDyG-BYskj1gyAbh17X5jd6DDClXdluww'
 
-# Configuração dos canais para cada idioma
+# Configuração dos canais em português
 BOT2_CANAIS_CONFIG = {
-    "-1002424874613": {  # Canal para mensagens em português
+    "-1002658649212": {  # Sala ChamaNaAlta
         "idioma": "pt",
-        "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
+        "link_corretora": "https://trade.xxbroker.com/register?aff=751626&aff_model=revenue&afftrack="
     },
-    "-1002453956387": {  # Canal para mensagens em inglês
-        "idioma": "en",
-        "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
+    "-1002538423500": {  # Sala do Np.bo
+        "idioma": "pt",
+        "link_corretora": "https://trade.xxbroker.com/register?aff=751924&aff_model=revenue&afftrack="
     },
-    "-1002446547846": {  # Canal para mensagens em espanhol
-        "idioma": "es",
+    "-1002317995059": {  # Minha sala
+        "idioma": "pt",
         "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
     }
 }
@@ -67,343 +67,447 @@ BOT2_CHAT_ID_CORRETO = BOT2_CHAT_IDS[0]  # Usar o primeiro canal como padrão
 # Limite de sinais por hora
 BOT2_LIMITE_SINAIS_POR_HORA = 3
 
-# Definições de ativos e categorias (copiado do Bot 1)
 # Categorias dos ativos
 ATIVOS_CATEGORIAS = {
-    # Forex
-    "EUR/USD": "Binary",
-    "EUR/GBP": "Binary",
-    "AUD/CAD": "Binary",
-    "AUD/JPY": "Binary",
-    "EUR/AUD": "Binary",
-    "EUR/CAD": "Binary",
-    "EUR/JPY": "Binary",
-    "GBP/AUD": "Binary",
-    "GBP/JPY": "Binary",
-    "GBP/USD": "Binary",
-    "NZD/USD": "Binary",
-    "USD/CAD": "Binary",
-    "USD/CHF": "Binary",
-    "USD/JPY": "Binary",
-    "AUD/USD": "Binary",
-    "AUD/NZD": "Binary",
-    "CAD/CHF": "Binary",
-    "CAD/JPY": "Binary",
-    "CHF/JPY": "Binary",
-    "EUR/CHF": "Binary",
-    "EUR/NZD": "Binary",
-    "GBP/CAD": "Binary",
-    "GBP/CHF": "Binary",
-    "GBP/NZD": "Binary",
-    "NZD/CAD": "Binary",
-    "NZD/CHF": "Binary",
-    "NZD/JPY": "Binary",
-    "USD/MXN": "Binary",
-    "USD/NOK": "Binary",
-    "USD/PLN": "Binary",
-    "USD/SGD": "Binary",
-    "USD/TRY": "Binary",
-    "USD/ZAR": "Binary",
-    
-    # Crypto
-    "BTC/USD": "Binary",
-    "ETH/USD": "Binary",
-    "XRP/USD": "Binary",
-    "LTC/USD": "Binary",
-    "EOS/USD": "Binary",
-    "BTC/UAH": "Binary",
-    "BTC/EUR": "Binary",
-    
-    # Stock
-    "TSLA": "Binary",
-    "AAPL": "Binary",
-    "AMZN": "Binary",
-    "MSFT": "Binary",
-    "FB": "Binary",
-    "NFLX": "Binary",
-    "GOOGL": "Binary",
-    "BABA": "Binary",
-    "UBER": "Binary",
-    "PFE": "Binary",
-    "TWTR": "Binary",
-    "SBUX": "Binary",
-    "BA": "Binary",
-    "WMT": "Binary",
-    "KO": "Binary",
-    "DIS": "Binary",
-    "INTC": "Binary",
-    "QCOM": "Binary",
-    "CSCO": "Binary",
-    "NVDA": "Binary",
-    "AMD": "Binary",
-    "PYPL": "Binary",
-    "EBAY": "Binary",
-    "MU": "Binary",
-    "SNAP": "Binary",
-    "GM": "Binary",
-    "F": "Binary",
-    
-    # Índices
-    "OTC FTSE 100 Index": "Binary",
-    "OTC US 30 Index": "Binary",
-    "OTC US 100 NAS": "Binary",
-    "OTC US 500 Index": "Binary",
-    "OTC HK 50 Index": "Binary",
-    "OTC DE 40 Index": "Binary",
-    "OTC DE 30 Index": "Binary",
-    "OTC EUR 50 Index": "Binary",
-    "OTC UK 100 Index": "Binary",
-    "OTC JP 225 Index": "Binary",
-    "OTC CHN 50 Index": "Binary",
-    "OTC AUS 200 Index": "Binary",
-    "OTC FR 40 Index": "Binary",
-    "OTC NED 25 Index": "Binary",
-    "OTC AUS SPI": "Binary",
-    "OTC IT 40 Index": "Binary",
-    "OTC SP 35 Index": "Binary",
-    "OTC 500 INDU": "Binary",
-    
-    # Commodities
-    "GOLD": "Binary",
-    "SILVER": "Binary",
-    "OIL": "Binary",
-    "PLATINUM": "Binary",
-    "COPPER": "Binary",
-    "COCOA": "Binary",
-    "CORN": "Binary",
-    "COTTON": "Binary",
-    "SOYBEAN": "Binary",
-    "SUGAR": "Binary",
-    "COFFEE": "Binary",
-    
-    # OTC Forex
-    "AUD/CAD (OTC)": "Binary",
-    "AUD/CHF (OTC)": "Binary",
-    "AUD/JPY (OTC)": "Binary",
-    "AUD/NZD (OTC)": "Binary",
-    "EUR/AUD (OTC)": "Binary",
-    "EUR/CAD (OTC)": "Binary",
-    "EUR/CHF (OTC)": "Binary",
-    "EUR/GBP (OTC)": "Binary",
-    "EUR/JPY (OTC)": "Binary",
-    "EUR/NZD (OTC)": "Binary",
-    "EUR/USD (OTC)": "Binary",
-    "GBP/AUD (OTC)": "Binary",
-    "GBP/CAD (OTC)": "Binary",
-    "GBP/CHF (OTC)": "Binary",
-    "GBP/JPY (OTC)": "Binary",
-    "GBP/NZD (OTC)": "Binary",
-    "GBP/USD (OTC)": "Binary",
-    "NZD/CAD (OTC)": "Binary",
-    "NZD/CHF (OTC)": "Binary",
-    "NZD/JPY (OTC)": "Binary",
-    "NZD/USD (OTC)": "Binary",
-    "USD/CAD (OTC)": "Binary",
-    "USD/CHF (OTC)": "Binary",
-    "USD/JPY (OTC)": "Binary",
-    "USD/SGD (OTC)": "Binary",
-    "USD/TRY (OTC)": "Binary",
-    
-    # Digital Options
-    "Digital_AUD/CAD": "Digital",
-    "Digital_AUD/CHF": "Digital",
-    "Digital_AUD/JPY": "Digital",
-    "Digital_AUD/NZD": "Digital",
-    "Digital_AUD/USD": "Digital",
-    "Digital_CAD/CHF": "Digital",
-    "Digital_CAD/JPY": "Digital",
-    "Digital_CHF/JPY": "Digital",
-    "Digital_EUR/AUD": "Digital",
-    "Digital_EUR/CAD": "Digital",
-    "Digital_EUR/CHF": "Digital",
-    "Digital_EUR/GBP": "Digital",
-    "Digital_EUR/JPY": "Digital",
-    "Digital_EUR/NZD": "Digital",
-    "Digital_EUR/USD": "Digital",
-    "Digital_GBP/AUD": "Digital",
-    "Digital_GBP/CAD": "Digital",
-    "Digital_GBP/CHF": "Digital",
-    "Digital_GBP/JPY": "Digital",
-    "Digital_GBP/NZD": "Digital",
-    "Digital_GBP/USD": "Digital",
-    "Digital_NZD/CAD": "Digital",
-    "Digital_NZD/CHF": "Digital",
-    "Digital_NZD/JPY": "Digital",
-    "Digital_NZD/USD": "Digital",
-    "Digital_USD/CAD": "Digital",
-    "Digital_USD/CHF": "Digital",
-    "Digital_USD/JPY": "Digital",
-    "Digital_USD/NOK": "Digital",
-    "Digital_USD/PLN": "Digital",
-    "Digital_USD/SGD": "Digital",
-    "Digital_USD/TRY": "Digital",
-    "Digital_USD/ZAR": "Digital",
-    "Digital_AUD/CAD (OTC)": "Digital",
-    "Digital_AUD/JPY (OTC)": "Digital",
-    "Digital_EUR/AUD (OTC)": "Digital",
-    "Digital_EUR/CAD (OTC)": "Digital",
-    "Digital_EUR/CHF (OTC)": "Digital",
-    "Digital_EUR/GBP (OTC)": "Digital",
-    "Digital_EUR/JPY (OTC)": "Digital",
-    "Digital_EUR/USD (OTC)": "Digital",
-    "Digital_GBP/AUD (OTC)": "Digital",
-    "Digital_GBP/JPY (OTC)": "Digital",
-    "Digital_GBP/USD (OTC)": "Digital",
-    "Digital_NZD/USD (OTC)": "Digital",
-    "Digital_USD/CAD (OTC)": "Digital",
-    "Digital_USD/CHF (OTC)": "Digital",
-    "Digital_USD/JPY (OTC)": "Digital",
-    "Digital_USD/SGD (OTC)": "Digital",
-    "Digital_USD/TRY (OTC)": "Digital",
-    
-    # Blitz
-    "EURUSD-OTCFX": "Blitz",
-    "GBPUSD-OTCFX": "Blitz",
-    "EURGBP-OTCFX": "Blitz",
-    "USDCHF-OTCFX": "Blitz",
-    "EURJPY-OTCFX": "Blitz",
-    "NZDUSD-OTCFX": "Blitz",
-    "AUDUSD-OTCFX": "Blitz",
-    "USDJPY-OTCFX": "Blitz",
-    "USDCAD-OTCFX": "Blitz",
-    "AUDJPY-OTCFX": "Blitz",
-    "GBPJPY-OTCFX": "Blitz",
+    # Ativos Blitz
+    "USD/BRL (OTC)": "Blitz",
+    "USOUSD (OTC)": "Blitz",
+    "BTC/USD (OTC)": "Blitz",
+    "Google (OTC)": "Blitz",
+    "EUR/JPY (OTC)": "Blitz",
+    "ETH/USD (OTC)": "Blitz",
+    "MELANIA COIN (OTC)": "Blitz",
+    "EUR/GBP (OTC)": "Blitz",
+    "Apple (OTC)": "Blitz",
+    "Amazon (OTC)": "Blitz",
+    "TRUM Coin (OTC)": "Blitz",
+    "Nike, Inc. (OTC)": "Blitz",
+    "DOGECOIN (OTC)": "Blitz",
+    "Tesla (OTC)": "Blitz",
+    "SOL/USD (OTC)": "Blitz",
+    "1000Sats (OTC)": "Blitz",
+    "XAUUSD (OTC)": "Blitz",
+    "McDonald´s Corporation (OTC)": "Blitz",
+    "Meta (OTC)": "Blitz",
+    "Coca-Cola Company (OTC)": "Blitz",
+    "CARDANO (OTC)": "Blitz",
+    "EUR/USD (OTC)": "Blitz",
+    "PEN/USD (OTC)": "Blitz",
+    "Bitcoin Cash (OTC)": "Blitz",
+    "AUD/CAD (OTC)": "Blitz",
+    "Tesla/Ford (OTC)": "Blitz",
+    "US 100 (OTC)": "Blitz",
+    "TRON/USD (OTC)": "Blitz",
+    "USD/CAD (OTC)": "Blitz",
+    "AUD/USD (OTC)": "Blitz",
+    "AIG (OTC)": "Blitz",
+    "Alibaba Group Holding (OTC)": "Blitz",
+    "Snap Inc. (OTC)": "Blitz",
+    "US 500 (OTC)": "Blitz",
+    "AUD/CHF (OTC)": "Blitz",
+    "Amazon/Alibaba (OTC)": "Blitz",
+    "Pepe (OTC)": "Blitz",
+    "Chainlink (OTC)": "Blitz",
+    "USD/ZAR (OTC)": "Blitz",
 }
 
-# Configurações de horários para os ativos
-# Configurações de horários
+# Configurações de horários específicos para cada ativo
 HORARIOS_PADRAO = {
-    "forex_padrao": {
-        "Monday": ["00:05-23:59"],
-        "Tuesday": ["00:05-23:59"],
-        "Wednesday": ["00:05-23:59"],
-        "Thursday": ["00:05-23:59"],
-        "Friday": ["00:05-21:00"],
-        "Saturday": [],
-        "Sunday": []
+    "USD/BRL_OTC": {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-00:45", "01:15-23:59"],
+        "Wednesday": ["00:00-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
     },
-    "otc_padrao": {
-        "Monday": ["00:05-23:59"],
-        "Tuesday": ["00:05-23:59"],
-        "Wednesday": ["00:05-23:59"],
-        "Thursday": ["00:05-23:59"],
-        "Friday": ["00:05-23:59"],
-        "Saturday": ["00:05-23:59"],
-        "Sunday": ["00:05-23:59"]
+    "USOUSD_OTC": {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-23:59"],
+        "Thursday": ["00:00-06:00", "06:30-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
     },
-    "crypto_padrao": {
-        "Monday": ["00:05-23:59"],
-        "Tuesday": ["00:05-23:59"],
-        "Wednesday": ["00:05-23:59"],
-        "Thursday": ["00:05-23:59"],
-        "Friday": ["00:05-23:59"],
-        "Saturday": ["00:05-23:59"],
-        "Sunday": ["00:05-23:59"]
+    "BTC/USD_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
     },
-    "stock_padrao": {
-        "Monday": ["09:30-16:00"],
-        "Tuesday": ["09:30-16:00"],
-        "Wednesday": ["09:30-16:00"],
-        "Thursday": ["09:30-16:00"],
-        "Friday": ["09:30-16:00"],
-        "Saturday": [],
-        "Sunday": []
+    "Google_OTC": {
+        "Monday": ["00:00-15:30", "16:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-15:30", "16:00-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-15:30", "16:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
     },
-    "indices_padrao": {
-        "Monday": ["00:05-23:59"],
-        "Tuesday": ["00:05-23:59"],
-        "Wednesday": ["00:05-23:59"],
-        "Thursday": ["00:05-23:59"],
-        "Friday": ["00:05-23:59"],
-        "Saturday": ["00:05-23:59"],
-        "Sunday": ["00:05-23:59"]
+    "EUR/JPY_OTC": {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-01:00", "01:15-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
     },
-    "btc_padrao": {
-        "Monday": ["00:05-23:59"],
-        "Tuesday": ["00:05-23:59"],
-        "Wednesday": ["00:05-23:59"],
-        "Thursday": ["00:05-23:59"],
-        "Friday": ["00:05-23:59"],
-        "Saturday": ["00:05-23:59"],
-        "Sunday": ["00:05-23:59"]
+    "ETH/USD_OTC": {
+        "Monday": ["00:00-18:45", "19:15-23:59"],
+        "Tuesday": ["00:00-18:45", "19:15-23:59"],
+        "Wednesday": ["00:00-18:45", "19:15-23:59"],
+        "Thursday": ["00:00-18:45", "19:15-23:59"],
+        "Friday": ["00:00-18:45", "19:15-23:59"],
+        "Saturday": ["00:00-18:45", "19:15-23:59"],
+        "Sunday": ["00:00-18:45", "19:15-23:59"]
     },
-    "blitz_padrao": {
-        "Monday": ["00:05-23:59"],
-        "Tuesday": ["00:05-23:59"],
-        "Wednesday": ["00:05-23:59"],
-        "Thursday": ["00:05-23:59"],
-        "Friday": ["00:05-23:59"],
-        "Saturday": ["00:05-23:59"],
-        "Sunday": ["00:05-23:59"]
+    "MELANIA_COIN_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "EUR/GBP_OTC": {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-01:00", "01:15-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "Apple_OTC": {
+        "Monday": ["00:00-15:30", "16:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-15:30", "16:00-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-15:30", "16:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "Amazon_OTC": {
+        "Monday": ["00:00-15:30", "16:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-15:30", "16:00-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-15:30", "16:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "TRUM_Coin_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Nike_Inc_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "DOGECOIN_OTC": {
+        "Monday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Tuesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Wednesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Thursday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Friday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Saturday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Sunday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"]
+    },
+    "Tesla_OTC": {
+        "Monday": ["00:00-15:30", "16:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-15:30", "16:00-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-15:30", "16:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "SOL/USD_OTC": {
+        "Monday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Tuesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Wednesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Thursday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Friday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Saturday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Sunday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"]
+    },
+    "1000Sats_OTC": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "XAUUSD_OTC": {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-23:59"],
+        "Thursday": ["00:00-06:00", "06:30-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "McDonalds_Corporation_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Meta_OTC": {
+        "Monday": ["00:00-15:30", "16:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-15:30", "16:00-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-15:30", "16:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "Coca_Cola_Company_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "CARDANO_OTC": {
+        "Monday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Tuesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Wednesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Thursday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Friday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Saturday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Sunday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"]
+    },
+    "EUR/USD_OTC": {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-01:00", "01:15-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "PEN/USD_OTC": {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-00:45", "01:15-23:59"],
+        "Wednesday": ["00:00-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "Bitcoin_Cash_OTC": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "AUD/CAD_OTC": {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-01:00", "01:15-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "Tesla/Ford_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "US_100_OTC": {
+        "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"]
+    },
+    "TRON/USD_OTC": {
+        "Monday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Tuesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Wednesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Thursday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Friday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Saturday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Sunday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"]
+    },
+    "USD/CAD_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "AUD/USD_OTC": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+    },
+    "AIG_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Alibaba_Group_Holding_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Snap_Inc_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "US_500_OTC": {
+        "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"]
+    },
+    "AUD/CHF_OTC": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+    },
+    "Amazon/Alibaba_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Pepe_OTC": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Chainlink_OTC": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "USD/ZAR_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
     }
 }
 
 # Mapeamento de ativos para padrões de horários
-assets = {}
-
-# Configuração para ativos Forex padrão
-for ativo in [
-    "EUR/USD", "EUR/GBP", "AUD/CAD", "AUD/JPY", "EUR/AUD", "EUR/CAD", "EUR/JPY", "GBP/AUD", "GBP/JPY", "GBP/USD", "NZD/USD", "USD/CAD", "USD/CHF", "USD/JPY",
-    "AUD/USD", "AUD/NZD", "CAD/CHF", "CAD/JPY", "CHF/JPY", "EUR/CHF", "EUR/NZD", "GBP/CAD", "GBP/CHF", "GBP/NZD", "NZD/CAD", "NZD/CHF", "NZD/JPY", "USD/MXN",
-    "USD/NOK", "USD/PLN", "USD/SGD", "USD/TRY", "USD/ZAR"
-]:
-    assets[ativo] = HORARIOS_PADRAO["forex_padrao"]
-
-# Configuração para ativos OTC
-for ativo in [
-    "AUD/CAD (OTC)", "AUD/CHF (OTC)", "AUD/JPY (OTC)", "AUD/NZD (OTC)", "EUR/AUD (OTC)", "EUR/CAD (OTC)", "EUR/CHF (OTC)", "EUR/GBP (OTC)", "EUR/JPY (OTC)",
-    "EUR/NZD (OTC)", "EUR/USD (OTC)", "GBP/AUD (OTC)", "GBP/CAD (OTC)", "GBP/CHF (OTC)", "GBP/JPY (OTC)", "GBP/NZD (OTC)", "GBP/USD (OTC)", "NZD/CAD (OTC)",
-    "NZD/CHF (OTC)", "NZD/JPY (OTC)", "NZD/USD (OTC)", "USD/CAD (OTC)", "USD/CHF (OTC)", "USD/JPY (OTC)", "USD/SGD (OTC)", "USD/TRY (OTC)"
-]:
-    assets[ativo] = HORARIOS_PADRAO["otc_padrao"]
-
-# Configuração para ativos Digital Options padrão
-for ativo in [
-    "Digital_AUD/CAD", "Digital_AUD/CHF", "Digital_AUD/JPY", "Digital_AUD/NZD", "Digital_AUD/USD", "Digital_CAD/CHF", "Digital_CAD/JPY", "Digital_CHF/JPY",
-    "Digital_EUR/AUD", "Digital_EUR/CAD", "Digital_EUR/CHF", "Digital_EUR/GBP", "Digital_EUR/JPY", "Digital_EUR/NZD", "Digital_EUR/USD", "Digital_GBP/AUD",
-    "Digital_GBP/CAD", "Digital_GBP/CHF", "Digital_GBP/JPY", "Digital_GBP/NZD", "Digital_GBP/USD", "Digital_NZD/CAD", "Digital_NZD/CHF", "Digital_NZD/JPY",
-    "Digital_NZD/USD", "Digital_USD/CAD", "Digital_USD/CHF", "Digital_USD/JPY", "Digital_USD/NOK", "Digital_USD/PLN", "Digital_USD/SGD", "Digital_USD/TRY",
-    "Digital_USD/ZAR"
-]:
-    assets[ativo] = HORARIOS_PADRAO["forex_padrao"]
-
-# Configuração para ativos Digital Options OTC
-for ativo in [
-    "Digital_AUD/CAD (OTC)", "Digital_AUD/JPY (OTC)", "Digital_EUR/AUD (OTC)", "Digital_EUR/CAD (OTC)", "Digital_EUR/CHF (OTC)", "Digital_EUR/GBP (OTC)",
-    "Digital_EUR/JPY (OTC)", "Digital_EUR/USD (OTC)", "Digital_GBP/AUD (OTC)", "Digital_GBP/JPY (OTC)", "Digital_GBP/USD (OTC)", "Digital_NZD/USD (OTC)",
-    "Digital_USD/CAD (OTC)", "Digital_USD/CHF (OTC)", "Digital_USD/JPY (OTC)", "Digital_USD/SGD (OTC)", "Digital_USD/TRY (OTC)"
-]:
-    assets[ativo] = HORARIOS_PADRAO["otc_padrao"]
-
-# Configuração para ativos Crypto
-for ativo in ["BTC/USD", "ETH/USD", "XRP/USD", "LTC/USD", "EOS/USD", "BTC/UAH", "BTC/EUR"]:
-    assets[ativo] = HORARIOS_PADRAO["crypto_padrao"]
-
-# Configuração para ativos Stocks
-for ativo in [
-    "TSLA", "AAPL", "AMZN", "MSFT", "FB", "NFLX", "GOOGL", "BABA", "UBER", "PFE", "TWTR", "SBUX", "BA", "WMT", "KO", "DIS", "INTC", "QCOM", "CSCO", "NVDA",
-    "AMD", "PYPL", "EBAY", "MU", "SNAP", "GM", "F"
-]:
-    assets[ativo] = HORARIOS_PADRAO["stock_padrao"]
-
-# Configuração para ativos Índices
-for ativo in [
-    "OTC FTSE 100 Index", "OTC US 30 Index", "OTC US 100 NAS", "OTC US 500 Index", "OTC HK 50 Index", "OTC DE 40 Index", "OTC DE 30 Index", "OTC EUR 50 Index",
-    "OTC UK 100 Index", "OTC JP 225 Index", "OTC CHN 50 Index", "OTC AUS 200 Index", "OTC FR 40 Index", "OTC NED 25 Index", "OTC AUS SPI", "OTC IT 40 Index",
-    "OTC SP 35 Index", "OTC 500 INDU"
-]:
-    assets[ativo] = HORARIOS_PADRAO["indices_padrao"]
-
-# Configuração para ativos Commodities
-for ativo in ["GOLD", "SILVER", "OIL", "PLATINUM", "COPPER", "COCOA", "CORN", "COTTON", "SOYBEAN", "SUGAR", "COFFEE"]:
-    assets[ativo] = HORARIOS_PADRAO["forex_padrao"]
-
-# Configuração para ativos Blitz
-for ativo in [
-    "EURUSD-OTCFX", "GBPUSD-OTCFX", "EURGBP-OTCFX", "USDCHF-OTCFX", "EURJPY-OTCFX", "NZDUSD-OTCFX", "AUDUSD-OTCFX", "USDJPY-OTCFX", "USDCAD-OTCFX",
-    "AUDJPY-OTCFX", "GBPJPY-OTCFX"
-]:
-    assets[ativo] = HORARIOS_PADRAO["blitz_padrao"]
+assets = {
+    "USD/BRL (OTC)": HORARIOS_PADRAO["USD/BRL_OTC"],
+    "USOUSD (OTC)": HORARIOS_PADRAO["USOUSD_OTC"],
+    "BTC/USD (OTC)": HORARIOS_PADRAO["BTC/USD_OTC"],
+    "Google (OTC)": HORARIOS_PADRAO["Google_OTC"],
+    "EUR/JPY (OTC)": HORARIOS_PADRAO["EUR/JPY_OTC"],
+    "ETH/USD (OTC)": HORARIOS_PADRAO["ETH/USD_OTC"],
+    "MELANIA COIN (OTC)": HORARIOS_PADRAO["MELANIA_COIN_OTC"],
+    "EUR/GBP (OTC)": HORARIOS_PADRAO["EUR/GBP_OTC"],
+    "Apple (OTC)": HORARIOS_PADRAO["Apple_OTC"],
+    "Amazon (OTC)": HORARIOS_PADRAO["Amazon_OTC"],
+    "TRUM Coin (OTC)": HORARIOS_PADRAO["TRUM_Coin_OTC"],
+    "Nike, Inc. (OTC)": HORARIOS_PADRAO["Nike_Inc_OTC"],
+    "DOGECOIN (OTC)": HORARIOS_PADRAO["DOGECOIN_OTC"],
+    "Tesla (OTC)": HORARIOS_PADRAO["Tesla_OTC"],
+    "SOL/USD (OTC)": HORARIOS_PADRAO["SOL/USD_OTC"],
+    "1000Sats (OTC)": HORARIOS_PADRAO["1000Sats_OTC"],
+    "XAUUSD (OTC)": HORARIOS_PADRAO["XAUUSD_OTC"],
+    "McDonald´s Corporation (OTC)": HORARIOS_PADRAO["McDonalds_Corporation_OTC"],
+    "Meta (OTC)": HORARIOS_PADRAO["Meta_OTC"],
+    "Coca-Cola Company (OTC)": HORARIOS_PADRAO["Coca_Cola_Company_OTC"],
+    "CARDANO (OTC)": HORARIOS_PADRAO["CARDANO_OTC"],
+    "EUR/USD (OTC)": HORARIOS_PADRAO["EUR/USD_OTC"],
+    "PEN/USD (OTC)": HORARIOS_PADRAO["PEN/USD_OTC"],
+    "Bitcoin Cash (OTC)": HORARIOS_PADRAO["Bitcoin_Cash_OTC"],
+    "AUD/CAD (OTC)": HORARIOS_PADRAO["AUD/CAD_OTC"],
+    "Tesla/Ford (OTC)": HORARIOS_PADRAO["Tesla/Ford_OTC"],
+    "US 100 (OTC)": HORARIOS_PADRAO["US_100_OTC"],
+    "TRON/USD (OTC)": HORARIOS_PADRAO["TRON/USD_OTC"],
+    "USD/CAD (OTC)": HORARIOS_PADRAO["USD/CAD_OTC"],
+    "AUD/USD (OTC)": HORARIOS_PADRAO["AUD/USD_OTC"],
+    "AIG (OTC)": HORARIOS_PADRAO["AIG_OTC"],
+    "Alibaba Group Holding (OTC)": HORARIOS_PADRAO["Alibaba_Group_Holding_OTC"],
+    "Snap Inc. (OTC)": HORARIOS_PADRAO["Snap_Inc_OTC"],
+    "US 500 (OTC)": HORARIOS_PADRAO["US_500_OTC"],
+    "AUD/CHF (OTC)": HORARIOS_PADRAO["AUD/CHF_OTC"],
+    "Amazon/Alibaba (OTC)": HORARIOS_PADRAO["Amazon/Alibaba_OTC"],
+    "Pepe (OTC)": HORARIOS_PADRAO["Pepe_OTC"],
+    "Chainlink (OTC)": HORARIOS_PADRAO["Chainlink_OTC"],
+    "USD/ZAR (OTC)": HORARIOS_PADRAO["USD/ZAR_OTC"]
+}
 
 # Lista de ativos disponíveis para negociação
 ATIVOS_FORNECIDOS = list(ATIVOS_CATEGORIAS.keys())
@@ -514,8 +618,8 @@ def bot2_gerar_sinal_aleatorio():
 
 def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     """
-    Formata a mensagem do sinal para o idioma especificado.
-    Retorna a mensagem formatada no idioma correto (pt, en ou es).
+    Formata a mensagem do sinal em português.
+    Retorna a mensagem formatada.
     """
     ativo = sinal['ativo']
     direcao = sinal['direcao']
@@ -523,7 +627,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
 
     # Debug: registrar os dados sendo usados para formatar a mensagem
-    BOT2_LOGGER.info(f"Formatando mensagem com: ativo={ativo}, direção={direcao}, categoria={categoria}, tempo={tempo_expiracao_minutos}, idioma={idioma}")
+    BOT2_LOGGER.info(f"Formatando mensagem com: ativo={ativo}, direção={direcao}, categoria={categoria}, tempo={tempo_expiracao_minutos}")
 
     # Formatação do nome do ativo para exibição
     nome_ativo_exibicao = ativo.replace("Digital_", "") if ativo.startswith("Digital_") else ativo
@@ -532,8 +636,6 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
 
     # Configura ações e emojis conforme a direção
     action_pt = "COMPRA" if direcao == 'buy' else "VENDA"
-    action_en = "BUY" if direcao == 'buy' else "SELL"
-    action_es = "COMPRA" if direcao == 'buy' else "VENTA"
     emoji = "🟢" if direcao == 'buy' else "🔴"
 
     # Hora de entrada convertida para datetime
@@ -568,10 +670,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_reentrada1_formatada = hora_reentrada1.strftime("%H:%M")
     hora_reentrada2_formatada = hora_reentrada2.strftime("%H:%M")
 
-    # Textos de expiração em diferentes idiomas
+    # Texto de expiração
     expiracao_texto_pt = f"⏳ Expiração: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
-    expiracao_texto_en = f"⏳ Expiration: {tempo_expiracao_minutos} minute{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
-    expiracao_texto_es = f"⏳ Expiración: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
     
     # Mensagem em PT
     mensagem_pt = (f"⚠️TRADE RÁPIDO⚠️\n\n"
@@ -583,38 +683,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"Reentrada 1 - {hora_reentrada1_formatada}\n"
             f"Reentrada 2 - {hora_reentrada2_formatada}")
             
-    # Mensagem em EN
-    mensagem_en = (f"⚠️QUICK TRADE⚠️\n\n"
-            f"💵 Asset: {nome_ativo_exibicao}\n"
-            f"🏷️ Options: {categoria}\n"
-            f"{emoji} {action_en}\n"
-            f"➡ Entry: {hora_entrada_formatada}\n"
-            f"{expiracao_texto_en}\n"
-            f"Re-entry 1 - {hora_reentrada1_formatada}\n"
-            f"Re-entry 2 - {hora_reentrada2_formatada}")
-            
-    # Mensagem em ES
-    mensagem_es = (f"⚠️COMERCIO RÁPIDO⚠️\n\n"
-            f"💵 Activo: {nome_ativo_exibicao}\n"
-            f"🏷️ Opciones: {categoria}\n"
-            f"{emoji} {action_es}\n"
-            f"➡ Entrada: {hora_entrada_formatada}\n"
-            f"{expiracao_texto_es}\n"
-            f"Reentrada 1 - {hora_reentrada1_formatada}\n"
-            f"Reentrada 2 - {hora_reentrada2_formatada}")
-            
-    # Verificar se há algum texto não esperado antes de retornar a mensagem
-    if idioma == "pt":
-        mensagem_final = mensagem_pt
-    elif idioma == "en":
-        mensagem_final = mensagem_en
-    elif idioma == "es":
-        mensagem_final = mensagem_es
-    else:  # Padrão para qualquer outro idioma (português)
-        mensagem_final = mensagem_pt
-        
-    BOT2_LOGGER.info(f"Mensagem formatada final para idioma {idioma}: {mensagem_final}")
-    return mensagem_final
+    BOT2_LOGGER.info(f"Mensagem formatada final: {mensagem_pt}")
+    return mensagem_pt
 
 def bot2_registrar_envio(ativo, direcao, categoria):
     """
@@ -640,163 +710,81 @@ VIDEOS_POS_SINAL_DIR = os.path.join(VIDEOS_DIR, "pos_sinal")
 VIDEOS_ESPECIAL_DIR = os.path.join(VIDEOS_DIR, "especial")
 VIDEOS_PROMO_DIR = os.path.join(VIDEOS_DIR, "promo")
 
-# Criar os subdiretórios dos idiomas para vídeos pós-sinal
+# Criar os subdiretórios dos idiomas para vídeos pós-sinal (apenas PT)
 VIDEOS_POS_SINAL_PT_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "pt")
-VIDEOS_POS_SINAL_EN_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "en")
-VIDEOS_POS_SINAL_ES_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "es")
-
-# Atualização dos diretórios e arquivos para os vídeos especiais por idioma
-VIDEOS_ESPECIAL_PT_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
-VIDEOS_ESPECIAL_EN_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "en")
-VIDEOS_ESPECIAL_ES_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "es")
-
-# Criar os subdiretórios se não existirem
-os.makedirs(VIDEOS_POS_SINAL_DIR, exist_ok=True)
-os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
-os.makedirs(VIDEOS_PROMO_DIR, exist_ok=True)
 os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
-os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
-os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
+
+# Atualização dos diretórios e arquivos para os vídeos especiais (apenas PT)
+VIDEOS_ESPECIAL_PT_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
 os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
-os.makedirs(VIDEOS_ESPECIAL_EN_DIR, exist_ok=True)
-os.makedirs(VIDEOS_ESPECIAL_ES_DIR, exist_ok=True)
 
-# Configurar vídeos pós-sinal específicos para cada idioma 
-VIDEOS_POS_SINAL = {
-    "pt": [
-        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "padrão.mp4"),  # Vídeo padrão em português (9/10)
-        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "especial.mp4")  # Vídeo especial em português (1/10)
-    ],
-    "en": [
-        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "padrao.mp4"),  # Vídeo padrão em inglês (9/10)
-        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "especial.mp4")  # Vídeo especial em inglês (1/10)
-    ],
-    "es": [
-        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "padrao.mp4"),  # Vídeo padrão em espanhol (9/10)
-        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "especial.mp4")  # Vídeo especial em espanhol (1/10)
-    ]
-}
+# Arquivos para vídeos promocionais (apenas PT)
+VIDEO_PROMO_PT = os.path.join(VIDEOS_PROMO_DIR, "promo_pt.mp4")
 
-# Vídeo especial a cada 3 sinais (por idioma)
-VIDEOS_ESPECIAIS = {
-    "pt": os.path.join(VIDEOS_ESPECIAL_DIR, "especial.mp4"),
-    "en": os.path.join(VIDEOS_ESPECIAL_EN_DIR, "especial.mp4"),
-    "es": os.path.join(VIDEOS_ESPECIAL_ES_DIR, "especial.mp4")
-}
-
-# Vídeos promocionais por idioma
+# Dicionário com os caminhos dos vídeos promocionais (apenas PT)
 VIDEOS_PROMO = {
-    "pt": os.path.join(VIDEOS_PROMO_DIR, "pt.mp4"),
-    "en": os.path.join(VIDEOS_PROMO_DIR, "en.mp4"),
-    "es": os.path.join(VIDEOS_PROMO_DIR, "es.mp4")
+    "pt": VIDEO_PROMO_PT
 }
 
-# Vídeo GIF especial que vai ser enviado a cada 3 sinais (apenas no canal português)
-VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_DIR, "gif_especial_pt.mp4")
+# Dicionário com os caminhos dos vídeos especiais (apenas PT)
+VIDEOS_ESPECIAIS = {
+    "pt": os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial_pt.mp4")
+}
+
+# Dicionário com os caminhos dos vídeos pós-sinal (apenas PT)
+VIDEOS_POS_SINAL = {
+    "pt": os.path.join(VIDEOS_POS_SINAL_PT_DIR, "pos_sinal_pt.mp4")
+}
+
+# Caminho do GIF especial para o canal português
+GIF_ESPECIAL_PT = "gif_especial_pt.mp4"  # No diretório principal
 
 # Contador para controle dos GIFs pós-sinal
 contador_pos_sinal = 0
 contador_desde_ultimo_especial = 0
 
-# Função para enviar GIF pós-sinal (1 minuto após cada sinal)
+# Função para enviar GIF após o sinal
 def bot2_enviar_gif_pos_sinal():
     """
-    Envia um vídeo 1 minuto após cada sinal.
-    Escolhe entre dois vídeos: o primeiro é enviado em 9 de 10 sinais, o segundo em 1 de 10 sinais.
-    A escolha do vídeo especial (segundo) é aleatória, garantindo apenas a proporção de 1 a cada 10.
-    O vídeo enviado é específico para o idioma de cada canal.
+    Envia um GIF após cada sinal (5 minutos depois).
     """
-    global contador_pos_sinal, contador_desde_ultimo_especial
-    
     try:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO VÍDEO PÓS-SINAL (1 minuto após o sinal)...")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO GIF PÓS-SINAL...")
         
-        # Incrementar os contadores
-        contador_pos_sinal += 1
-        contador_desde_ultimo_especial += 1
+        # Garantir que as pastas existam
+        os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
         
-        # Decidir qual vídeo enviar (9/10 o primeiro, 1/10 o segundo)
-        escolha_video = 0  # Índice do primeiro vídeo por padrão
-        
-        # Lógica para seleção aleatória do vídeo especial
-        if contador_desde_ultimo_especial >= 10:
-            # Forçar o vídeo especial se já passaram 10 sinais desde o último
-            escolha_video = 1
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO ESPECIAL (forçado após 10 sinais)")
-            contador_desde_ultimo_especial = 0
-        elif contador_desde_ultimo_especial > 1:
-            # A probabilidade de enviar o vídeo especial aumenta conforme
-            # mais sinais passam sem que o especial seja enviado
-            probabilidade = (contador_desde_ultimo_especial - 1) / 10.0
-            if random.random() < probabilidade:
-                escolha_video = 1
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO ESPECIAL (aleatório com probabilidade {probabilidade:.2f})")
-                contador_desde_ultimo_especial = 0
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO PADRÃO (probabilidade de especial era {probabilidade:.2f})")
-        else:
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO PADRÃO (muito cedo para especial)")
-        
-        # Loop para enviar aos canais configurados
+        # Para cada canal, enviar o GIF correspondente
         for chat_id in BOT2_CHAT_IDS:
-            # Pegar configuração do canal
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
+            # Obter o vídeo pós-sinal para português
+            video_path = VIDEOS_POS_SINAL["pt"]
             
-            # Obter o caminho do vídeo escolhido de acordo com o idioma
-            # Se o idioma não existir, usa o português como fallback
-            if idioma in VIDEOS_POS_SINAL:
-                video_path = VIDEOS_POS_SINAL[idioma][escolha_video]
-            else:
-                video_path = VIDEOS_POS_SINAL["pt"][escolha_video]
-                
-            BOT2_LOGGER.info(f"[{horario_atual}] Caminho do vídeo escolhido para {idioma}: {video_path}")
-            
-            # Verificar se o arquivo existe
             if not os.path.exists(video_path):
-                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo não encontrado: {video_path}")
-                # Listar os arquivos na pasta para debug
-                pasta_videos = os.path.dirname(video_path)
-                BOT2_LOGGER.info(f"[{horario_atual}] Arquivos na pasta {pasta_videos}: {os.listdir(pasta_videos) if os.path.exists(pasta_videos) else 'PASTA NÃO EXISTE'}")
-                # Tentar usar o vídeo em português como backup se o idioma não for PT
-                if idioma != "pt":
-                    video_path = VIDEOS_POS_SINAL["pt"][escolha_video]
-                    BOT2_LOGGER.info(f"[{horario_atual}] Tentando usar vídeo em português como backup: {video_path}")
-                    if not os.path.exists(video_path):
-                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo backup também não encontrado: {video_path}")
-                        continue
+                BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo pós-sinal não encontrado: {video_path}")
+                continue
+                
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO PÓS-SINAL para o canal {chat_id}...")
+            
+            # Enviar o vídeo
+            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+            
+            with open(video_path, 'rb') as video_file:
+                files = {
+                    'video': video_file
+                }
+                
+                payload = {
+                    'chat_id': chat_id,
+                    'parse_mode': 'HTML'
+                }
+                
+                resposta = requests.post(url_base, data=payload, files=files)
+                
+                if resposta.status_code != 200:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pós-sinal para o canal {chat_id}: {resposta.text}")
                 else:
-                    continue
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] Arquivo de vídeo encontrado: {video_path}")
-            
-            # Enviar o vídeo escolhido
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando vídeo para o canal {chat_id} em {idioma}...")
-            url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-            
-            try:
-                with open(video_path, 'rb') as video_file:
-                    files = {
-                        'video': video_file
-                    }
-                    
-                    payload_video = {
-                        'chat_id': chat_id,
-                        'parse_mode': 'HTML'
-                    }
-                    
-                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando requisição para API do Telegram...")
-                    resposta_video = requests.post(url_base_video, data=payload_video, files=files)
-                    BOT2_LOGGER.info(f"[{horario_atual}] Resposta da API: {resposta_video.status_code}")
-                    
-                    if resposta_video.status_code != 200:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pós-sinal para o canal {chat_id}: {resposta_video.text}")
-                    else:
-                        tipo_video = "ESPECIAL (1/10)" if escolha_video == 1 else "PADRÃO (9/10)"
-                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL {tipo_video} ENVIADO COM SUCESSO para o canal {chat_id} em {idioma}")
-            except Exception as e:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao abrir ou enviar arquivo de vídeo: {str(e)}")
+                    BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
     
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
@@ -812,50 +800,28 @@ def bot2_enviar_promo_pre_sinal():
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PROMOCIONAL PRÉ-SINAL...")
         
-        # Loop para enviar aos canais configurados
+        # Loop para enviar ao canal configurado
         for chat_id in BOT2_CHAT_IDS:
-            # Pegar configuração do canal
+            # Obter link específico para este canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
+            link_corretora = config_canal["link_corretora"]
             
-            # Preparar textos baseados no idioma com link diretamente no texto
-            if idioma == "pt":
-                texto_mensagem = (
-                    "👉🏼Abram a corretora Pessoal\n\n"
-                    "⚠️FIQUEM ATENTOS⚠️\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
-                )
-            elif idioma == "en":
-                texto_mensagem = (
-                    "👉🏼Open the broker now\n\n"
-                    "⚠️STAY ALERT⚠️\n\n"
-                    "🔥Register on XXBROKER right now🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICK HERE</a>"
-                )
-            elif idioma == "es":
-                texto_mensagem = (
-                    "👉🏼Abran el corredor ahora\n\n"
-                    "⚠️ESTÉN ATENTOS⚠️\n\n"
-                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLIC AQUÍ</a>"
-                )
-            else:
-                texto_mensagem = (
-                    "👉🏼Abram a corretora Pessoal\n\n"
-                    "⚠️FIQUEM ATENTOS⚠️\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
-                )
+            # Preparar texto em português com o link específico
+            texto_mensagem = (
+                "👉🏼Abram a corretora Pessoal\n\n"
+                "⚠️FIQUEM ATENTOS⚠️\n\n"
+                "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
+            )
             
-            # Obter caminho do vídeo específico para este idioma
-            video_path = VIDEOS_PROMO.get(idioma, VIDEOS_PROMO["pt"])  # Usa o vídeo PT como fallback
+            # Obter caminho do vídeo para português
+            video_path = VIDEOS_PROMO["pt"]
             
             # Verificar se o arquivo existe
             if not os.path.exists(video_path):
                 BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo promocional não encontrado: {video_path}")
             else:
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO PROMOCIONAL PRÉ-SINAL para o canal {chat_id} em {idioma}...")
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO PROMOCIONAL PRÉ-SINAL para o canal {chat_id}...")
                 # Enviar vídeo
                 url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
                 
@@ -876,7 +842,7 @@ def bot2_enviar_promo_pre_sinal():
                         BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PROMOCIONAL PRÉ-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
             
             # Enviar mensagem com link (agora incorporado diretamente no texto, não como botão)
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL PRÉ-SINAL para o canal {chat_id} em {idioma}...")
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL PRÉ-SINAL para o canal {chat_id}...")
             url_base_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
             
             payload_msg = {
@@ -901,82 +867,35 @@ def bot2_enviar_promo_pre_sinal():
 def bot2_enviar_promo_especial():
     """
     Envia uma mensagem promocional especial a cada 3 sinais enviados.
-    Para todos os canais: envia o vídeo específico do idioma e depois a mensagem.
     """
     try:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) - Contador: {bot2_contador_sinais}...")
         
-        # Loop para enviar aos canais configurados
+        # Loop para enviar ao canal configurado
         for chat_id in BOT2_CHAT_IDS:
-            # Pegar configuração do canal
+            # Obter link específico para este canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
+            link_corretora = config_canal["link_corretora"]
             
-            # Preparar textos baseados no idioma com links diretamente no texto
-            if idioma == "pt":
-                texto_mensagem = (
-                    "Seguimos com as operações ✅\n\n"
-                    "Mantenham a corretora aberta!!\n\n\n"
-                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
-                )
-            elif idioma == "en":
-                texto_mensagem = (
-                    "We continue with operations ✅\n\n"
-                    "Keep the broker open!!\n\n\n"
-                    "For those who haven't started making money with us yet👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLICK HERE AND WATCH THE VIDEO</a>\n\n"
-                    "🔥Register on XXBROKER right now🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICK HERE</a>"
-                )
-            elif idioma == "es":
-                texto_mensagem = (
-                    "Continuamos con las operaciones ✅\n\n"
-                    "¡Mantengan el corredor abierto!\n\n\n"
-                    "Para quienes aún no han comenzado a ganar dinero con nosotros👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">HAZ CLIC AQUÍ Y MIRA EL VIDEO</a>\n\n"
-                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLIC AQUÍ</a>"
-                )
-            else:
-                texto_mensagem = (
-                    "Seguimos com as operações ✅\n\n"
-                    "Mantenham a corretora aberta!!\n\n\n"
-                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
-                )
+            # Preparar texto em português com o link específico
+            texto_mensagem = (
+                "Seguimos com as operações ✅\n\n"
+                "Mantenham a corretora aberta!!\n\n\n"
+                "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
+                "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
+            )
             
-            # Obter o caminho do vídeo especial específico para este idioma
-            if idioma in VIDEOS_ESPECIAIS:
-                video_path = VIDEOS_ESPECIAIS[idioma]
-            else:
-                video_path = VIDEOS_ESPECIAIS["pt"]  # Fallback para português
+            # Obter o caminho do vídeo especial
+            video_path = VIDEOS_ESPECIAIS["pt"]
                 
             # Verificar se o arquivo existe
             if not os.path.exists(video_path):
                 BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo especial não encontrado: {video_path}")
-                # Tentar usar o vídeo em português como backup se o idioma não for PT
-                if idioma != "pt":
-                    video_path = VIDEOS_ESPECIAIS["pt"]
-                    BOT2_LOGGER.info(f"[{horario_atual}] Tentando usar vídeo especial em português como backup: {video_path}")
-                    if not os.path.exists(video_path):
-                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo especial backup também não encontrado: {video_path}")
-                        # Prosseguir para enviar apenas a mensagem de texto
-                    else:
-                        # Enviar vídeo
-                        BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em português para o canal {chat_id}...")
-                        bot2_enviar_video_especial(video_path, chat_id, horario_atual)
-                else:
-                    # Prosseguir para enviar apenas a mensagem de texto
-                    pass
             else:
                 # Enviar vídeo
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em {idioma} para o canal {chat_id}...")
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) para o canal {chat_id}...")
                 bot2_enviar_video_especial(video_path, chat_id, horario_atual)
             
             # Enviar mensagem com links (agora incorporados diretamente no texto)
@@ -1053,8 +972,8 @@ def bot2_enviar_gif_especial_pt():
             # Enviar apenas para o canal em português
             if idioma == "pt":
                 # Verificar se o arquivo existe
-                if not os.path.exists(VIDEO_GIF_ESPECIAL_PT):
-                    BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {VIDEO_GIF_ESPECIAL_PT}")
+                if not os.path.exists(GIF_ESPECIAL_PT):
+                    BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {GIF_ESPECIAL_PT}")
                     BOT2_LOGGER.info(f"[{horario_atual}] Listando arquivos na pasta {VIDEOS_ESPECIAL_DIR}: {os.listdir(VIDEOS_ESPECIAL_DIR) if os.path.exists(VIDEOS_ESPECIAL_DIR) else 'PASTA NÃO EXISTE'}")
                     return
                 
@@ -1062,7 +981,7 @@ def bot2_enviar_gif_especial_pt():
                 # Usar sendVideo em vez de sendAnimation para maior compatibilidade
                 url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
                 
-                with open(VIDEO_GIF_ESPECIAL_PT, 'rb') as gif_file:
+                with open(GIF_ESPECIAL_PT, 'rb') as gif_file:
                     files = {
                         'video': gif_file
                     }
@@ -1077,7 +996,7 @@ def bot2_enviar_gif_especial_pt():
                         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {resposta_video.text}")
                         # Tentar método alternativo se o primeiro falhar
                         url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                        with open(VIDEO_GIF_ESPECIAL_PT, 'rb') as alt_file:
+                        with open(GIF_ESPECIAL_PT, 'rb') as alt_file:
                             files_alt = {'animation': alt_file}
                             resp_alt = requests.post(url_alt, data=payload_video, files=files_alt)
                             if resp_alt.status_code == 200:
@@ -1093,125 +1012,83 @@ def bot2_enviar_gif_especial_pt():
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial: {str(e)}")
         traceback.print_exc()
 
-# Modificar a função bot2_send_message para alterar os tempos de agendamento
 def bot2_send_message(ignorar_anti_duplicacao=False):
-    global bot2_contador_sinais
-    
+    """
+    Função principal para enviar uma mensagem de sinal para o canal do Telegram.
+    Executa todo o processo de geração e envio de sinal.
+    """
     try:
-        # Verifica se já enviou muito recentemente (anti-duplicação)
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
-        
-        if not ignorar_anti_duplicacao and hasattr(bot2_send_message, 'ultimo_envio_timestamp'):
-            ultimo_envio = bot2_send_message.ultimo_envio_timestamp
-            diferenca = (agora - ultimo_envio).total_seconds()
-            if diferenca < 60:  # Se a última mensagem foi enviada há menos de 1 minuto
-                BOT2_LOGGER.info(f"[{horario_atual}] Anti-duplicação: Mensagem ignorada. Última enviada há {diferenca:.1f} segundos.")
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        hora_formatada = bot2_obter_hora_brasilia().strftime("%H:%M")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DE SINAL...")
+
+        # Verificação anti-duplicação (menos de 15 minutos entre envios)
+        if not ignorar_anti_duplicacao:
+            tempo_desde_ultimo_envio = (bot2_obter_hora_brasilia() - bot2_send_message.ultimo_envio_timestamp).total_seconds() / 60
+            if tempo_desde_ultimo_envio < 10:  # Ajustado para 10 minutos
+                BOT2_LOGGER.warning(f"[{horario_atual}] Tentativa de envio muito próxima ao último envio ({tempo_desde_ultimo_envio:.1f} minutos). Pulando.")
                 return
 
-        # Atualiza o timestamp da última mensagem enviada para evitar duplicações
-        bot2_send_message.ultimo_envio_timestamp = agora
-
-        # Verifica se não excedeu o limite por hora
-        hora_atual = agora.replace(minute=0, second=0, microsecond=0)
-        if hora_atual not in bot2_send_message.contagem_por_hora:
-            bot2_send_message.contagem_por_hora = {hora_atual: 0}
-
-        if not ignorar_anti_duplicacao and bot2_send_message.contagem_por_hora[hora_atual] >= BOT2_LIMITE_SINAIS_POR_HORA:
-            BOT2_LOGGER.info(f"[{horario_atual}] Limite de {BOT2_LIMITE_SINAIS_POR_HORA} sinais por hora atingido. Ignorando este sinal.")
-            return
-
-        # Gera um sinal aleatório para enviar
+        # Escolher aleatoriamente um sinal para enviar
         sinal = bot2_gerar_sinal_aleatorio()
         if not sinal:
-            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao gerar sinal. Abortando envio.")
+            BOT2_LOGGER.error(f"[{horario_atual}] Não foi possível gerar um sinal. Nenhum ativo disponível.")
             return
-
-        # Incrementa o contador de mensagens enviadas nesta hora
-        bot2_send_message.contagem_por_hora[hora_atual] += 1
-
-        # Registra a hora de geração do sinal
-        BOT2_LOGGER.info(f"[{horario_atual}] SINAL GERADO. Enviando para todos os canais configurados...")
-
-        # Obter dados do sinal
+        
+        # Extrair dados do sinal
         ativo = sinal['ativo']
         direcao = sinal['direcao']
         categoria = sinal['categoria']
-        tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
-
-        # Calcular horários para a operação
-        hora_entrada = agora + timedelta(minutes=2)
-        hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
-        hora_reentrada1 = hora_expiracao + timedelta(minutes=1)
-        hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos)
         
-        BOT2_LOGGER.info(f"[{horario_atual}] Detalhes do sinal: Ativo={ativo}, Direção={direcao}, Categoria={categoria}, Expiração={tempo_expiracao_minutos}min")
-        BOT2_LOGGER.info(f"[{horario_atual}] Horários: Entrada={hora_entrada.strftime('%H:%M:%S')}, Expiração={hora_expiracao.strftime('%H:%M:%S')}, Reentrada1={hora_reentrada1.strftime('%H:%M:%S')}, Reentrada2={hora_reentrada2.strftime('%H:%M:%S')}")
+        BOT2_LOGGER.info(f"[{horario_atual}] Sinal gerado: Ativo={ativo}, Direção={direcao}, Categoria={categoria}")
 
-        # Obtém a hora atual para formatação na mensagem
-        hora_formatada = agora.strftime("%H:%M")
-
-        # Loop para enviar aos canais configurados com base no idioma
+        # Para cada canal configurado, enviar o sinal no idioma correto
         for chat_id in BOT2_CHAT_IDS:
-            # Pegar configuração do canal
+            # Obter configuração e link específico para este canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
             link_corretora = config_canal["link_corretora"]
-
-            # Enviar apenas no idioma configurado para este canal
-            mensagem = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
             
-            # IMPORTANTE: Log detalhado do conteúdo exato da mensagem para debug
-            BOT2_LOGGER.info(f"[{horario_atual}] CONTEÚDO EXATO DA MENSAGEM DO SINAL: {mensagem}")
-
-            # Texto do botão de acordo com o idioma
-            texto_botao = "🔗 Abrir corretora"  # Padrão em português
-
-            if idioma == "en":
-                texto_botao = "🔗 Open broker"
-            elif idioma == "es":
-                texto_botao = "🔗 Abrir corredor"
-
-            # Configura o teclado inline com o link da corretora
+            # Formatação da mensagem em português
+            mensagem = bot2_formatar_mensagem(sinal, hora_formatada, "pt")
+            
+            # Configurar teclado inline com o link específico da corretora
             teclado_inline = {
                 "inline_keyboard": [
                     [
                         {
-                            "text": texto_botao,
+                            "text": "🔗 Abrir corretora",
                             "url": link_corretora
                         }
                     ]
                 ]
             }
-
-            # Envia a mensagem para o canal específico
+            
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM para o canal {chat_id}...")
             url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-
+            
             payload = {
                 'chat_id': chat_id,
                 'text': mensagem,
                 'parse_mode': 'HTML',
-                'disable_web_page_preview': True,
                 'reply_markup': json.dumps(teclado_inline)
             }
-
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM DO SINAL em {idioma} para o canal {chat_id}...")
+            
             resposta = requests.post(url_base, data=payload)
 
             if resposta.status_code != 200:
                 BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar sinal para o canal {chat_id}: {resposta.text}")
             else:
-                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM DO SINAL ENVIADA COM SUCESSO para o canal {chat_id} no idioma {idioma}")
+                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM DO SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
 
         # Registra estatísticas de envio
         bot2_registrar_envio(ativo, direcao, categoria)
         
         # Incrementa o contador global de sinais
+        global bot2_contador_sinais
         bot2_contador_sinais += 1
         BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado: {bot2_contador_sinais}")
         
-        # Agendar o envio do GIF pós-sinal para 5 minutos depois (alterado de 1 minuto)
+        # Agendar o envio do GIF pós-sinal para 5 minutos depois
         BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF pós-sinal para daqui a 5 minutos...")
         import threading
         timer_pos_sinal = threading.Timer(300.0, bot2_enviar_gif_pos_sinal)  # 300 segundos = 5 minutos
@@ -1219,7 +1096,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         
         # Verifica se deve enviar a mensagem promocional especial (a cada 3 sinais)
         if bot2_contador_sinais % 3 == 0:
-            # Agendar o envio do GIF especial para 6 minutos - 1 segundo depois (apenas canal PT)
+            # Agendar o envio do GIF especial para 6 minutos - 1 segundo depois
             BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF especial PT para daqui a {359} segundos...")
             timer_gif_especial = threading.Timer(359.0, bot2_enviar_gif_especial_pt)  # 359 segundos = 5 minutos e 59 segundos
             timer_gif_especial.start()
@@ -1228,6 +1105,9 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
             BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio da mensagem promocional especial para daqui a 6 minutos (sinal #{bot2_contador_sinais}, divisível por 3)...")
             timer_promo_especial = threading.Timer(360.0, bot2_enviar_promo_especial)  # 360 segundos = 6 minutos
             timer_promo_especial.start()
+
+        # Atualiza o timestamp do último envio
+        bot2_send_message.ultimo_envio_timestamp = bot2_obter_hora_brasilia()
 
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
