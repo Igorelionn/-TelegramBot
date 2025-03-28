@@ -1437,157 +1437,47 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         bot2_contador_sinais += 1
         BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado: {bot2_contador_sinais}")
         
-        # Agendar o envio do GIF pós-sinal para 5 minutos depois (alterado de 1 minuto)
-        BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF pós-sinal para daqui a 5 minutos...")
+        # Agendar o envio do vídeo pós-sinal para 5 minutos depois (acontece em TODOS os sinais)
+        BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do vídeo pós-sinal para daqui a 5 minutos...")
         import threading
         timer_pos_sinal = threading.Timer(300.0, bot2_enviar_gif_pos_sinal)  # 300 segundos = 5 minutos
         timer_pos_sinal.start()
         
-        # Verifica se deve enviar a mensagem promocional especial (a cada 3 sinais)
+        # Verifica se é o terceiro sinal para enviar a sequência especial
         if bot2_contador_sinais % 3 == 0:
-            # Agendar o envio do GIF especial para 6 minutos - 1 segundo depois (apenas canal PT)
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF especial PT para daqui a {359} segundos...")
-            timer_gif_especial = threading.Timer(359.0, bot2_enviar_gif_especial_pt)  # 359 segundos = 5 minutos e 59 segundos
-            timer_gif_especial.start()
+            BOT2_LOGGER.info(f"[{horario_atual}] Terceiro sinal detectado! Agendando sequência especial...")
             
-            # Agendar o envio da mensagem promocional especial para 6 minutos depois
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio da mensagem promocional especial para daqui a 6 minutos (sinal #{bot2_contador_sinais}, divisível por 3)...")
-            timer_promo_especial = threading.Timer(360.0, bot2_enviar_promo_especial)  # 360 segundos = 6 minutos
-            timer_promo_especial.start()
+            # Função para agendar o envio sequencial
+            def agendar_sequencia_especial():
+                # 1. O vídeo pós-sinal já está agendado para 5 minutos após o sinal
+                
+                # 2. GIF especial PT (30 segundos após o vídeo pós-sinal = 5 minutos e 30 segundos após o sinal)
+                timer_gif_especial = threading.Timer(330.0, bot2_enviar_gif_especial_pt)
+                timer_gif_especial.start()
+                BOT2_LOGGER.info(f"[{horario_atual}] Agendando GIF especial PT para daqui a 5 minutos e 30 segundos...")
+                
+                # 3. Mensagem promocional especial (3 segundos após o GIF especial PT = 5 minutos e 33 segundos após o sinal)
+                timer_promo_especial = threading.Timer(333.0, bot2_enviar_promo_especial)
+                timer_promo_especial.start()
+                BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem promocional especial para daqui a 5 minutos e 33 segundos...")
+                
+                # 4. Vídeo pré-sinal (5 minutos após a mensagem promocional = 10 minutos e 33 segundos após o sinal)
+                timer_pre_sinal = threading.Timer(633.0, bot2_enviar_promo_pre_sinal)
+                timer_pre_sinal.start()
+                BOT2_LOGGER.info(f"[{horario_atual}] Agendando vídeo pré-sinal para daqui a 10 minutos e 33 segundos...")
+                
+                # 5. Mensagem pré-sinal (3 segundos após o vídeo pré-sinal = 10 minutos e 36 segundos após o sinal)
+                timer_msg_pre_sinal = threading.Timer(636.0, bot2_enviar_mensagem_pre_sinal)
+                timer_msg_pre_sinal.start()
+                BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem pré-sinal para daqui a 10 minutos e 36 segundos...")
+            
+            # Inicia o agendamento da sequência especial
+            agendar_sequencia_especial()
 
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem: {str(e)}")
         traceback.print_exc()
-
-# Inicializações para a função send_message
-bot2_send_message.ultimo_envio_timestamp = bot2_obter_hora_brasilia()
-bot2_send_message.contagem_por_hora = {bot2_obter_hora_brasilia().replace(minute=0, second=0, microsecond=0): 0}
-
-def bot2_schedule_messages():
-    """Agenda o envio de mensagens para o Bot 2."""
-    try:
-        # Verificar se já existe agendamento
-        if hasattr(bot2_schedule_messages, 'scheduled'):
-            BOT2_LOGGER.info("Agendamentos já existentes. Pulando...")
-            return
-
-        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
-
-        # Agendar envio de sinais a cada hora
-        for hora in range(24):
-            # Primeiro sinal - Promo 10 minutos antes
-            schedule.every().day.at(f"{hora:02d}:03:02").do(bot2_enviar_promo_pre_sinal)
-            schedule.every().day.at(f"{hora:02d}:13:02").do(bot2_send_message)
-
-            # Segundo sinal - Promo 10 minutos antes
-            schedule.every().day.at(f"{hora:02d}:27:02").do(bot2_enviar_promo_pre_sinal)
-            schedule.every().day.at(f"{hora:02d}:37:02").do(bot2_send_message)
-
-            # Terceiro sinal - Promo 10 minutos antes
-            schedule.every().day.at(f"{hora:02d}:43:02").do(bot2_enviar_promo_pre_sinal)
-            schedule.every().day.at(f"{hora:02d}:53:02").do(bot2_send_message)
-
-        # Marcar como agendado
-        bot2_schedule_messages.scheduled = True
-
-        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído com sucesso")
-        BOT2_LOGGER.info("Horários configurados:")
-        BOT2_LOGGER.info("Promos pré-sinal: XX:03:02, XX:27:02, XX:43:02")
-        BOT2_LOGGER.info("Sinais: XX:13:02, XX:37:02, XX:53:02")
-
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
-        traceback.print_exc()
-
-def bot2_testar_envio_promocional():
-    """
-    Função para testar o envio das mensagens promocionais e vídeos.
-    """
-    BOT2_LOGGER.info("Iniciando teste de avisos pré-sinais...")
-    
-    # Testar mensagem promocional pré-sinal
-    BOT2_LOGGER.info("Testando envio de mensagem promocional pré-sinal...")
-    bot2_enviar_promo_pre_sinal()
-    
-    # Agendar o teste de envio do sinal para 30 segundos depois
-    BOT2_LOGGER.info("Agendando teste de envio do sinal para 30 segundos depois...")
-    import threading
-    timer_sinal = threading.Timer(30.0, lambda: bot2_send_message(ignorar_anti_duplicacao=True))
-    timer_sinal.start()
-    
-    BOT2_LOGGER.info("Iniciando operação normal do Bot 2...")
-
-# Função para testar toda a sequência de sinais imediatamente
-def bot2_testar_sequencia_completa():
-    """
-    Função para testar toda a sequência de sinais imediatamente:
-    1. Vídeo/mensagem pré-sinal
-    2. Sinal
-    3. Vídeo pós-sinal
-    """
-    BOT2_LOGGER.info("TESTE COMPLETO: Iniciando teste da sequência completa...")
-    
-    # Função para executar cada etapa da sequência
-    def executar_etapa(etapa, func, delay_segundos=0):
-        BOT2_LOGGER.info(f"TESTE COMPLETO: Etapa {etapa} será executada em {delay_segundos} segundos...")
-        if delay_segundos > 0:
-            import threading
-            timer = threading.Timer(delay_segundos, func)
-            timer.start()
-        else:
-            func()
-    
-    # Etapa 1: Enviar vídeo e mensagem pré-sinal
-    executar_etapa(1, lambda: bot2_enviar_promo_pre_sinal(), 0)
-    
-    # Etapa 2: Enviar sinal 5 segundos depois
-    executar_etapa(2, lambda: bot2_send_message(ignorar_anti_duplicacao=True), 5)
-    
-    # Etapa 3: Enviar vídeo pós-sinal diretamente após 10 segundos (sem esperar 1 minuto)
-    executar_etapa(3, lambda: bot2_enviar_gif_pos_sinal(), 10)
-    
-    BOT2_LOGGER.info("TESTE COMPLETO: Sequência de teste agendada com sucesso!")
-
-# Modificar a função de inicialização para não executar a sequência de teste
-def iniciar_ambos_bots():
-    """
-    Inicializa ambos os bots quando executado como script principal.
-    """
-    # Não executar o teste, iniciar o bot normalmente
-    # bot2_testar_sequencia_completa()  # Comentado para executar normalmente
-    
-    # Inicializar o Bot 1 (original)
-    try:
-        logging.info("Inicializando Bot 1...")
-        # Verifica se já existe uma instância do bot rodando
-        if is_bot_already_running():
-            logging.error("O bot já está rodando em outra instância. Encerrando...")
-            sys.exit(1)
-        schedule_messages()      # Função original do bot 1
-    except Exception as e:
-        logging.error(f"Erro ao inicializar Bot 1: {str(e)}")
-    
-    # Inicializar o Bot 2
-    try:
-        BOT2_LOGGER.info("Inicializando Bot 2 em modo normal...")
-        bot2_schedule_messages()  # Agendar mensagens nos horários normais
-        bot2_keep_bot_running()  # Chamada direta para a função do Bot 2
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
-    
-    logging.info("Ambos os bots estão em execução!")
-    BOT2_LOGGER.info("Ambos os bots estão em execução em modo normal!")
-    
-    # Loop principal para verificar os agendamentos
-    while True:
-        try:
-            schedule.run_pending()
-            time.sleep(1)
-        except Exception as e:
-            logging.error(f"Erro no loop principal: {str(e)}")
-            BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
-            time.sleep(5)  # Pausa maior em caso de erro
 
 # Função para verificar se o bot já está em execução
 def is_bot_already_running():
@@ -1624,6 +1514,150 @@ def bot2_keep_bot_running():
             time.sleep(1)
     except Exception as e:
         BOT2_LOGGER.error(f"Erro na função keep_bot_running do Bot 2: {str(e)}")
+        traceback.print_exc()
+
+def bot2_schedule_messages():
+    """Agenda o envio de mensagens para o Bot 2."""
+    try:
+        # Verificar se já existe agendamento
+        if hasattr(bot2_schedule_messages, 'scheduled'):
+            BOT2_LOGGER.info("Agendamentos já existentes. Pulando...")
+            return
+
+        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
+
+        # Agendar envio de sinais a cada hora
+        for hora in range(24):
+            # Primeiro sinal
+            schedule.every().day.at(f"{hora:02d}:13:02").do(bot2_send_message)
+
+            # Segundo sinal
+            schedule.every().day.at(f"{hora:02d}:37:02").do(bot2_send_message)
+
+            # Terceiro sinal
+            schedule.every().day.at(f"{hora:02d}:53:02").do(bot2_send_message)
+
+        # Marcar como agendado
+        bot2_schedule_messages.scheduled = True
+
+        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído com sucesso")
+        BOT2_LOGGER.info("Horários configurados:")
+        BOT2_LOGGER.info("Sinais: XX:13:02, XX:37:02, XX:53:02")
+        BOT2_LOGGER.info("Para TODOS os sinais:")
+        BOT2_LOGGER.info("- Vídeo pós-sinal: 5 minutos após o sinal")
+        BOT2_LOGGER.info("Apenas para o terceiro sinal (ou múltiplos de 3):")
+        BOT2_LOGGER.info("- GIF especial PT: 5 minutos e 30 segundos após o sinal (30 segundos após o vídeo pós-sinal)")
+        BOT2_LOGGER.info("- Mensagem promocional especial: 5 minutos e 33 segundos após o sinal (3 segundos após o GIF especial)")
+        BOT2_LOGGER.info("- Vídeo pré-sinal: 10 minutos e 33 segundos após o sinal (5 minutos após a mensagem promocional)")
+        BOT2_LOGGER.info("- Mensagem pré-sinal: 10 minutos e 36 segundos após o sinal (3 segundos após o vídeo pré-sinal)")
+
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
+        traceback.print_exc()
+
+def iniciar_ambos_bots():
+    """
+    Inicializa ambos os bots quando executado como script principal.
+    """
+    # Inicializar o Bot 1 (original)
+    try:
+        logging.info("Inicializando Bot 1...")
+        # Verifica se já existe uma instância do bot rodando
+        if is_bot_already_running():
+            logging.error("O bot já está rodando em outra instância. Encerrando...")
+            sys.exit(1)
+        schedule_messages()      # Função original do bot 1
+    except Exception as e:
+        logging.error(f"Erro ao inicializar Bot 1: {str(e)}")
+    
+    # Inicializar o Bot 2
+    try:
+        BOT2_LOGGER.info("Inicializando Bot 2 em modo normal...")
+        bot2_schedule_messages()  # Agendar mensagens nos horários normais
+        bot2_keep_bot_running()  # Chamada direta para a função do Bot 2
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
+    
+    logging.info("Ambos os bots estão em execução!")
+    BOT2_LOGGER.info("Ambos os bots estão em execução em modo normal!")
+    
+    # Loop principal para verificar os agendamentos
+    while True:
+        try:
+            schedule.run_pending()
+            time.sleep(1)
+        except Exception as e:
+            logging.error(f"Erro no loop principal: {str(e)}")
+            BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
+            time.sleep(5)  # Pausa maior em caso de erro
+
+def bot2_enviar_mensagem_pre_sinal():
+    """
+    Envia uma mensagem promocional antes do sinal.
+    Esta função é chamada após o envio do vídeo pré-sinal.
+    """
+    try:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PRÉ-SINAL...")
+
+        # Mensagens pré-definidas por idioma
+        mensagens_pre_sinal = {
+            "pt": "⚠️ ATENÇÃO! Um novo sinal será enviado em breve! Prepare-se para lucrar! 💰",
+            "en": "⚠️ ATTENTION! A new signal will be sent soon! Get ready to profit! 💰",
+            "es": "⚠️ ¡ATENCIÓN! ¡Una nueva señal será enviada pronto! ¡Prepárate para ganar! 💰"
+        }
+
+        # Loop para enviar a mensagem para cada canal configurado
+        for chat_id in BOT2_CHAT_IDS:
+            config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            idioma = config_canal["idioma"]
+            link_corretora = config_canal["link_corretora"]
+            
+            # Texto do botão de acordo com o idioma
+            texto_botao = "🔗 Abrir corretora"  # Padrão em português
+            if idioma == "en":
+                texto_botao = "🔗 Open broker"
+            elif idioma == "es":
+                texto_botao = "🔗 Abrir corredor"
+
+            # Mensagem específica para o idioma
+            mensagem = mensagens_pre_sinal.get(idioma, mensagens_pre_sinal["pt"])
+            
+            # Configurar teclado inline com o link da corretora
+            teclado_inline = {
+                "inline_keyboard": [
+                    [
+                        {
+                            "text": texto_botao,
+                            "url": link_corretora
+                        }
+                    ]
+                ]
+            }
+            
+            # Enviar a mensagem para o canal específico
+            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+            
+            payload = {
+                'chat_id': chat_id,
+                'text': mensagem,
+                'parse_mode': 'HTML',
+                'disable_web_page_preview': True,
+                'reply_markup': json.dumps(teclado_inline)
+            }
+            
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PRÉ-SINAL em {idioma} para o canal {chat_id}...")
+            resposta = requests.post(url_base, data=payload)
+            
+            if resposta.status_code != 200:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal para o canal {chat_id}: {resposta.text}")
+            else:
+                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PRÉ-SINAL ENVIADA COM SUCESSO para o canal {chat_id} no idioma {idioma}")
+                
+    except Exception as e:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal: {str(e)}")
         traceback.print_exc()
 
 # Executar se este arquivo for o script principal
