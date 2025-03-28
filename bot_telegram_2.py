@@ -1479,6 +1479,10 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem: {str(e)}")
         traceback.print_exc()
 
+# Inicializações para a função bot2_send_message
+bot2_send_message.ultimo_envio_timestamp = bot2_obter_hora_brasilia()
+bot2_send_message.contagem_por_hora = {bot2_obter_hora_brasilia().replace(minute=0, second=0, microsecond=0): 0}
+
 # Função para verificar se o bot já está em execução
 def is_bot_already_running():
     """
