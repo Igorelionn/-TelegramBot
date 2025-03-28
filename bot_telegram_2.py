@@ -901,7 +901,7 @@ VIDEOS_POS_SINAL = {
 
 # Vídeo especial a cada 3 sinais (por idioma)
 VIDEOS_ESPECIAIS = {
-    "pt": os.path.join(VIDEOS_ESPECIAL_DIR, "especial.mp4"),
+    "pt": os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.mp4"),
     "en": os.path.join(VIDEOS_ESPECIAL_EN_DIR, "especial.mp4"),
     "es": os.path.join(VIDEOS_ESPECIAL_ES_DIR, "especial.mp4")
 }
@@ -914,7 +914,7 @@ VIDEOS_PROMO = {
 }
 
 # Vídeo GIF especial que vai ser enviado a cada 3 sinais (apenas no canal português)
-VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_DIR, "gif_especial_pt.mp4")
+VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_PT_DIR, "gif_especial_pt.mp4")
 
 # Contador para controle dos GIFs pós-sinal
 contador_pos_sinal = 0
