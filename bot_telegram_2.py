@@ -1060,35 +1060,8 @@ def bot2_enviar_gif_pos_sinal():
                             
                             if sticker_response.status_code == 200:
                                 BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM PNG ENVIADA COMO STICKER com transparência preservada")
-                                # Se enviou com sucesso como sticker, então enviar uma mensagem de complemento
-                                
-                                # Texto de complemento baseado no tipo de imagem e idioma
-                                if escolha_imagem == 0:
-                                    texto = "🔔 Sinal confirmado! Confira a operação."
-                                else:
-                                    texto = "⭐ Sinal especial confirmado! Confira a operação."
-                                
-                                if idioma == "en":
-                                    if escolha_imagem == 0:
-                                        texto = "🔔 Signal confirmed! Check the operation."
-                                    else:
-                                        texto = "⭐ Special signal confirmed! Check the operation."
-                                elif idioma == "es":
-                                    if escolha_imagem == 0:
-                                        texto = "🔔 ¡Señal confirmada! Verifica la operación."
-                                    else:
-                                        texto = "⭐ ¡Señal especial confirmada! Verifica la operación."
-                                
-                                # Enviar mensagem de complemento
-                                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                                msg_params = {
-                                    'chat_id': chat_id,
-                                    'text': texto,
-                                    'parse_mode': 'HTML'
-                                }
-                                
-                                requests.post(url_msg, data=msg_params)
-                                continue  # Continuar para o próximo canal
+                                # Continuar para o próximo canal sem enviar mensagem complementar
+                                continue
                             else:
                                 BOT2_LOGGER.warning(f"[{horario_atual}] Não foi possível enviar como sticker. Tentando como documento...")
                     except Exception as sticker_error:
@@ -1097,28 +1070,9 @@ def bot2_enviar_gif_pos_sinal():
                     # Se não conseguiu enviar como sticker, tentar como documento
                     url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
                     
-                    # Adicionar legenda para documento
-                    if escolha_imagem == 0:
-                        legenda = "🔔 Sinal confirmado! Confira a operação."
-                    else:
-                        legenda = "⭐ Sinal especial confirmado! Confira a operação."
-                    
-                    if idioma == "en":
-                        if escolha_imagem == 0:
-                            legenda = "🔔 Signal confirmed! Check the operation."
-                        else:
-                            legenda = "⭐ Special signal confirmed! Check the operation."
-                    elif idioma == "es":
-                        if escolha_imagem == 0:
-                            legenda = "🔔 ¡Señal confirmada! Verifica la operación."
-                        else:
-                            legenda = "⭐ ¡Señal especial confirmada! Verifica la operación."
-                    
-                    # Parâmetros para documento com legenda
+                    # Parâmetros para documento sem legenda
                     params_doc = {
                         'chat_id': chat_id,
-                        'caption': legenda,
-                        'parse_mode': 'HTML',
                         'disable_notification': False
                     }
                     
