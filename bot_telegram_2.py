@@ -939,20 +939,22 @@ contador_desde_ultimo_especial = 0
 # Função para enviar GIF pós-sinal (1 minuto após cada sinal)
 def bot2_enviar_gif_pos_sinal():
     """
-    Envia um vídeo 1 minuto após cada sinal.
-    Escolhe entre dois vídeos: o primeiro é enviado em 9 de 10 sinais, o segundo em 1 de 10 sinais.
-    A escolha do vídeo especial (segundo) é aleatória, garantindo apenas a proporção de 1 a cada 10.
-    O vídeo enviado é específico para o idioma de cada canal.
+    Envia um GIF/vídeo após o sinal.
+    Esta função é chamada 5 minutos após cada sinal.
     """
-    global contador_pos_sinal, contador_desde_ultimo_especial
+    global contador_pos_sinal
+    global contador_desde_ultimo_especial
     
     try:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO VÍDEO PÓS-SINAL (1 minuto após o sinal)...")
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO VÍDEO PÓS-SINAL...")
         
-        # Incrementar os contadores
+        # Incrementar o contador de envios pós-sinal
         contador_pos_sinal += 1
         contador_desde_ultimo_especial += 1
+        
+        BOT2_LOGGER.info(f"[{horario_atual}] Contador pós-sinal: {contador_pos_sinal}, Contador desde último especial: {contador_desde_ultimo_especial}")
         
         # Decidir qual vídeo enviar (9/10 o primeiro, 1/10 o segundo)
         escolha_video = 0  # Índice do primeiro vídeo por padrão
@@ -973,68 +975,68 @@ def bot2_enviar_gif_pos_sinal():
                 contador_desde_ultimo_especial = 0
             else:
                 BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO PADRÃO (probabilidade de especial era {probabilidade:.2f})")
-        else:
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO PADRÃO (muito cedo para especial)")
         
         # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
             # Pegar configuração do canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
+            idioma = config_canal.get("idioma", "pt")  # Usar português como padrão
             
-            # Obter o caminho do vídeo escolhido de acordo com o idioma
-            # Se o idioma não existir, usa o português como fallback
-            if idioma in VIDEOS_POS_SINAL:
-                video_path = VIDEOS_POS_SINAL[idioma][escolha_video]
-            else:
+            # Determinar qual vídeo enviar com base no idioma
+            if idioma not in VIDEOS_POS_SINAL or not os.path.exists(VIDEOS_POS_SINAL[idioma][escolha_video]):
+                # Se o idioma não estiver configurado ou o arquivo não existir, usar português como fallback
                 video_path = VIDEOS_POS_SINAL["pt"][escolha_video]
-                
-            BOT2_LOGGER.info(f"[{horario_atual}] Caminho do vídeo escolhido para {idioma}: {video_path}")
-            
-            # Verificar se o arquivo existe
-            if not os.path.exists(video_path):
-                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo não encontrado: {video_path}")
-                # Listar os arquivos na pasta para debug
-                pasta_videos = os.path.dirname(video_path)
-                BOT2_LOGGER.info(f"[{horario_atual}] Arquivos na pasta {pasta_videos}: {os.listdir(pasta_videos) if os.path.exists(pasta_videos) else 'PASTA NÃO EXISTE'}")
-                # Tentar usar o vídeo em português como backup se o idioma não for PT
-                if idioma != "pt":
-                    video_path = VIDEOS_POS_SINAL["pt"][escolha_video]
-                    BOT2_LOGGER.info(f"[{horario_atual}] Tentando usar vídeo em português como backup: {video_path}")
-                    if not os.path.exists(video_path):
-                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo backup também não encontrado: {video_path}")
-                        continue
-                else:
+                if not os.path.exists(video_path):
+                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo pós-sinal não encontrado: {video_path}")
                     continue
+            else:
+                video_path = VIDEOS_POS_SINAL[idioma][escolha_video]
             
-            BOT2_LOGGER.info(f"[{horario_atual}] Arquivo de vídeo encontrado: {video_path}")
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando vídeo pós-sinal para o canal {chat_id} no idioma {idioma}: {video_path}")
             
-            # Enviar o vídeo escolhido
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando vídeo para o canal {chat_id} em {idioma}...")
-            url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-            
+            # Enviar o vídeo
             try:
+                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+                
+                # Parâmetros para controlar o tamanho do vídeo
+                # Tamanho ajustado conforme solicitado
+                params = {
+                    'chat_id': chat_id,
+                    'width': 217,            # Largura ajustada
+                    'height': 85,            # Altura ajustada
+                    'supports_streaming': True,
+                    'disable_notification': False
+                }
+                
                 with open(video_path, 'rb') as video_file:
-                    files = {
-                        'video': video_file
-                    }
+                    files = {'video': video_file}
                     
-                    payload_video = {
-                        'chat_id': chat_id,
-                        'parse_mode': 'HTML'
-                    }
+                    resposta = requests.post(url_base, data=params, files=files)
                     
-                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando requisição para API do Telegram...")
-                    resposta_video = requests.post(url_base_video, data=payload_video, files=files)
-                    BOT2_LOGGER.info(f"[{horario_atual}] Resposta da API: {resposta_video.status_code}")
-                    
-                    if resposta_video.status_code != 200:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pós-sinal para o canal {chat_id}: {resposta_video.text}")
+                    if resposta.status_code != 200:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pós-sinal para o canal {chat_id}: {resposta.text}")
+                        
+                        # Tentar enviar como animação se falhar como vídeo
+                        url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                        with open(video_path, 'rb') as anim_file:
+                            files_alt = {'animation': anim_file}
+                            alt_params = {
+                                'chat_id': chat_id,
+                                'width': 217,            # Largura ajustada
+                                'height': 85,            # Altura ajustada
+                                'disable_notification': False
+                            }
+                            resp_alt = requests.post(url_alt, data=alt_params, files=files_alt)
+                            
+                            if resp_alt.status_code != 200:
+                                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar como animação: {resp_alt.text}")
+                            else:
+                                BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL enviado como animação para o canal {chat_id}")
                     else:
-                        tipo_video = "ESPECIAL (1/10)" if escolha_video == 1 else "PADRÃO (9/10)"
-                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL {tipo_video} ENVIADO COM SUCESSO para o canal {chat_id} em {idioma}")
+                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
+                
             except Exception as e:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao abrir ou enviar arquivo de vídeo: {str(e)}")
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar envio do vídeo pós-sinal: {str(e)}")
     
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
@@ -1044,99 +1046,123 @@ def bot2_enviar_gif_pos_sinal():
 # Função para enviar mensagem promocional antes do sinal
 def bot2_enviar_promo_pre_sinal():
     """
-    Envia uma mensagem promocional 10 minutos antes de cada sinal com vídeo.
+    Envia um vídeo promocional 10 minutos antes do sinal.
+    É seguido de uma mensagem com link da corretora.
     """
     try:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PROMOCIONAL PRÉ-SINAL...")
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PRÉ-SINAL...")
         
         # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
             # Pegar configuração do canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
+            idioma = config_canal.get("idioma", "pt")  # Usar português como padrão
+            link_corretora = config_canal.get("link_corretora", XXBROKER_URL)
             
-            # Preparar textos baseados no idioma com link diretamente no texto
-            if idioma == "pt":
-                texto_mensagem = (
-                    "👉🏼Abram a corretora Pessoal\n\n"
-                    "⚠️FIQUEM ATENTOS⚠️\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
-                )
-            elif idioma == "en":
-                texto_mensagem = (
-                    "👉🏼Open the broker now\n\n"
-                    "⚠️STAY ALERT⚠️\n\n"
-                    "🔥Register on XXBROKER right now🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICK HERE</a>"
-                )
-            elif idioma == "es":
-                texto_mensagem = (
-                    "👉🏼Abran el corredor ahora\n\n"
-                    "⚠️ESTÉN ATENTOS⚠️\n\n"
-                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLIC AQUÍ</a>"
-                )
+            # Determinar qual vídeo enviar com base no idioma
+            if idioma in VIDEOS_PROMO:
+                video_path = VIDEOS_PROMO[idioma]
+                if not os.path.exists(video_path):
+                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo promo não encontrado para {idioma}: {video_path}")
+                    # Tentar usar português como fallback
+                    video_path = VIDEOS_PROMO.get("pt", "")
+                    if not os.path.exists(video_path):
+                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo promo fallback também não encontrado: {video_path}")
+                        continue
             else:
-                texto_mensagem = (
-                    "👉🏼Abram a corretora Pessoal\n\n"
-                    "⚠️FIQUEM ATENTOS⚠️\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
-                )
+                # Usar português como padrão
+                video_path = VIDEOS_PROMO.get("pt", "")
+                if not os.path.exists(video_path):
+                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo promo não encontrado: {video_path}")
+                    continue
             
-            # Obter caminho do vídeo específico para este idioma
-            video_path = VIDEOS_PROMO.get(idioma, VIDEOS_PROMO["pt"])  # Usa o vídeo PT como fallback
+            # Verificar se é a primeira mensagem do dia para este canal
+            hora_atual = agora.replace(minute=0, second=0, microsecond=0)
+            key_contagem = f"{chat_id}_{hora_atual.strftime('%Y%m%d%H')}"
             
-            # Verificar se o arquivo existe
-            if not os.path.exists(video_path):
-                BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo promocional não encontrado: {video_path}")
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO PROMOCIONAL PRÉ-SINAL para o canal {chat_id} em {idioma}...")
-                # Enviar vídeo
-                url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando vídeo pré-sinal para o canal {chat_id} em {idioma}...")
+            
+            # Enviar o vídeo promocional
+            try:
+                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+                
+                # Parâmetros para controlar o tamanho do vídeo
+                params = {
+                    'chat_id': chat_id,
+                    'width': 217,            # Largura ajustada
+                    'height': 85,            # Altura ajustada
+                    'supports_streaming': True,
+                    'disable_notification': False
+                }
                 
                 with open(video_path, 'rb') as video_file:
-                    files = {
-                        'video': video_file
-                    }
+                    files = {'video': video_file}
                     
-                    payload_video = {
-                        'chat_id': chat_id,
-                        'parse_mode': 'HTML'
-                    }
+                    resposta = requests.post(url_base, data=params, files=files)
                     
-                    resposta_video = requests.post(url_base_video, data=payload_video, files=files)
-                    if resposta_video.status_code != 200:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo promocional para o canal {chat_id}: {resposta_video.text}")
+                    if resposta.status_code != 200:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pré-sinal para o canal {chat_id}: {resposta.text}")
                     else:
-                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PROMOCIONAL PRÉ-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
-            
-            # Enviar mensagem com link (agora incorporado diretamente no texto, não como botão)
-            BOT2_LOGGER.info(f"[{horario_atual}] ESPERANDO 2 SEGUNDOS ANTES DE ENVIAR MENSAGEM PROMOCIONAL PRÉ-SINAL...")
-            # Adicionar um delay de 2 segundos antes de enviar a mensagem
-            time.sleep(2)
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL PRÉ-SINAL para o canal {chat_id} em {idioma}...")
-            url_base_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-            
-            payload_msg = {
-                'chat_id': chat_id,
-                'text': texto_mensagem,
-                'parse_mode': 'HTML',
-                'disable_web_page_preview': True
-            }
-            
-            resposta_msg = requests.post(url_base_msg, data=payload_msg)
-            if resposta_msg.status_code != 200:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional para o canal {chat_id}: {resposta_msg.text}")
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PROMOCIONAL PRÉ-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
-    
+                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PRÉ-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
+                
+                # Texto da mensagem promocional
+                if idioma == "pt":
+                    mensagem = "⚠️ IMPORTANTE! Se você ainda não é nosso parceiro, clique no botão abaixo e abra sua conta na corretora. Aproveite os sinais! 💰"
+                elif idioma == "en":
+                    mensagem = "⚠️ IMPORTANT! If you are not yet our partner, click the button below and open your broker account. Enjoy the signals! 💰"
+                elif idioma == "es":
+                    mensagem = "⚠️ ¡IMPORTANTE! Si aún no eres nuestro socio, haz clic en el botón de abajo y abre tu cuenta de corredor. ¡Disfruta de las señales! 💰"
+                else:
+                    mensagem = "⚠️ IMPORTANTE! Se você ainda não é nosso parceiro, clique no botão abaixo e abra sua conta na corretora. Aproveite os sinais! 💰"
+                
+                # Texto do botão de acordo com o idioma
+                if idioma == "pt":
+                    texto_botao = "🔗 Abrir corretora"
+                elif idioma == "en":
+                    texto_botao = "🔗 Open broker"
+                elif idioma == "es":
+                    texto_botao = "🔗 Abrir corredor"
+                else:
+                    texto_botao = "🔗 Abrir corretora"
+                
+                # Configurar teclado inline com o link da corretora
+                teclado_inline = {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": texto_botao,
+                                "url": link_corretora
+                            }
+                        ]
+                    ]
+                }
+                
+                # Enviar a mensagem com o botão para a corretora
+                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                
+                payload = {
+                    'chat_id': chat_id,
+                    'text': mensagem,
+                    'parse_mode': 'HTML',
+                    'disable_web_page_preview': True,
+                    'reply_markup': json.dumps(teclado_inline)
+                }
+                
+                resposta_msg = requests.post(url_msg, data=payload)
+                
+                if resposta_msg.status_code != 200:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal para o canal {chat_id}: {resposta_msg.text}")
+                else:
+                    BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PRÉ-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
+                
+            except Exception as e:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo e mensagem pré-sinal: {str(e)}")
+        
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional pré-sinal: {str(e)}")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal: {str(e)}")
         traceback.print_exc()
 
 # Função para enviar mensagem promocional a cada 3 sinais
@@ -1341,11 +1367,18 @@ def bot2_enviar_gif_especial_pt():
                 
                 url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
                 
+                # Parâmetros para controlar o tamanho do vídeo
+                params = {
+                    'chat_id': chat_id,
+                    'width': 217,            # Largura ajustada
+                    'height': 85,            # Altura ajustada
+                    'disable_notification': False
+                }
+                
                 with open(arquivo_gif, 'rb') as gif_file:
                     files = {'animation': gif_file}
-                    data = {'chat_id': chat_id}
                     
-                    resposta = requests.post(url_base, files=files, data=data)
+                    resposta = requests.post(url_base, data=params, files=files)
                     
                     if resposta.status_code != 200:
                         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {resposta.text}")
@@ -1357,11 +1390,19 @@ def bot2_enviar_gif_especial_pt():
                 try:
                     url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
                     
+                    # Parâmetros para vídeo
+                    params_video = {
+                        'chat_id': chat_id,
+                        'width': 217,            # Largura ajustada
+                        'height': 85,            # Altura ajustada
+                        'supports_streaming': True,
+                        'disable_notification': False
+                    }
+                    
                     with open(arquivo_gif, 'rb') as alt_file:
                         files = {'video': alt_file}
-                        data = {'chat_id': chat_id}
                         
-                        resposta = requests.post(url_base, files=files, data=data)
+                        resposta = requests.post(url_base, data=params_video, files=files)
                         
                         if resposta.status_code != 200:
                             BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial como vídeo para o canal {chat_id}: {resposta.text}")
