@@ -46,15 +46,15 @@ BOT2_TOKEN = '7997585882:AAFDyG-BYskj1gyAbh17X5jd6DDClXdluww'
 BOT2_CANAIS_CONFIG = {
     "-1002424874613": {  # Canal para mensagens em português
         "idioma": "pt",
-        "link_corretora": "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
+        "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
     },
     "-1002453956387": {  # Canal para mensagens em inglês
         "idioma": "en",
-        "link_corretora": "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
+        "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
     },
     "-1002446547846": {  # Canal para mensagens em espanhol
         "idioma": "es",
-        "link_corretora": "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+        "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
     }
 }
 
@@ -850,7 +850,7 @@ bot2_sinais_agendados = False
 bot2_contador_sinais = 0  # Contador para rastrear quantos sinais foram enviados
 
 # URLs promocionais
-XXBROKER_URL = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
+XXBROKER_URL = "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
 VIDEO_TELEGRAM_URL = "https://t.me/trendingbrazil/215"
 
 # Base directory para os arquivos do projeto
@@ -1385,52 +1385,100 @@ def bot2_enviar_gif_especial_pt():
         if not os.path.exists(VIDEOS_ESPECIAL_DIR):
             os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
             BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta para GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
-
+        
         if not os.path.exists(VIDEOS_ESPECIAL_PT_DIR):
             os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
             BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta PT para GIFs especiais: {VIDEOS_ESPECIAL_PT_DIR}")
-
+        
         # Verificar se o arquivo do GIF especial existe
         BOT2_LOGGER.info(f"[{horario_atual}] Procurando GIF especial em: {VIDEO_GIF_ESPECIAL_PT}")
         if not os.path.exists(VIDEO_GIF_ESPECIAL_PT):
             BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {VIDEO_GIF_ESPECIAL_PT}")
-            return
-        
-        # Configurações específicas para o canal de idioma português
-        chat_id = BOT2_CHAT_IDS[0]
-        
-        # Se o canal estiver desativado, não enviar mensagem
-        if chat_id == "":
-            BOT2_LOGGER.warning(f"[{horario_atual}] Canal PT está desativado. GIF ESPECIAL PT não foi enviado.")
-            return
-        
-        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF ESPECIAL PT para o canal: {chat_id}")
-        
-        try:
-            # Enviar o GIF como vídeo diretamente
+            
+            # Tentar encontrar arquivos semelhantes
+            if os.path.exists(VIDEOS_ESPECIAL_PT_DIR):
+                arquivos_pt = os.listdir(VIDEOS_ESPECIAL_PT_DIR)
+                BOT2_LOGGER.info(f"[{horario_atual}] Arquivos na pasta {VIDEOS_ESPECIAL_PT_DIR}: {arquivos_pt}")
+                
+                # Se encontrar algum arquivo na pasta PT, usar o primeiro
+                if arquivos_pt:
+                    primeiro_arquivo = os.path.join(VIDEOS_ESPECIAL_PT_DIR, arquivos_pt[0])
+                    BOT2_LOGGER.info(f"[{horario_atual}] Usando arquivo alternativo: {primeiro_arquivo}")
+                    arquivo_gif = primeiro_arquivo
+                else:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Pasta PT existe mas está vazia: {VIDEOS_ESPECIAL_PT_DIR}")
+                    return
+            else:
+                BOT2_LOGGER.error(f"[{horario_atual}] Pasta PT para GIFs especiais não existe: {VIDEOS_ESPECIAL_PT_DIR}")
+                
+                # Tentar listar o conteúdo da pasta pai
+                if os.path.exists(VIDEOS_ESPECIAL_DIR):
+                    BOT2_LOGGER.info(f"[{horario_atual}] Conteúdo da pasta {VIDEOS_ESPECIAL_DIR}: {os.listdir(VIDEOS_ESPECIAL_DIR)}")
+                
+                # Listar o conteúdo da pasta videos
+                if os.path.exists(VIDEOS_DIR):
+                    BOT2_LOGGER.info(f"[{horario_atual}] Conteúdo da pasta {VIDEOS_DIR}: {os.listdir(VIDEOS_DIR)}")
+                
+                return
+        else:
             BOT2_LOGGER.info(f"[{horario_atual}] Arquivo GIF encontrado: {VIDEO_GIF_ESPECIAL_PT}")
             arquivo_gif = VIDEO_GIF_ESPECIAL_PT
             
-            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+        # Enviar o GIF para o canal PT
+        for chat_id in BOT2_CHAT_IDS:
+            config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            idioma = config_canal["idioma"]
             
-            # Parâmetros para vídeo (sem definição de tamanho)
-            params = {
-                'chat_id': chat_id,
-                'supports_streaming': True,
-            }
-            
-            with open(arquivo_gif, 'rb') as video_file:
-                files = {'video': video_file}
+            # Enviar apenas para o canal em português
+            if idioma != "pt":
+                continue
                 
-                resposta = requests.post(url_base, data=params, files=files)
+            try:
+                # Enviar o arquivo para o canal PT
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO GIF ESPECIAL para o canal PT {chat_id}...")
                 
-                if resposta.status_code != 200:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial como vídeo para o canal {chat_id}: {resposta.text}")
-                else:
-                    BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL PT ENVIADO COMO VÍDEO com sucesso para o canal {chat_id}")
-        except Exception as e:
-            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {str(e)}")
-        
+                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                
+                # Parâmetros para envio do GIF (sem definição de tamanho)
+                params = {
+                    'chat_id': chat_id,
+                    'disable_notification': False
+                }
+                
+                with open(arquivo_gif, 'rb') as gif_file:
+                    files = {'animation': gif_file}
+                    
+                    resposta = requests.post(url_base, data=params, files=files)
+                    
+                    if resposta.status_code != 200:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {resposta.text}")
+                    else:
+                        BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL PT ENVIADO COM SUCESSO para o canal {chat_id}")
+            except Exception as e:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {str(e)}")
+                # Tentar enviar como vídeo se falhar como animação
+                try:
+                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+                    
+                    # Parâmetros para vídeo (sem definição de tamanho)
+                    params_video = {
+                        'chat_id': chat_id,
+                        'supports_streaming': True,
+                        'disable_notification': False
+                    }
+                    
+                    with open(arquivo_gif, 'rb') as alt_file:
+                        files = {'video': alt_file}
+                        
+                        resposta = requests.post(url_base, data=params_video, files=files)
+                        
+                        if resposta.status_code != 200:
+                            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial como vídeo para o canal {chat_id}: {resposta.text}")
+                        else:
+                            BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL PT ENVIADO COMO VÍDEO com sucesso para o canal {chat_id}")
+                except Exception as e2:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial como vídeo: {str(e2)}")
+                    
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial PT: {str(e)}")
