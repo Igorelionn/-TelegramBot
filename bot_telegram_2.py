@@ -1,4 +1,4 @@
-#a -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Bot Telegram 2 para envio de sinais em canais separados por idioma.
 Versão independente que não depende mais do Bot 1.
