@@ -1002,8 +1002,8 @@ def bot2_enviar_gif_pos_sinal():
                 # Tamanho ajustado conforme solicitado
                 params = {
                     'chat_id': chat_id,
-                    'width': 217,            # Largura ajustada
-                    'height': 85,            # Altura ajustada
+                    'width': 320,            # Tamanho intrínseco: largura
+                    'height': 126,           # Tamanho intrínseco: altura
                     'supports_streaming': True,
                     'disable_notification': False
                 }
@@ -1022,8 +1022,8 @@ def bot2_enviar_gif_pos_sinal():
                             files_alt = {'animation': anim_file}
                             alt_params = {
                                 'chat_id': chat_id,
-                                'width': 217,            # Largura ajustada
-                                'height': 85,            # Altura ajustada
+                                'width': 320,           # Tamanho intrínseco: largura
+                                'height': 126,          # Tamanho intrínseco: altura
                                 'disable_notification': False
                             }
                             resp_alt = requests.post(url_alt, data=alt_params, files=files_alt)
@@ -1091,8 +1091,8 @@ def bot2_enviar_promo_pre_sinal():
                 # Parâmetros para controlar o tamanho do vídeo
                 params = {
                     'chat_id': chat_id,
-                    'width': 217,            # Largura ajustada
-                    'height': 85,            # Altura ajustada
+                    'width': 320,            # Tamanho intrínseco: largura
+                    'height': 126,           # Tamanho intrínseco: altura
                     'supports_streaming': True,
                     'disable_notification': False
                 }
@@ -1370,8 +1370,8 @@ def bot2_enviar_gif_especial_pt():
                 # Parâmetros para controlar o tamanho do vídeo
                 params = {
                     'chat_id': chat_id,
-                    'width': 217,            # Largura ajustada
-                    'height': 85,            # Altura ajustada
+                    'width': 320,            # Tamanho intrínseco: largura
+                    'height': 126,           # Tamanho intrínseco: altura
                     'disable_notification': False
                 }
                 
@@ -1393,8 +1393,8 @@ def bot2_enviar_gif_especial_pt():
                     # Parâmetros para vídeo
                     params_video = {
                         'chat_id': chat_id,
-                        'width': 217,            # Largura ajustada
-                        'height': 85,            # Altura ajustada
+                        'width': 320,            # Tamanho intrínseco: largura
+                        'height': 126,           # Tamanho intrínseco: altura
                         'supports_streaming': True,
                         'disable_notification': False
                     }
