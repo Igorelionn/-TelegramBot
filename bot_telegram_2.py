@@ -1057,55 +1057,58 @@ def bot2_enviar_gif_pos_sinal():
                 'disable_notification': False
             }
             
+            envio_sucesso = False
+            
             # Primeiro tentar enviar como sticker se for webp ou png (para preservar transparência)
             if is_transparent and pil_available:
                 BOT2_LOGGER.info(f"[{horario_atual}] Detectada imagem com possível transparência, tentando enviar como sticker")
                 
-                try:
-                    url_sticker = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendSticker"
-                    with open(imagem_path, 'rb') as sticker_file:
+                # Tentar enviar como sticker
+                with open(imagem_path, 'rb') as sticker_file:
+                    try:
+                        url_sticker = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendSticker"
                         files = {'sticker': sticker_file}
-                        
                         sticker_response = requests.post(url_sticker, data=params, files=files)
                         
                         if sticker_response.status_code == 200:
                             BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM ENVIADA COMO STICKER com transparência preservada")
-                            continue  # Próximo canal se enviou com sucesso
+                            envio_sucesso = True
                         else:
                             BOT2_LOGGER.warning(f"[{horario_atual}] Não foi possível enviar como sticker: {sticker_response.text}")
-                except Exception as sticker_error:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao tentar enviar como sticker: {str(sticker_error)}")
-                
-                # Se não conseguiu enviar como sticker, tentar como documento
-                try:
-                    url_doc = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
-                    with open(imagem_path, 'rb') as doc_file:
+                    except Exception as sticker_error:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao tentar enviar como sticker: {str(sticker_error)}")
+            
+            # Se não conseguiu enviar como sticker, tentar como documento
+            if not envio_sucesso and is_transparent and pil_available:
+                with open(imagem_path, 'rb') as doc_file:
+                    try:
+                        url_doc = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
                         files = {'document': doc_file}
-                        
                         doc_response = requests.post(url_doc, data=params, files=files)
                         
                         if doc_response.status_code == 200:
                             BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM ENVIADA COMO DOCUMENTO para preservar transparência")
-                            continue  # Próximo canal se enviou com sucesso
+                            envio_sucesso = True
                         else:
                             BOT2_LOGGER.warning(f"[{horario_atual}] Não foi possível enviar como documento: {doc_response.text}")
-                except Exception as doc_error:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao tentar enviar como documento: {str(doc_error)}")
+                    except Exception as doc_error:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao tentar enviar como documento: {str(doc_error)}")
             
             # Método padrão: enviar como foto
-            try:
-                url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
+            if not envio_sucesso:
                 with open(imagem_path, 'rb') as img_file:
-                    files = {'photo': img_file}
-                    
-                photo_response = requests.post(url_photo, data=params, files=files)
-                
-                if photo_response.status_code == 200:
-                    BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM ENVIADA COMO FOTO com sucesso")
-                else:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar como foto: {photo_response.text}")
-            except Exception as photo_error:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar envio como foto: {str(photo_error)}")
+                    try:
+                        url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
+                        files = {'photo': img_file}
+                        photo_response = requests.post(url_photo, data=params, files=files)
+                        
+                        if photo_response.status_code == 200:
+                            BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM ENVIADA COMO FOTO com sucesso")
+                            envio_sucesso = True
+                        else:
+                            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar como foto: {photo_response.text}")
+                    except Exception as photo_error:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar envio como foto: {str(photo_error)}")
     
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
