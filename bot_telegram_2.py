@@ -939,7 +939,7 @@ contador_desde_ultimo_especial = 0
 # Função para enviar GIF pós-sinal (1 minuto após cada sinal)
 def bot2_enviar_gif_pos_sinal():
     """
-    Envia um GIF/vídeo após o sinal.
+    Envia uma imagem após o sinal.
     Esta função é chamada 5 minutos após cada sinal.
     """
     global contador_pos_sinal
@@ -948,7 +948,7 @@ def bot2_enviar_gif_pos_sinal():
     try:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO VÍDEO PÓS-SINAL...")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA IMAGEM PÓS-SINAL...")
         
         # Incrementar o contador de envios pós-sinal
         contador_pos_sinal += 1
@@ -956,25 +956,25 @@ def bot2_enviar_gif_pos_sinal():
         
         BOT2_LOGGER.info(f"[{horario_atual}] Contador pós-sinal: {contador_pos_sinal}, Contador desde último especial: {contador_desde_ultimo_especial}")
         
-        # Decidir qual vídeo enviar (9/10 o primeiro, 1/10 o segundo)
-        escolha_video = 0  # Índice do primeiro vídeo por padrão
+        # Decidir qual imagem enviar (9/10 a primeira, 1/10 a segunda)
+        escolha_imagem = 0  # Índice da primeira imagem por padrão
         
-        # Lógica para seleção aleatória do vídeo especial
+        # Lógica para seleção aleatória da imagem especial
         if contador_desde_ultimo_especial >= 10:
-            # Forçar o vídeo especial se já passaram 10 sinais desde o último
-            escolha_video = 1
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO ESPECIAL (forçado após 10 sinais)")
+            # Forçar a imagem especial se já passaram 10 sinais desde o último
+            escolha_imagem = 1
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM ESPECIAL (forçado após 10 sinais)")
             contador_desde_ultimo_especial = 0
         elif contador_desde_ultimo_especial > 1:
-            # A probabilidade de enviar o vídeo especial aumenta conforme
+            # A probabilidade de enviar a imagem especial aumenta conforme
             # mais sinais passam sem que o especial seja enviado
             probabilidade = (contador_desde_ultimo_especial - 1) / 10.0
             if random.random() < probabilidade:
-                escolha_video = 1
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO ESPECIAL (aleatório com probabilidade {probabilidade:.2f})")
+                escolha_imagem = 1
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM ESPECIAL (aleatório com probabilidade {probabilidade:.2f})")
                 contador_desde_ultimo_especial = 0
             else:
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO O VÍDEO PADRÃO (probabilidade de especial era {probabilidade:.2f})")
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM PADRÃO (probabilidade de especial era {probabilidade:.2f})")
         
         # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
@@ -982,65 +982,53 @@ def bot2_enviar_gif_pos_sinal():
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal.get("idioma", "pt")  # Usar português como padrão
             
-            # Determinar qual vídeo enviar com base no idioma
-            if idioma not in VIDEOS_POS_SINAL or not os.path.exists(VIDEOS_POS_SINAL[idioma][escolha_video]):
-                # Se o idioma não estiver configurado ou o arquivo não existir, usar português como fallback
-                video_path = VIDEOS_POS_SINAL["pt"][escolha_video]
-                if not os.path.exists(video_path):
-                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo pós-sinal não encontrado: {video_path}")
+            # Determinar qual imagem enviar com base no idioma
+            # As imagens devem estar na mesma estrutura de pastas que os vídeos
+            # Formato do nome do arquivo: padrao.jpg e especial.jpg (na pasta pos_sinal/[idioma]/)
+            imagem_padrao = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, "padrao.jpg")
+            imagem_especial = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, "especial.jpg")
+            
+            # Selecionar a imagem com base na escolha
+            imagem_path = imagem_padrao if escolha_imagem == 0 else imagem_especial
+            
+            # Verificar se a imagem existe
+            if not os.path.exists(imagem_path):
+                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de imagem pós-sinal não encontrado: {imagem_path}")
+                # Tentar usar o português como fallback
+                fallback_path = os.path.join(VIDEOS_POS_SINAL_DIR, "pt", "padrao.jpg" if escolha_imagem == 0 else "especial.jpg")
+                if not os.path.exists(fallback_path):
+                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de imagem fallback também não encontrado: {fallback_path}")
                     continue
-            else:
-                video_path = VIDEOS_POS_SINAL[idioma][escolha_video]
+                imagem_path = fallback_path
             
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando vídeo pós-sinal para o canal {chat_id} no idioma {idioma}: {video_path}")
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem pós-sinal para o canal {chat_id} no idioma {idioma}: {imagem_path}")
             
-            # Enviar o vídeo
+            # Enviar a imagem
             try:
-                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
                 
-                # Parâmetros para controlar o tamanho do vídeo
-                # Tamanho ajustado conforme solicitado
+                # Parâmetros para envio da foto (sem definição de tamanho)
                 params = {
                     'chat_id': chat_id,
-                    'width': 320,            # Tamanho intrínseco: largura
-                    'height': 126,           # Tamanho intrínseco: altura
-                    'supports_streaming': True,
                     'disable_notification': False
                 }
                 
-                with open(video_path, 'rb') as video_file:
-                    files = {'video': video_file}
+                with open(imagem_path, 'rb') as img_file:
+                    files = {'photo': img_file}
                     
                     resposta = requests.post(url_base, data=params, files=files)
                     
                     if resposta.status_code != 200:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pós-sinal para o canal {chat_id}: {resposta.text}")
-                        
-                        # Tentar enviar como animação se falhar como vídeo
-                        url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                        with open(video_path, 'rb') as anim_file:
-                            files_alt = {'animation': anim_file}
-                            alt_params = {
-                                'chat_id': chat_id,
-                                'width': 320,           # Tamanho intrínseco: largura
-                                'height': 126,          # Tamanho intrínseco: altura
-                                'disable_notification': False
-                            }
-                            resp_alt = requests.post(url_alt, data=alt_params, files=files_alt)
-                            
-                            if resp_alt.status_code != 200:
-                                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar como animação: {resp_alt.text}")
-                            else:
-                                BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL enviado como animação para o canal {chat_id}")
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar imagem pós-sinal para o canal {chat_id}: {resposta.text}")
                     else:
-                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PÓS-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
-                
+                        BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM PÓS-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
+                        
             except Exception as e:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar envio do vídeo pós-sinal: {str(e)}")
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar envio da imagem pós-sinal: {str(e)}")
     
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pós-sinal: {str(e)}")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar imagem pós-sinal: {str(e)}")
         traceback.print_exc()
 
 # Função para enviar mensagem promocional antes do sinal
@@ -1088,11 +1076,9 @@ def bot2_enviar_promo_pre_sinal():
             try:
                 url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
                 
-                # Parâmetros para controlar o tamanho do vídeo
+                # Parâmetros para envio do vídeo (sem definição de tamanho)
                 params = {
                     'chat_id': chat_id,
-                    'width': 320,            # Tamanho intrínseco: largura
-                    'height': 126,           # Tamanho intrínseco: altura
                     'supports_streaming': True,
                     'disable_notification': False
                 }
@@ -1367,11 +1353,9 @@ def bot2_enviar_gif_especial_pt():
                 
                 url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
                 
-                # Parâmetros para controlar o tamanho do vídeo
+                # Parâmetros para envio do GIF (sem definição de tamanho)
                 params = {
                     'chat_id': chat_id,
-                    'width': 320,            # Tamanho intrínseco: largura
-                    'height': 126,           # Tamanho intrínseco: altura
                     'disable_notification': False
                 }
                 
@@ -1390,11 +1374,9 @@ def bot2_enviar_gif_especial_pt():
                 try:
                     url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
                     
-                    # Parâmetros para vídeo
+                    # Parâmetros para vídeo (sem definição de tamanho)
                     params_video = {
                         'chat_id': chat_id,
-                        'width': 320,            # Tamanho intrínseco: largura
-                        'height': 126,           # Tamanho intrínseco: altura
                         'supports_streaming': True,
                         'disable_notification': False
                     }
@@ -1770,9 +1752,19 @@ if __name__ == "__main__":
         print(f"Diretório de GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
         print(f"Arquivo GIF especial PT: {VIDEO_GIF_ESPECIAL_PT}")
         
+        # Exibir caminhos das imagens pós-sinal
+        print(f"Caminho da imagem pós-sinal padrão (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}")
+        print(f"Caminho da imagem pós-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}")
+        print(f"Caminho da imagem pós-sinal padrão (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}")
+        print(f"Caminho da imagem pós-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}")
+        print(f"Caminho da imagem pós-sinal padrão (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}")
+        print(f"Caminho da imagem pós-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}")
+        
         # Verificar se os diretórios existem
         print(f"Verificando pastas:")
         print(f"VIDEOS_DIR existe: {os.path.exists(VIDEOS_DIR)}")
+        print(f"VIDEOS_POS_SINAL_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_DIR)}")
+        print(f"VIDEOS_POS_SINAL_PT_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_PT_DIR)}")
         print(f"VIDEOS_ESPECIAL_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_DIR)}")
         print(f"VIDEOS_ESPECIAL_PT_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_PT_DIR)}")
         
@@ -1780,6 +1772,10 @@ if __name__ == "__main__":
         os.makedirs(VIDEOS_DIR, exist_ok=True)
         os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
         os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
         
         # Iniciar os bots
         iniciar_ambos_bots()
