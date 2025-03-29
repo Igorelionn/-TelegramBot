@@ -918,8 +918,19 @@ VIDEOS_PROMO = {
     "es": os.path.join(VIDEOS_PROMO_DIR, "es.mp4")
 }
 
-# Vídeo GIF especial que vai ser enviado a cada 3 sinais (apenas no canal português)
+# Diretórios para vídeos especiais em cada idioma
+VIDEOS_ESPECIAL_PT_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
+VIDEOS_ESPECIAL_EN_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "en")
+VIDEOS_ESPECIAL_ES_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "es")
+
+# Logs para diagnóstico
+print(f"VIDEOS_DIR: {VIDEOS_DIR}")
+print(f"VIDEOS_ESPECIAL_DIR: {VIDEOS_ESPECIAL_DIR}")
+print(f"VIDEOS_ESPECIAL_PT_DIR: {VIDEOS_ESPECIAL_PT_DIR}")
+
+# Caminho para o vídeo do GIF especial PT
 VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.mp4")
+print(f"VIDEO_GIF_ESPECIAL_PT: {VIDEO_GIF_ESPECIAL_PT}")
 
 # Contador para controle dos GIFs pós-sinal
 contador_pos_sinal = 0
@@ -1277,16 +1288,43 @@ def bot2_enviar_gif_especial_pt():
             os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
             BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta para GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
         
+        if not os.path.exists(VIDEOS_ESPECIAL_PT_DIR):
+            os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
+            BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta PT para GIFs especiais: {VIDEOS_ESPECIAL_PT_DIR}")
+        
         # Verificar se o arquivo do GIF especial existe
+        BOT2_LOGGER.info(f"[{horario_atual}] Procurando GIF especial em: {VIDEO_GIF_ESPECIAL_PT}")
         if not os.path.exists(VIDEO_GIF_ESPECIAL_PT):
             BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {VIDEO_GIF_ESPECIAL_PT}")
-            BOT2_LOGGER.info(f"[{horario_atual}] Verificando estrutura de diretórios...")
-            BOT2_LOGGER.info(f"[{horario_atual}] Listando arquivos na pasta {VIDEOS_ESPECIAL_DIR}: {os.listdir(VIDEOS_ESPECIAL_DIR) if os.path.exists(VIDEOS_ESPECIAL_DIR) else 'PASTA NÃO EXISTE'}")
+            
+            # Tentar encontrar arquivos semelhantes
             if os.path.exists(VIDEOS_ESPECIAL_PT_DIR):
-                BOT2_LOGGER.info(f"[{horario_atual}] Listando arquivos na pasta {VIDEOS_ESPECIAL_PT_DIR}: {os.listdir(VIDEOS_ESPECIAL_PT_DIR)}")
+                arquivos_pt = os.listdir(VIDEOS_ESPECIAL_PT_DIR)
+                BOT2_LOGGER.info(f"[{horario_atual}] Arquivos na pasta {VIDEOS_ESPECIAL_PT_DIR}: {arquivos_pt}")
+                
+                # Se encontrar algum arquivo na pasta PT, usar o primeiro
+                if arquivos_pt:
+                    primeiro_arquivo = os.path.join(VIDEOS_ESPECIAL_PT_DIR, arquivos_pt[0])
+                    BOT2_LOGGER.info(f"[{horario_atual}] Usando arquivo alternativo: {primeiro_arquivo}")
+                    arquivo_gif = primeiro_arquivo
+                else:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Pasta PT existe mas está vazia: {VIDEOS_ESPECIAL_PT_DIR}")
+                    return
             else:
                 BOT2_LOGGER.error(f"[{horario_atual}] Pasta PT para GIFs especiais não existe: {VIDEOS_ESPECIAL_PT_DIR}")
-            return
+                
+                # Tentar listar o conteúdo da pasta pai
+                if os.path.exists(VIDEOS_ESPECIAL_DIR):
+                    BOT2_LOGGER.info(f"[{horario_atual}] Conteúdo da pasta {VIDEOS_ESPECIAL_DIR}: {os.listdir(VIDEOS_ESPECIAL_DIR)}")
+                
+                # Listar o conteúdo da pasta videos
+                if os.path.exists(VIDEOS_DIR):
+                    BOT2_LOGGER.info(f"[{horario_atual}] Conteúdo da pasta {VIDEOS_DIR}: {os.listdir(VIDEOS_DIR)}")
+                
+                return
+        else:
+            BOT2_LOGGER.info(f"[{horario_atual}] Arquivo GIF encontrado: {VIDEO_GIF_ESPECIAL_PT}")
+            arquivo_gif = VIDEO_GIF_ESPECIAL_PT
             
         # Enviar o GIF para o canal PT
         for chat_id in BOT2_CHAT_IDS:
@@ -1303,7 +1341,7 @@ def bot2_enviar_gif_especial_pt():
                 
                 url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
                 
-                with open(VIDEO_GIF_ESPECIAL_PT, 'rb') as gif_file:
+                with open(arquivo_gif, 'rb') as gif_file:
                     files = {'animation': gif_file}
                     data = {'chat_id': chat_id}
                     
@@ -1319,7 +1357,7 @@ def bot2_enviar_gif_especial_pt():
                 try:
                     url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
                     
-                    with open(VIDEO_GIF_ESPECIAL_PT, 'rb') as alt_file:
+                    with open(arquivo_gif, 'rb') as alt_file:
                         files = {'video': alt_file}
                         data = {'chat_id': chat_id}
                         
@@ -1684,4 +1722,26 @@ def bot2_enviar_mensagem_pre_sinal():
 
 # Executar se este arquivo for o script principal
 if __name__ == "__main__":
-    iniciar_ambos_bots()
+    try:
+        print("=== INICIANDO O BOT TELEGRAM ===")
+        print(f"Diretório base: {BASE_DIR}")
+        print(f"Diretório de vídeos: {VIDEOS_DIR}")
+        print(f"Diretório de GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
+        print(f"Arquivo GIF especial PT: {VIDEO_GIF_ESPECIAL_PT}")
+        
+        # Verificar se os diretórios existem
+        print(f"Verificando pastas:")
+        print(f"VIDEOS_DIR existe: {os.path.exists(VIDEOS_DIR)}")
+        print(f"VIDEOS_ESPECIAL_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_DIR)}")
+        print(f"VIDEOS_ESPECIAL_PT_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_PT_DIR)}")
+        
+        # Criar pastas se não existirem
+        os.makedirs(VIDEOS_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
+        
+        # Iniciar os bots
+        iniciar_ambos_bots()
+    except Exception as e:
+        print(f"Erro ao iniciar bots: {str(e)}")
+        traceback.print_exc()
