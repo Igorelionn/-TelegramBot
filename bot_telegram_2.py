@@ -950,6 +950,16 @@ def bot2_enviar_gif_pos_sinal():
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA IMAGEM PÓS-SINAL...")
         
+        # Importar biblioteca para processamento de imagens
+        try:
+            from PIL import Image
+            import io
+            pil_available = True
+            BOT2_LOGGER.info(f"[{horario_atual}] Biblioteca PIL (Pillow) disponível para processamento de imagem")
+        except ImportError:
+            pil_available = False
+            BOT2_LOGGER.warning(f"[{horario_atual}] Biblioteca PIL (Pillow) não disponível. As imagens serão enviadas sem tratamento.")
+        
         # Incrementar o contador de envios pós-sinal
         contador_pos_sinal += 1
         contador_desde_ultimo_especial += 1
@@ -988,6 +998,17 @@ def bot2_enviar_gif_pos_sinal():
             imagem_padrao = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, "padrao.jpg")
             imagem_especial = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, "especial.jpg")
             
+            # Também procurar por imagens PNG
+            if not os.path.exists(imagem_padrao):
+                imagem_padrao_png = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, "padrao.png")
+                if os.path.exists(imagem_padrao_png):
+                    imagem_padrao = imagem_padrao_png
+            
+            if not os.path.exists(imagem_especial):
+                imagem_especial_png = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, "especial.png")
+                if os.path.exists(imagem_especial_png):
+                    imagem_especial = imagem_especial_png
+            
             # Selecionar a imagem com base na escolha
             imagem_path = imagem_padrao if escolha_imagem == 0 else imagem_especial
             
@@ -997,11 +1018,18 @@ def bot2_enviar_gif_pos_sinal():
                 # Tentar usar o português como fallback
                 fallback_path = os.path.join(VIDEOS_POS_SINAL_DIR, "pt", "padrao.jpg" if escolha_imagem == 0 else "especial.jpg")
                 if not os.path.exists(fallback_path):
-                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de imagem fallback também não encontrado: {fallback_path}")
-                    continue
+                    fallback_path_png = os.path.join(VIDEOS_POS_SINAL_DIR, "pt", "padrao.png" if escolha_imagem == 0 else "especial.png")
+                    if os.path.exists(fallback_path_png):
+                        fallback_path = fallback_path_png
+                    else:
+                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de imagem fallback também não encontrado: {fallback_path}")
+                        continue
                 imagem_path = fallback_path
             
             BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem pós-sinal para o canal {chat_id} no idioma {idioma}: {imagem_path}")
+            
+            # Verificar se a imagem é PNG (pode ter transparência)
+            is_png = imagem_path.lower().endswith('.png')
             
             # Enviar a imagem
             try:
@@ -1013,15 +1041,115 @@ def bot2_enviar_gif_pos_sinal():
                     'disable_notification': False
                 }
                 
-                with open(imagem_path, 'rb') as img_file:
-                    files = {'photo': img_file}
+                # Processar imagem se for PNG e PIL estiver disponível
+                if is_png and pil_available:
+                    BOT2_LOGGER.info(f"[{horario_atual}] Detectada imagem PNG, tentando enviar como sticker para preservar transparência")
                     
-                    resposta = requests.post(url_base, data=params, files=files)
+                    # Primeiro, tentar enviar como sticker (melhor suporte à transparência)
+                    try:
+                        url_sticker = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendSticker"
+                        with open(imagem_path, 'rb') as sticker_file:
+                            files = {'sticker': sticker_file}
+                            
+                            sticker_params = {
+                                'chat_id': chat_id,
+                                'disable_notification': False
+                            }
+                            
+                            sticker_response = requests.post(url_sticker, data=sticker_params, files=files)
+                            
+                            if sticker_response.status_code == 200:
+                                BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM PNG ENVIADA COMO STICKER com transparência preservada")
+                                # Se enviou com sucesso como sticker, então enviar uma mensagem de complemento
+                                
+                                # Texto de complemento baseado no tipo de imagem e idioma
+                                if escolha_imagem == 0:
+                                    texto = "🔔 Sinal confirmado! Confira a operação."
+                                else:
+                                    texto = "⭐ Sinal especial confirmado! Confira a operação."
+                                
+                                if idioma == "en":
+                                    if escolha_imagem == 0:
+                                        texto = "🔔 Signal confirmed! Check the operation."
+                                    else:
+                                        texto = "⭐ Special signal confirmed! Check the operation."
+                                elif idioma == "es":
+                                    if escolha_imagem == 0:
+                                        texto = "🔔 ¡Señal confirmada! Verifica la operación."
+                                    else:
+                                        texto = "⭐ ¡Señal especial confirmada! Verifica la operación."
+                                
+                                # Enviar mensagem de complemento
+                                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                                msg_params = {
+                                    'chat_id': chat_id,
+                                    'text': texto,
+                                    'parse_mode': 'HTML'
+                                }
+                                
+                                requests.post(url_msg, data=msg_params)
+                                continue  # Continuar para o próximo canal
+                            else:
+                                BOT2_LOGGER.warning(f"[{horario_atual}] Não foi possível enviar como sticker. Tentando como documento...")
+                    except Exception as sticker_error:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao tentar enviar como sticker: {str(sticker_error)}")
+                    
+                    # Se não conseguiu enviar como sticker, tentar como documento
+                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
+                    
+                    # Adicionar legenda para documento
+                    if escolha_imagem == 0:
+                        legenda = "🔔 Sinal confirmado! Confira a operação."
+                    else:
+                        legenda = "⭐ Sinal especial confirmado! Confira a operação."
+                    
+                    if idioma == "en":
+                        if escolha_imagem == 0:
+                            legenda = "🔔 Signal confirmed! Check the operation."
+                        else:
+                            legenda = "⭐ Special signal confirmed! Check the operation."
+                    elif idioma == "es":
+                        if escolha_imagem == 0:
+                            legenda = "🔔 ¡Señal confirmada! Verifica la operación."
+                        else:
+                            legenda = "⭐ ¡Señal especial confirmada! Verifica la operación."
+                    
+                    # Parâmetros para documento com legenda
+                    params_doc = {
+                        'chat_id': chat_id,
+                        'caption': legenda,
+                        'parse_mode': 'HTML',
+                        'disable_notification': False
+                    }
+                    
+                    with open(imagem_path, 'rb') as img_file:
+                        files = {'document': img_file}
+                        
+                    resposta = requests.post(url_base, data=params_doc, files=files)
                     
                     if resposta.status_code != 200:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar imagem pós-sinal para o canal {chat_id}: {resposta.text}")
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar imagem como documento: {resposta.text}")
+                        # Fallback para o método antigo se falhar
+                        BOT2_LOGGER.info(f"[{horario_atual}] Tentando enviar como foto normal...")
+                        url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
+                        with open(imagem_path, 'rb') as img_file:
+                            files = {'photo': img_file}
+                        resposta = requests.post(url_base, data=params, files=files)
                     else:
-                        BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM PÓS-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
+                        BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM PNG ENVIADA COMO DOCUMENTO para preservar transparência")
+                        # Se enviou com sucesso, não precisamos continuar
+                        continue
+                # Método normal para JPG ou quando PIL não está disponível
+                with open(imagem_path, 'rb') as img_file:
+                    files = {'photo': img_file}
+                
+                # Enviar a imagem como foto (caso não seja PNG ou se o envio como documento falhou)
+                resposta = requests.post(url_base, data=params, files=files)
+                
+                if resposta.status_code != 200:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar imagem pós-sinal para o canal {chat_id}: {resposta.text}")
+                else:
+                    BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM PÓS-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
                         
             except Exception as e:
                 BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar envio da imagem pós-sinal: {str(e)}")
