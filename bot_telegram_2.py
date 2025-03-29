@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Bot Telegram 2 para envio de sinais em canais separados por idioma.
+Bot Telegram 2 para envio de sinais em canais.
 Versão independente que não depende mais do Bot 1.
-Os sinais serão enviados da seguinte forma:
-- Canal Português: -1002424874613
-- Canal Inglês: -1002453956387
-- Canal Espanhol: -1002446547846
+Os sinais serão enviados nos seguintes canais:
+- Sala ChamaNaAlta: -1002658649212
+- Sala do Np.bo: -1002538423500
+- Minha sala: -1002317995059
 O bot enviará 3 sinais por hora nos minutos 10, 30 e 50.
 """
 
@@ -42,19 +42,19 @@ if not BOT2_LOGGER.handlers:
 # Credenciais Telegram
 BOT2_TOKEN = '7997585882:AAFDyG-BYskj1gyAbh17X5jd6DDClXdluww'
 
-# Configuração dos canais para cada idioma
+# Configuração dos canais
 BOT2_CANAIS_CONFIG = {
-    "-1002424874613": {  # Canal para mensagens em português
+    "-1002658649212": {  # Sala ChamaNaAlta
         "idioma": "pt",
-        "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
+        "link_corretora": "https://trade.xxbroker.com/register?aff=751626&aff_model=revenue&afftrack="
     },
-    "-1002453956387": {  # Canal para mensagens em inglês
-        "idioma": "en",
-        "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
+    "-1002538423500": {  # Sala do Np.bo
+        "idioma": "pt",
+        "link_corretora": "https://trade.xxbroker.com/register?aff=751924&aff_model=revenue&afftrack="
     },
-    "-1002446547846": {  # Canal para mensagens em espanhol
-        "idioma": "es",
-        "link_corretora": "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
+    "-1002317995059": {  # Minha sala
+        "idioma": "pt",
+        "link_corretora": "https://trade.xxbroker.com/register?aff=751626&aff_model=revenue&afftrack="
     }
 }
 
@@ -65,7 +65,7 @@ BOT2_CHAT_IDS = list(BOT2_CANAIS_CONFIG.keys())
 BOT2_CHAT_ID_CORRETO = BOT2_CHAT_IDS[0]  # Usar o primeiro canal como padrão
 
 # Limite de sinais por hora
-BOT2_LIMITE_SINAIS_POR_HORA = 3
+BOT2_LIMITE_SINAIS_POR_HORA = 6
 
 # Categorias dos ativos
 ATIVOS_CATEGORIAS = {
@@ -736,8 +736,8 @@ def bot2_gerar_sinal_aleatorio():
 
 def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     """
-    Formata a mensagem do sinal para o idioma especificado.
-    Retorna a mensagem formatada no idioma correto (pt, en ou es).
+    Formata a mensagem do sinal em português.
+    Retorna a mensagem formatada.
     """
     ativo = sinal['ativo']
     direcao = sinal['direcao']
@@ -745,7 +745,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
 
     # Debug: registrar os dados sendo usados para formatar a mensagem
-    BOT2_LOGGER.info(f"Formatando mensagem com: ativo={ativo}, direção={direcao}, categoria={categoria}, tempo={tempo_expiracao_minutos}, idioma={idioma}")
+    BOT2_LOGGER.info(f"Formatando mensagem com: ativo={ativo}, direção={direcao}, categoria={categoria}, tempo={tempo_expiracao_minutos}")
 
     # Formatação do nome do ativo para exibição
     nome_ativo_exibicao = ativo.replace("Digital_", "") if ativo.startswith("Digital_") else ativo
@@ -754,8 +754,6 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
 
     # Configura ações e emojis conforme a direção
     action_pt = "COMPRA" if direcao == 'buy' else "VENDA"
-    action_en = "BUY" if direcao == 'buy' else "SELL"
-    action_es = "COMPRA" if direcao == 'buy' else "VENTA"
     emoji = "🟢" if direcao == 'buy' else "🔴"
 
     # Hora de entrada convertida para datetime
@@ -790,10 +788,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_reentrada1_formatada = hora_reentrada1.strftime("%H:%M")
     hora_reentrada2_formatada = hora_reentrada2.strftime("%H:%M")
 
-    # Textos de expiração em diferentes idiomas
+    # Texto de expiração
     expiracao_texto_pt = f"⏳ Expiração: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
-    expiracao_texto_en = f"⏳ Expiration: {tempo_expiracao_minutos} minute{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
-    expiracao_texto_es = f"⏳ Expiración: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
     
     # Mensagem em PT
     mensagem_pt = (f"⚠️TRADE RÁPIDO⚠️\n\n"
@@ -805,38 +801,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"Reentrada 1 - {hora_reentrada1_formatada}\n"
             f"Reentrada 2 - {hora_reentrada2_formatada}")
             
-    # Mensagem em EN
-    mensagem_en = (f"⚠️QUICK TRADE⚠️\n\n"
-            f"💵 Asset: {nome_ativo_exibicao}\n"
-            f"🏷️ Options: {categoria}\n"
-            f"{emoji} {action_en}\n"
-            f"➡ Entry: {hora_entrada_formatada}\n"
-            f"{expiracao_texto_en}\n"
-            f"Re-entry 1 - {hora_reentrada1_formatada}\n"
-            f"Re-entry 2 - {hora_reentrada2_formatada}")
-            
-    # Mensagem em ES
-    mensagem_es = (f"⚠️COMERCIO RÁPIDO⚠️\n\n"
-            f"💵 Activo: {nome_ativo_exibicao}\n"
-            f"🏷️ Opciones: {categoria}\n"
-            f"{emoji} {action_es}\n"
-            f"➡ Entrada: {hora_entrada_formatada}\n"
-            f"{expiracao_texto_es}\n"
-            f"Reentrada 1 - {hora_reentrada1_formatada}\n"
-            f"Reentrada 2 - {hora_reentrada2_formatada}")
-            
-    # Verificar se há algum texto não esperado antes de retornar a mensagem
-    if idioma == "pt":
-        mensagem_final = mensagem_pt
-    elif idioma == "en":
-        mensagem_final = mensagem_en
-    elif idioma == "es":
-        mensagem_final = mensagem_es
-    else:  # Padrão para qualquer outro idioma (português)
-        mensagem_final = mensagem_pt
-        
-    BOT2_LOGGER.info(f"Mensagem formatada final para idioma {idioma}: {mensagem_final}")
-    return mensagem_final
+    BOT2_LOGGER.info(f"Mensagem formatada final: {mensagem_pt}")
+    return mensagem_pt
 
 def bot2_registrar_envio(ativo, direcao, categoria):
     """
@@ -853,391 +819,378 @@ bot2_contador_sinais = 0  # Contador para rastrear quantos sinais foram enviados
 XXBROKER_URL = "https://trade.xxbroker.com/register?aff=436564&aff_model=revenue&afftrack="
 VIDEO_TELEGRAM_URL = "https://t.me/trendingbrazil/215"
 
-# Base directory para os arquivos do projeto
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Definindo diretórios para os vídeos
-VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
+# Diretórios para os vídeos
+VIDEOS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "videos")
 os.makedirs(VIDEOS_DIR, exist_ok=True)
 
 # Subdiretórios para organizar os vídeos
 VIDEOS_POS_SINAL_DIR = os.path.join(VIDEOS_DIR, "pos_sinal")
+VIDEOS_ESPECIAL_DIR = os.path.join(VIDEOS_DIR, "especial")
 VIDEOS_PROMO_DIR = os.path.join(VIDEOS_DIR, "promo")
-VIDEOS_ESPECIAL_DIR = os.path.join(VIDEOS_DIR, "gif_especial")  # Alterado de "especial" para "gif_especial"
+
+# Criar apenas diretório para vídeos em português
+VIDEOS_POS_SINAL_PT_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "pt")
+
+# Atualização dos diretórios para os vídeos especiais apenas em português
+VIDEOS_ESPECIAL_PT_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
 
 # Criar os subdiretórios se não existirem
 os.makedirs(VIDEOS_POS_SINAL_DIR, exist_ok=True)
-os.makedirs(VIDEOS_PROMO_DIR, exist_ok=True)
 os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
-
-# Diretórios para vídeos pós-sinal em cada idioma
-VIDEOS_POS_SINAL_PT_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "pt")
-VIDEOS_POS_SINAL_EN_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "en")
-VIDEOS_POS_SINAL_ES_DIR = os.path.join(VIDEOS_POS_SINAL_DIR, "es")
-
-# Diretórios para vídeos especiais em cada idioma
-VIDEOS_ESPECIAL_PT_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
-VIDEOS_ESPECIAL_EN_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "en")
-VIDEOS_ESPECIAL_ES_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "es")
-
-# Criar os subdiretórios para cada idioma se não existirem
+os.makedirs(VIDEOS_PROMO_DIR, exist_ok=True)
 os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
-os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
-os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
 os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
-os.makedirs(VIDEOS_ESPECIAL_EN_DIR, exist_ok=True)
-os.makedirs(VIDEOS_ESPECIAL_ES_DIR, exist_ok=True)
 
-# Configurar vídeos pós-sinal específicos para cada idioma 
+# Configurar vídeos apenas para português 
 VIDEOS_POS_SINAL = {
     "pt": [
         os.path.join(VIDEOS_POS_SINAL_PT_DIR, "padrão.mp4"),  # Vídeo padrão em português (9/10)
         os.path.join(VIDEOS_POS_SINAL_PT_DIR, "especial.mp4")  # Vídeo especial em português (1/10)
-    ],
-    "en": [
-        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "padrao.mp4"),  # Vídeo padrão em inglês (9/10)
-        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "especial.mp4")  # Vídeo especial em inglês (1/10)
-    ],
-    "es": [
-        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "padrao.mp4"),  # Vídeo padrão em espanhol (9/10)
-        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "especial.mp4")  # Vídeo especial em espanhol (1/10)
     ]
 }
 
-# Vídeo especial a cada 3 sinais (por idioma)
+# Vídeo especial a cada 3 sinais (apenas português)
 VIDEOS_ESPECIAIS = {
-    "pt": os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.mp4"),
-    "en": os.path.join(VIDEOS_ESPECIAL_EN_DIR, "especial.mp4"),
-    "es": os.path.join(VIDEOS_ESPECIAL_ES_DIR, "especial.mp4")
+    "pt": os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.mp4")
 }
 
-# Vídeos promocionais por idioma
+# Vídeos promocionais apenas em português
 VIDEOS_PROMO = {
-    "pt": os.path.join(VIDEOS_PROMO_DIR, "pt.mp4"),
-    "en": os.path.join(VIDEOS_PROMO_DIR, "en.mp4"),
-    "es": os.path.join(VIDEOS_PROMO_DIR, "es.mp4")
+    "pt": os.path.join(VIDEOS_PROMO_DIR, "pt.mp4")
 }
 
-# Diretórios para vídeos especiais em cada idioma
-VIDEOS_ESPECIAL_PT_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
-VIDEOS_ESPECIAL_EN_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "en")
-VIDEOS_ESPECIAL_ES_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "es")
-
-# Logs para diagnóstico
-print(f"VIDEOS_DIR: {VIDEOS_DIR}")
-print(f"VIDEOS_ESPECIAL_DIR: {VIDEOS_ESPECIAL_DIR}")
-print(f"VIDEOS_ESPECIAL_PT_DIR: {VIDEOS_ESPECIAL_PT_DIR}")
-
-# Caminho para o vídeo do GIF especial PT
+# Vídeo GIF especial que vai ser enviado a cada 3 sinais
 VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.mp4")
-print(f"VIDEO_GIF_ESPECIAL_PT: {VIDEO_GIF_ESPECIAL_PT}")
 
 # Contador para controle dos GIFs pós-sinal
 contador_pos_sinal = 0
 contador_desde_ultimo_especial = 0
 
-# Função para enviar GIF pós-sinal (1 minuto após cada sinal)
-def bot2_enviar_gif_pos_sinal():
+# Função auxiliar para enviar vídeos com tamanho padronizado
+def bot2_enviar_video_padronizado(video_path, chat_id, descricao="", horario_atual=None):
     """
-    Envia uma imagem após o sinal.
-    Esta função é chamada 5 minutos após cada sinal.
+    Função auxiliar para enviar vídeos com o tamanho padronizado.
+    
+    Args:
+        video_path (str): Caminho do arquivo de vídeo
+        chat_id (str): ID do chat destino
+        descricao (str): Descrição do vídeo para logs
+        horario_atual (str): Horário atual formatado, opcional
+        
+    Returns:
+        bool: True se enviado com sucesso, False caso contrário
     """
-    global contador_pos_sinal
-    global contador_desde_ultimo_especial
+    if not horario_atual:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+    
+    if not os.path.exists(video_path):
+        BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo não encontrado: {video_path}")
+        return False
     
     try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA IMAGEM PÓS-SINAL...")
+        # Utilizar a API sendVideo do Telegram
+        url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
         
-        # Importar biblioteca para processamento de imagens
+        with open(video_path, 'rb') as video_file:
+            files = {
+                'video': video_file
+            }
+            
+            # Usar o tamanho renderizado correto: 217 × 85 px
+            # E incluir metadados para tamanho intrínseco: 320 × 126 px
+            payload_video = {
+                'chat_id': chat_id,
+                'parse_mode': 'HTML',
+                'width': 217,         # Tamanho renderizado - largura
+                'height': 85,         # Tamanho renderizado - altura
+                'media_width': 320,   # Tamanho intrínseco - largura
+                'media_height': 126   # Tamanho intrínseco - altura
+                # Removendo caption para não exibir texto junto com o vídeo
+            }
+            
+            resposta_video = requests.post(url_base_video, data=payload_video, files=files)
+            
+            if resposta_video.status_code != 200:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo {descricao} para o canal {chat_id}: {resposta_video.text}")
+                return False
+            else:
+                BOT2_LOGGER.info(f"[{horario_atual}] Vídeo {descricao} ENVIADO COM SUCESSO para o canal {chat_id}, com dimensões: 217×85 (renderizado) e 320×126 (intrínseco)")
+                return True
+    
+    except Exception as e:
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo {descricao}: {str(e)}")
+        return False
+
+# Função auxiliar para enviar fotos com tamanho padronizado
+def bot2_enviar_foto_padronizada(foto_path, chat_id, descricao="", horario_atual=None):
+    """
+    Função auxiliar para enviar imagens como sticker para preservar a transparência
+    e exibir diretamente na conversa.
+    
+    Args:
+        foto_path (str): Caminho do arquivo de foto
+        chat_id (str): ID do chat destino
+        descricao (str): Descrição da foto para logs
+        horario_atual (str): Horário atual formatado, opcional
+        
+    Returns:
+        bool: True se enviado com sucesso, False caso contrário
+    """
+    if not horario_atual:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+    
+    if not foto_path or not os.path.exists(foto_path):
+        BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de imagem não encontrado: {foto_path}")
+        return False
+    
+    try:
+        # Verificar tamanho do arquivo
+        file_size = os.path.getsize(foto_path)
+        if file_size == 0:
+            BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de imagem vazio (0 bytes): {foto_path}")
+            return False
+            
+        BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem {foto_path} com tamanho {file_size} bytes")
+        
+        # Verificar a extensão do arquivo
+        _, extensao = os.path.splitext(foto_path)
+        
+        # Verificar se é um formato otimizado para stickers
+        if extensao.lower() == '.webp':
+            BOT2_LOGGER.info(f"[{horario_atual}] Formato WebP detectado - ótimo para stickers com transparência")
+        elif extensao.lower() == '.png':
+            BOT2_LOGGER.info(f"[{horario_atual}] Formato PNG detectado - bom para transparência")
+        elif extensao.lower() in ['.jpg', '.jpeg']:
+            BOT2_LOGGER.info(f"[{horario_atual}] Formato JPG/JPEG detectado - recomendado usar WebP ou PNG para transparência")
+        
+        # Primeira tentativa: enviar como sticker (melhor para transparência e visualização direta)
+        BOT2_LOGGER.info(f"[{horario_atual}] Enviando como sticker para preservar transparência e exibir diretamente...")
+        url_sticker = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendSticker"
+        
+        sticker_file = None
         try:
-            from PIL import Image
-            import io
-            pil_available = True
-            BOT2_LOGGER.info(f"[{horario_atual}] Biblioteca PIL (Pillow) disponível para processamento de imagem")
-        except ImportError:
-            pil_available = False
-            BOT2_LOGGER.warning(f"[{horario_atual}] Biblioteca PIL (Pillow) não disponível. As imagens serão enviadas sem tratamento.")
+            sticker_file = open(foto_path, 'rb')
+            sticker_files = {'sticker': sticker_file}
+            sticker_payload = {'chat_id': chat_id}
+            sticker_resposta = requests.post(url_sticker, data=sticker_payload, files=sticker_files)
+            
+            if sticker_resposta.status_code == 200:
+                BOT2_LOGGER.info(f"[{horario_atual}] Imagem {descricao} enviada com sucesso como sticker!")
+                
+                # Removendo o envio da mensagem de texto adicional com a descrição
+                # A descrição será mantida apenas para fins de log
+                
+                return True
+            else:
+                BOT2_LOGGER.error(f"[{horario_atual}] Falha ao enviar como sticker: {sticker_resposta.text}")
+                
+                # Segunda tentativa: enviar como foto, mas avisar sobre possível perda de transparência
+                BOT2_LOGGER.info(f"[{horario_atual}] Tentando enviar como foto regular (pode ter bordas brancas)...")
+        finally:
+            # Garantir que o arquivo seja fechado
+            if sticker_file:
+                sticker_file.close()
         
-        # Incrementar o contador de envios pós-sinal
+        # Segunda tentativa usando SendPhoto
+        url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
+        photo_file = None
+        try:
+            photo_file = open(foto_path, 'rb')
+            photo_files = {'photo': photo_file}
+            photo_payload = {
+                'chat_id': chat_id,
+                'parse_mode': 'HTML'
+                # Removendo o campo 'caption' para não exibir texto junto com a foto
+            }
+            photo_resposta = requests.post(url_photo, data=photo_payload, files=photo_files)
+            
+            if photo_resposta.status_code == 200:
+                BOT2_LOGGER.info(f"[{horario_atual}] Imagem enviada como foto regular (pode ter perdido transparência)")
+                return True
+            else:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar como foto: {photo_resposta.text}")
+                return False
+        finally:
+            # Garantir que o arquivo seja fechado
+            if photo_file:
+                photo_file.close()
+    
+    except Exception as e:
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar imagem {descricao}: {str(e)}")
+        traceback.print_exc()
+        return False
+
+# Função para enviar GIF pós-sinal
+def bot2_enviar_gif_pos_sinal():
+    """
+    Envia uma foto após cada sinal.
+    Escolhe entre duas fotos: a primeira é enviada em 9 de 10 sinais, a segunda em 1 de 10 sinais.
+    A escolha da foto especial (segunda) é aleatória, garantindo apenas a proporção de 1 a cada 10.
+    """
+    global contador_pos_sinal, contador_desde_ultimo_especial
+    
+    try:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA FOTO PÓS-SINAL...")
+        
+        # Incrementar os contadores
         contador_pos_sinal += 1
         contador_desde_ultimo_especial += 1
         
-        BOT2_LOGGER.info(f"[{horario_atual}] Contador pós-sinal: {contador_pos_sinal}, Contador desde último especial: {contador_desde_ultimo_especial}")
+        # Decidir qual foto enviar (9/10 a primeira, 1/10 a segunda)
+        escolha_foto = 0  # Índice da primeira foto por padrão
         
-        # Decidir qual imagem enviar (9/10 a primeira, 1/10 a segunda)
-        escolha_imagem = 0  # Índice da primeira imagem por padrão
-        
-        # Lógica para seleção aleatória da imagem especial
+        # Lógica para seleção aleatória da foto especial
         if contador_desde_ultimo_especial >= 10:
-            # Forçar a imagem especial se já passaram 10 sinais desde o último
-            escolha_imagem = 1
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM ESPECIAL (forçado após 10 sinais)")
+            # Forçar a foto especial se já passaram 10 sinais desde o último
+            escolha_foto = 1
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A FOTO ESPECIAL (forçado após 10 sinais)")
             contador_desde_ultimo_especial = 0
         elif contador_desde_ultimo_especial > 1:
-            # A probabilidade de enviar a imagem especial aumenta conforme
+            # A probabilidade de enviar a foto especial aumenta conforme
             # mais sinais passam sem que o especial seja enviado
             probabilidade = (contador_desde_ultimo_especial - 1) / 10.0
             if random.random() < probabilidade:
-                escolha_imagem = 1
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM ESPECIAL (aleatório com probabilidade {probabilidade:.2f})")
+                escolha_foto = 1
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A FOTO ESPECIAL (aleatório com probabilidade {probabilidade:.2f})")
                 contador_desde_ultimo_especial = 0
             else:
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM PADRÃO (probabilidade de especial era {probabilidade:.2f})")
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A FOTO PADRÃO (probabilidade de especial era {probabilidade:.2f})")
+        else:
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A FOTO PADRÃO (muito cedo para especial)")
+        
+        # Mapeamento dos nomes de arquivos específicos para cada idioma
+        nome_arquivos = {
+            'pt': {
+                0: "padrao.webp",  # Arquivo padrão em português
+                1: "especial.webp" # Arquivo especial em português
+            },
+            'en': {
+                0: "padrão.webp",  # Arquivo padrão em inglês (com acento)
+                1: "especial.webp" # Arquivo especial em inglês
+            },
+            'es': {
+                0: "padrao.webp",  # Arquivo padrão em espanhol (sem acento)
+                1: "especial.webp" # Arquivo especial em espanhol
+            }
+        }
+        
+        # Lista de alternativas para cada tipo de arquivo para verificar
+        alternativas_padrao = ["padrao.webp", "padrão.webp", "padraum.webp", "padrāo.webp", "standard.webp", "padrao.jpg", "padrão.jpg"]
+        alternativas_especial = ["especial.webp", "special.webp", "especial.jpg", "special.jpg"]
         
         # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
-            # Pegar configuração do canal
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal.get("idioma", "pt")  # Usar português como padrão
+            # Determinar o idioma para o canal atual (configuração ou padrão 'pt')
+            idioma = 'pt'  # Idioma padrão
+            if chat_id in BOT2_CANAIS_CONFIG:
+                idioma = BOT2_CANAIS_CONFIG[chat_id].get('idioma', 'pt')
             
-            # Determinar qual imagem enviar com base no idioma
-            # As imagens devem estar na mesma estrutura de pastas que os vídeos
-            # Formato do nome do arquivo: padrao.jpg e especial.jpg (na pasta pos_sinal/[idioma]/)
-            imagem_padrao = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, "padrao.jpg")
-            imagem_especial = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, "especial.jpg")
+            # Se o idioma não estiver no nosso mapeamento, usar português
+            if idioma not in nome_arquivos:
+                idioma = 'pt'
+                
+            BOT2_LOGGER.info(f"[{horario_atual}] Preparando para enviar imagem para o canal {chat_id} no idioma {idioma}")
             
-            # Também procurar por imagens PNG
-            if not os.path.exists(imagem_padrao):
-                imagem_padrao_png = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, "padrao.png")
-                if os.path.exists(imagem_padrao_png):
-                    imagem_padrao = imagem_padrao_png
-            
-            if not os.path.exists(imagem_especial):
-                imagem_especial_png = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, "especial.png")
-                if os.path.exists(imagem_especial_png):
-                    imagem_especial = imagem_especial_png
-            
-            # Selecionar a imagem com base na escolha
-            imagem_path = imagem_padrao if escolha_imagem == 0 else imagem_especial
-            
-            # Verificar se a imagem existe
-            if not os.path.exists(imagem_path):
-                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de imagem pós-sinal não encontrado: {imagem_path}")
-                # Tentar usar o português como fallback
-                fallback_path = os.path.join(VIDEOS_POS_SINAL_DIR, "pt", "padrao.jpg" if escolha_imagem == 0 else "especial.jpg")
-                if not os.path.exists(fallback_path):
-                    fallback_path_png = os.path.join(VIDEOS_POS_SINAL_DIR, "pt", "padrao.png" if escolha_imagem == 0 else "especial.png")
-                    if os.path.exists(fallback_path_png):
-                        fallback_path = fallback_path_png
-                    else:
-                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de imagem fallback também não encontrado: {fallback_path}")
-                        continue
-                imagem_path = fallback_path
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem pós-sinal para o canal {chat_id} no idioma {idioma}: {imagem_path}")
-            
-            # Verificar se a imagem é PNG (pode ter transparência)
-            is_png = imagem_path.lower().endswith('.png')
-            
-            # Enviar a imagem
             try:
-                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
+                # Construir o caminho da pasta para este idioma
+                pasta_idioma = os.path.join(VIDEOS_POS_SINAL_DIR, idioma)
                 
-                # Parâmetros para envio da foto (sem definição de tamanho)
-                params = {
-                    'chat_id': chat_id,
-                    'disable_notification': False
-                }
+                # Verificar se a pasta existe
+                if not os.path.exists(pasta_idioma):
+                    os.makedirs(pasta_idioma, exist_ok=True)
+                    BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta para o idioma {idioma}: {pasta_idioma}")
                 
-                # Processar imagem se for PNG e PIL estiver disponível
-                if is_png and pil_available:
-                    BOT2_LOGGER.info(f"[{horario_atual}] Detectada imagem PNG, tentando enviar como sticker para preservar transparência")
+                # Determinar o nome do arquivo correto para este idioma e tipo de imagem
+                nome_arquivo = nome_arquivos[idioma][escolha_foto]
+                
+                # Construir o caminho completo
+                foto_path = os.path.join(pasta_idioma, nome_arquivo)
+                BOT2_LOGGER.info(f"[{horario_atual}] Tentando usar arquivo: {foto_path}")
+                
+                # Verificar se o arquivo existe
+                if not os.path.exists(foto_path):
+                    BOT2_LOGGER.warning(f"[{horario_atual}] Arquivo não encontrado: {foto_path}")
                     
-                    # Primeiro, tentar enviar como sticker (melhor suporte à transparência)
-                    try:
-                        url_sticker = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendSticker"
-                        with open(imagem_path, 'rb') as sticker_file:
-                            files = {'sticker': sticker_file}
-                            
-                            sticker_params = {
-                                'chat_id': chat_id,
-                                'disable_notification': False
-                            }
-                            
-                            sticker_response = requests.post(url_sticker, data=sticker_params, files=files)
-                            
-                            if sticker_response.status_code == 200:
-                                BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM PNG ENVIADA COMO STICKER com transparência preservada")
-                                # Continuar para o próximo canal sem enviar mensagem complementar
-                                continue
-                            else:
-                                BOT2_LOGGER.warning(f"[{horario_atual}] Não foi possível enviar como sticker. Tentando como documento...")
-                    except Exception as sticker_error:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao tentar enviar como sticker: {str(sticker_error)}")
+                    # Tentar alternativas para o mesmo idioma
+                    alternativas = alternativas_especial if escolha_foto == 1 else alternativas_padrao
+                    encontrado = False
                     
-                    # Se não conseguiu enviar como sticker, tentar como documento
-                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
+                    for alt in alternativas:
+                        alt_path = os.path.join(pasta_idioma, alt)
+                        if os.path.exists(alt_path):
+                            BOT2_LOGGER.info(f"[{horario_atual}] Encontrada alternativa no mesmo idioma: {alt_path}")
+                            foto_path = alt_path
+                            encontrado = True
+                            break
                     
-                    # Parâmetros para documento sem legenda
-                    params_doc = {
-                        'chat_id': chat_id,
-                        'disable_notification': False
-                    }
-                    
-                    with open(imagem_path, 'rb') as img_file:
-                        files = {'document': img_file}
+                    # Se não encontrou no idioma específico, tente em português (fallback)
+                    if not encontrado:
+                        BOT2_LOGGER.warning(f"[{horario_atual}] Nenhuma alternativa encontrada no idioma {idioma}, tentando em português")
+                        pasta_pt = os.path.join(VIDEOS_POS_SINAL_DIR, "pt")
                         
-                    resposta = requests.post(url_base, data=params_doc, files=files)
-                    
-                    if resposta.status_code != 200:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar imagem como documento: {resposta.text}")
-                        # Fallback para o método antigo se falhar
-                        BOT2_LOGGER.info(f"[{horario_atual}] Tentando enviar como foto normal...")
-                        url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
-                        with open(imagem_path, 'rb') as img_file:
-                            files = {'photo': img_file}
-                        resposta = requests.post(url_base, data=params, files=files)
-                    else:
-                        BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM PNG ENVIADA COMO DOCUMENTO para preservar transparência")
-                        # Se enviou com sucesso, não precisamos continuar
-                        continue
-                # Método normal para JPG ou quando PIL não está disponível
-                with open(imagem_path, 'rb') as img_file:
-                    files = {'photo': img_file}
+                        # Verificar se a pasta em português existe
+                        if not os.path.exists(pasta_pt):
+                            os.makedirs(pasta_pt, exist_ok=True)
+                            BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta para o idioma pt: {pasta_pt}")
+                        
+                        # Tentar todas as alternativas em português
+                        for alt in alternativas:
+                            alt_path = os.path.join(pasta_pt, alt)
+                            if os.path.exists(alt_path):
+                                BOT2_LOGGER.info(f"[{horario_atual}] Usando fallback em português: {alt_path}")
+                                foto_path = alt_path
+                                encontrado = True
+                                break
+                        
+                        if not encontrado:
+                            BOT2_LOGGER.error(f"[{horario_atual}] Nenhum arquivo de imagem encontrado, impossível enviar")
+                            continue
                 
-                # Enviar a imagem como foto (caso não seja PNG ou se o envio como documento falhou)
-                resposta = requests.post(url_base, data=params, files=files)
+                # Registrar o caminho final do arquivo que será usado
+                tipo_foto = "ESPECIAL (1/10)" if escolha_foto == 1 else "PADRÃO (9/10)"
+                descricao = f"PÓS-SINAL {tipo_foto}"
+                BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem: {foto_path}")
                 
-                if resposta.status_code != 200:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar imagem pós-sinal para o canal {chat_id}: {resposta.text}")
+                # Enviar a imagem sem texto complementar
+                if bot2_enviar_foto_padronizada(foto_path, chat_id, "", horario_atual):
+                    BOT2_LOGGER.info(f"[{horario_atual}] FOTO {descricao} enviada com sucesso para o canal {chat_id}")
                 else:
-                    BOT2_LOGGER.info(f"[{horario_atual}] IMAGEM PÓS-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
-                        
+                    BOT2_LOGGER.error(f"[{horario_atual}] Falha ao enviar FOTO {descricao} para o canal {chat_id}")
+            
             except Exception as e:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar envio da imagem pós-sinal: {str(e)}")
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar envio da imagem pós-sinal para o canal {chat_id}: {str(e)}")
+                traceback.print_exc()
     
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar imagem pós-sinal: {str(e)}")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar foto pós-sinal: {str(e)}")
         traceback.print_exc()
 
-# Função para enviar mensagem promocional antes do sinal
 def bot2_enviar_promo_pre_sinal():
     """
-    Envia um vídeo promocional 10 minutos antes do sinal.
-    É seguido de uma mensagem com link da corretora.
+    Envia uma mensagem promocional antes de cada sinal com vídeo.
+    Esta função não é mais utilizada diretamente - foi dividida em bot2_enviar_video_pre_sinal e bot2_enviar_mensagem_pre_sinal.
+    Mantida por compatibilidade.
     """
     try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PRÉ-SINAL...")
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] ATENÇÃO: A função bot2_enviar_promo_pre_sinal está obsoleta. Use as funções separadas.")
         
-        # Loop para enviar aos canais configurados
-        for chat_id in BOT2_CHAT_IDS:
-            # Pegar configuração do canal
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal.get("idioma", "pt")  # Usar português como padrão
-            link_corretora = config_canal.get("link_corretora", XXBROKER_URL)
-            
-            # Determinar qual vídeo enviar com base no idioma
-            if idioma in VIDEOS_PROMO:
-                video_path = VIDEOS_PROMO[idioma]
-                if not os.path.exists(video_path):
-                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo promo não encontrado para {idioma}: {video_path}")
-                    # Tentar usar português como fallback
-                    video_path = VIDEOS_PROMO.get("pt", "")
-                    if not os.path.exists(video_path):
-                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo promo fallback também não encontrado: {video_path}")
-                        continue
-            else:
-                # Usar português como padrão
-                video_path = VIDEOS_PROMO.get("pt", "")
-                if not os.path.exists(video_path):
-                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo promo não encontrado: {video_path}")
-                    continue
-            
-            # Verificar se é a primeira mensagem do dia para este canal
-            hora_atual = agora.replace(minute=0, second=0, microsecond=0)
-            key_contagem = f"{chat_id}_{hora_atual.strftime('%Y%m%d%H')}"
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando vídeo pré-sinal para o canal {chat_id} em {idioma}...")
-            
-            # Enviar o vídeo promocional
-            try:
-                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-                
-                # Parâmetros para envio do vídeo (sem definição de tamanho)
-                params = {
-                    'chat_id': chat_id,
-                    'supports_streaming': True,
-                    'disable_notification': False
-                }
-                
-                with open(video_path, 'rb') as video_file:
-                    files = {'video': video_file}
-                    
-                    resposta = requests.post(url_base, data=params, files=files)
-                    
-                    if resposta.status_code != 200:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pré-sinal para o canal {chat_id}: {resposta.text}")
-                    else:
-                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PRÉ-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
-                
-                # Texto da mensagem promocional
-                if idioma == "pt":
-                    mensagem = "⚠️ IMPORTANTE! Se você ainda não é nosso parceiro, clique no botão abaixo e abra sua conta na corretora. Aproveite os sinais! 💰"
-                elif idioma == "en":
-                    mensagem = "⚠️ IMPORTANT! If you are not yet our partner, click the button below and open your broker account. Enjoy the signals! 💰"
-                elif idioma == "es":
-                    mensagem = "⚠️ ¡IMPORTANTE! Si aún no eres nuestro socio, haz clic en el botón de abajo y abre tu cuenta de corredor. ¡Disfruta de las señales! 💰"
-                else:
-                    mensagem = "⚠️ IMPORTANTE! Se você ainda não é nosso parceiro, clique no botão abaixo e abra sua conta na corretora. Aproveite os sinais! 💰"
-                
-                # Texto do botão de acordo com o idioma
-                if idioma == "pt":
-                    texto_botao = "🔗 Abrir corretora"
-                elif idioma == "en":
-                    texto_botao = "🔗 Open broker"
-                elif idioma == "es":
-                    texto_botao = "🔗 Abrir corredor"
-                else:
-                    texto_botao = "🔗 Abrir corretora"
-                
-                # Configurar teclado inline com o link da corretora
-                teclado_inline = {
-                    "inline_keyboard": [
-                        [
-                            {
-                                "text": texto_botao,
-                                "url": link_corretora
-                            }
-                        ]
-                    ]
-                }
-                
-                # Enviar a mensagem com o botão para a corretora
-                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                
-                payload = {
-                    'chat_id': chat_id,
-                    'text': mensagem,
-                    'parse_mode': 'HTML',
-                    'disable_web_page_preview': True,
-                    'reply_markup': json.dumps(teclado_inline)
-                }
-                
-                resposta_msg = requests.post(url_msg, data=payload)
-                
-                if resposta_msg.status_code != 200:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal para o canal {chat_id}: {resposta_msg.text}")
-                else:
-                    BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PRÉ-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
-                
-            except Exception as e:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo e mensagem pré-sinal: {str(e)}")
-        
+        # Chama as novas funções separadas
+        bot2_enviar_video_pre_sinal()
+        # Adiciona um pequeno delay para simular o comportamento anterior
+        time.sleep(3)
+        bot2_enviar_mensagem_pre_sinal()
+    
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal: {str(e)}")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional pré-sinal: {str(e)}")
         traceback.print_exc()
 
-# Função para enviar mensagem promocional a cada 3 sinais
 def bot2_enviar_promo_especial():
     """
     Envia uma mensagem promocional especial a cada 3 sinais enviados.
-    Para todos os canais: envia o vídeo específico do idioma e depois a mensagem.
     """
     try:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
@@ -1247,73 +1200,29 @@ def bot2_enviar_promo_especial():
         for chat_id in BOT2_CHAT_IDS:
             # Pegar configuração do canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
+            link_corretora = config_canal["link_corretora"]
             
-            # Preparar textos baseados no idioma com links diretamente no texto
-            if idioma == "pt":
-                texto_mensagem = (
-                    "Seguimos com as operações ✅\n\n"
-                    "Mantenham a corretora aberta!!\n\n\n"
-                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
-                )
-            elif idioma == "en":
-                texto_mensagem = (
-                    "We continue with operations ✅\n\n"
-                    "Keep the broker open!!\n\n\n"
-                    "For those who haven't started making money with us yet👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLICK HERE AND WATCH THE VIDEO</a>\n\n"
-                    "🔥Register on XXBROKER right now🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICK HERE</a>"
-                )
-            elif idioma == "es":
-                texto_mensagem = (
-                    "Continuamos con las operaciones ✅\n\n"
-                    "¡Mantengan el corredor abierto!\n\n\n"
-                    "Para quienes aún no han comenzado a ganar dinero con nosotros👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">HAZ CLIC AQUÍ Y MIRA EL VIDEO</a>\n\n"
-                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLIC AQUÍ</a>"
-                )
-            else:
-                texto_mensagem = (
-                    "Seguimos com as operações ✅\n\n"
-                    "Mantenham a corretora aberta!!\n\n\n"
-                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
-                )
+            # Preparar texto com link específico para cada canal
+            texto_mensagem = (
+                "Seguimos com as operações ✅\n\n"
+                "Mantenham a corretora aberta!!\n\n\n"
+                "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
+                "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
+            )
             
-            # Obter o caminho do vídeo especial específico para este idioma
-            if idioma in VIDEOS_ESPECIAIS:
-                video_path = VIDEOS_ESPECIAIS[idioma]
-            else:
-                video_path = VIDEOS_ESPECIAIS["pt"]  # Fallback para português
-                
-            # Verificar se o arquivo existe
-            if not os.path.exists(video_path):
-                BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo especial não encontrado: {video_path}")
-                # Tentar usar o vídeo em português como backup se o idioma não for PT
-                if idioma != "pt":
-                    video_path = VIDEOS_ESPECIAIS["pt"]
-                    BOT2_LOGGER.info(f"[{horario_atual}] Tentando usar vídeo especial em português como backup: {video_path}")
-                    if not os.path.exists(video_path):
-                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo especial backup também não encontrado: {video_path}")
-                        # Prosseguir para enviar apenas a mensagem de texto
-                    else:
-                        # Enviar vídeo
-                        BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em português para o canal {chat_id}...")
-                        bot2_enviar_video_especial(video_path, chat_id, horario_atual)
+            # Obter o caminho do vídeo especial
+            video_path = VIDEOS_ESPECIAIS["pt"]
+            
+            # Enviar vídeo especial usando a função auxiliar
+            if os.path.exists(video_path):
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) para o canal {chat_id}...")
+                if bot2_enviar_video_padronizado(video_path, chat_id, "ESPECIAL (A CADA 3 SINAIS)", horario_atual):
+                    BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO ESPECIAL enviado com sucesso para o canal {chat_id}")
                 else:
-                    # Prosseguir para enviar apenas a mensagem de texto
-                    pass
+                    BOT2_LOGGER.error(f"[{horario_atual}] Falha ao enviar VÍDEO ESPECIAL para o canal {chat_id}")
             else:
-                # Enviar vídeo
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em {idioma} para o canal {chat_id}...")
-                bot2_enviar_video_especial(video_path, chat_id, horario_atual)
+                BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo especial não encontrado: {video_path}")
             
             # Enviar mensagem com links (agora incorporados diretamente no texto)
             BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) para o canal {chat_id}...")
@@ -1337,147 +1246,69 @@ def bot2_enviar_promo_especial():
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional especial: {str(e)}")
         traceback.print_exc()
 
-# Função auxiliar para enviar o vídeo especial
-def bot2_enviar_video_especial(video_path, chat_id, horario_atual):
-    """
-    Função auxiliar para enviar o vídeo especial.
-    """
-    try:
-        url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-        
-        with open(video_path, 'rb') as video_file:
-            files = {
-                'video': video_file
-            }
-            
-            payload_video = {
-                'chat_id': chat_id,
-                'parse_mode': 'HTML'
-            }
-            
-            resposta_video = requests.post(url_base_video, data=payload_video, files=files)
-            if resposta_video.status_code != 200:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo especial para o canal {chat_id}: {resposta_video.text}")
-                return False
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO ESPECIAL (A CADA 3 SINAIS) ENVIADO COM SUCESSO para o canal {chat_id}")
-                return True
-    except Exception as e:
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao abrir ou enviar arquivo de vídeo especial: {str(e)}")
-        return False
-
-# Função para enviar o GIF especial a cada 3 sinais (apenas para o canal português)
+# Função para enviar o GIF especial a cada 3 sinais para todos os canais.
 def bot2_enviar_gif_especial_pt():
     """
-    Envia um GIF especial apenas para o canal PT.
-    Esta função deve ser chamada 30 segundos após o vídeo pós-sinal.
+    Envia um GIF especial a cada 3 sinais para todos os canais.
+    Usa o mesmo arquivo de vídeo especial (especial.mp4) para garantir compatibilidade.
     """
     try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO GIF ESPECIAL PT...")
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO GIF ESPECIAL (A CADA 3 SINAIS)...")
         
-        # Verificar se a pasta de vídeos especiais existe, se não, criar
-        if not os.path.exists(VIDEOS_ESPECIAL_DIR):
-            os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
-            BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta para GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
-        
+        # Garantir que a pasta existe
         if not os.path.exists(VIDEOS_ESPECIAL_PT_DIR):
             os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
-            BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta PT para GIFs especiais: {VIDEOS_ESPECIAL_PT_DIR}")
+            BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta para vídeos especiais: {VIDEOS_ESPECIAL_PT_DIR}")
         
-        # Verificar se o arquivo do GIF especial existe
-        BOT2_LOGGER.info(f"[{horario_atual}] Procurando GIF especial em: {VIDEO_GIF_ESPECIAL_PT}")
+        # Verificar se o arquivo existe
         if not os.path.exists(VIDEO_GIF_ESPECIAL_PT):
             BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {VIDEO_GIF_ESPECIAL_PT}")
+            BOT2_LOGGER.info(f"[{horario_atual}] Tentando encontrar arquivos na pasta {VIDEOS_ESPECIAL_PT_DIR}: {os.listdir(VIDEOS_ESPECIAL_PT_DIR) if os.path.exists(VIDEOS_ESPECIAL_PT_DIR) else 'PASTA NÃO EXISTE'}")
             
-            # Tentar encontrar arquivos semelhantes
-            if os.path.exists(VIDEOS_ESPECIAL_PT_DIR):
-                arquivos_pt = os.listdir(VIDEOS_ESPECIAL_PT_DIR)
-                BOT2_LOGGER.info(f"[{horario_atual}] Arquivos na pasta {VIDEOS_ESPECIAL_PT_DIR}: {arquivos_pt}")
-                
-                # Se encontrar algum arquivo na pasta PT, usar o primeiro
-                if arquivos_pt:
-                    primeiro_arquivo = os.path.join(VIDEOS_ESPECIAL_PT_DIR, arquivos_pt[0])
-                    BOT2_LOGGER.info(f"[{horario_atual}] Usando arquivo alternativo: {primeiro_arquivo}")
-                    arquivo_gif = primeiro_arquivo
-                else:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Pasta PT existe mas está vazia: {VIDEOS_ESPECIAL_PT_DIR}")
-                    return
+            # Tentar usar o vídeo especial diretamente
+            backup_video = os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.mp4")
+            if os.path.exists(backup_video):
+                BOT2_LOGGER.info(f"[{horario_atual}] Usando arquivo de backup: {backup_video}")
+                VIDEO_GIF_ESPECIAL_PT = backup_video
             else:
-                BOT2_LOGGER.error(f"[{horario_atual}] Pasta PT para GIFs especiais não existe: {VIDEOS_ESPECIAL_PT_DIR}")
-                
-                # Tentar listar o conteúdo da pasta pai
-                if os.path.exists(VIDEOS_ESPECIAL_DIR):
-                    BOT2_LOGGER.info(f"[{horario_atual}] Conteúdo da pasta {VIDEOS_ESPECIAL_DIR}: {os.listdir(VIDEOS_ESPECIAL_DIR)}")
-                
-                # Listar o conteúdo da pasta videos
-                if os.path.exists(VIDEOS_DIR):
-                    BOT2_LOGGER.info(f"[{horario_atual}] Conteúdo da pasta {VIDEOS_DIR}: {os.listdir(VIDEOS_DIR)}")
-                
+                BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de backup também não encontrado: {backup_video}")
                 return
-        else:
-            BOT2_LOGGER.info(f"[{horario_atual}] Arquivo GIF encontrado: {VIDEO_GIF_ESPECIAL_PT}")
-            arquivo_gif = VIDEO_GIF_ESPECIAL_PT
-            
-        # Enviar o GIF para o canal PT
+        
+        # Enviar para todos os canais configurados
         for chat_id in BOT2_CHAT_IDS:
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF especial para o canal {chat_id}...")
             
-            # Enviar apenas para o canal em português
-            if idioma != "pt":
-                continue
-                
-            try:
-                # Enviar o arquivo para o canal PT
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO GIF ESPECIAL para o canal PT {chat_id}...")
-                
-                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                
-                # Parâmetros para envio do GIF (sem definição de tamanho)
-                params = {
-                    'chat_id': chat_id,
-                    'disable_notification': False
-                }
-                
-                with open(arquivo_gif, 'rb') as gif_file:
-                    files = {'animation': gif_file}
-                    
-                    resposta = requests.post(url_base, data=params, files=files)
-                    
-                    if resposta.status_code != 200:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {resposta.text}")
-                    else:
-                        BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL PT ENVIADO COM SUCESSO para o canal {chat_id}")
-            except Exception as e:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {str(e)}")
-                # Tentar enviar como vídeo se falhar como animação
+            # Primeiro tentar com a função auxiliar padrão
+            resultado = bot2_enviar_video_padronizado(VIDEO_GIF_ESPECIAL_PT, chat_id, "GIF ESPECIAL", horario_atual)
+            
+            # Se falhar, tentar o método alternativo (sendAnimation)
+            if not resultado:
+                BOT2_LOGGER.info(f"[{horario_atual}] Tentando método alternativo (sendAnimation) para o GIF especial...")
                 try:
-                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-                    
-                    # Parâmetros para vídeo (sem definição de tamanho)
-                    params_video = {
-                        'chat_id': chat_id,
-                        'supports_streaming': True,
-                        'disable_notification': False
-                    }
-                    
-                    with open(arquivo_gif, 'rb') as alt_file:
-                        files = {'video': alt_file}
-                        
-                        resposta = requests.post(url_base, data=params_video, files=files)
-                        
-                        if resposta.status_code != 200:
-                            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial como vídeo para o canal {chat_id}: {resposta.text}")
+                    url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                    with open(VIDEO_GIF_ESPECIAL_PT, 'rb') as alt_file:
+                        files_alt = {'animation': alt_file}
+                        payload_alt = {
+                            'chat_id': chat_id,
+                            'parse_mode': 'HTML',
+                            'width': 217,             # Tamanho renderizado - largura
+                            'height': 85,             # Tamanho renderizado - altura
+                            'media_width': 320,       # Tamanho intrínseco - largura
+                            'media_height': 126       # Tamanho intrínseco - altura
+                            # Removendo caption para não exibir texto junto com a animação
+                        }
+                        resp_alt = requests.post(url_alt, data=payload_alt, files=files_alt)
+                        if resp_alt.status_code == 200:
+                            BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL ENVIADO COM SUCESSO via método alternativo para o canal {chat_id}, com dimensões: 217×85 (renderizado) e 320×126 (intrínseco)")
                         else:
-                            BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL PT ENVIADO COMO VÍDEO com sucesso para o canal {chat_id}")
-                except Exception as e2:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial como vídeo: {str(e2)}")
-                    
+                            BOT2_LOGGER.error(f"[{horario_atual}] Falha também no método alternativo: {resp_alt.text}")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro no método alternativo: {str(e)}")
+    
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial PT: {str(e)}")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial: {str(e)}")
         traceback.print_exc()
 
 # Modificar a função bot2_send_message para alterar os tempos de agendamento
@@ -1539,28 +1370,22 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         # Obtém a hora atual para formatação na mensagem
         hora_formatada = agora.strftime("%H:%M")
 
-        # Loop para enviar aos canais configurados com base no idioma
+        # Loop para enviar a todos os canais configurados
         for chat_id in BOT2_CHAT_IDS:
-            # Pegar configuração do canal
+            # Pegar configuração do canal e link específico
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
             link_corretora = config_canal["link_corretora"]
 
-            # Enviar apenas no idioma configurado para este canal
-            mensagem = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
+            # Formatar mensagem para português
+            mensagem = bot2_formatar_mensagem(sinal, hora_formatada, "pt")
             
             # IMPORTANTE: Log detalhado do conteúdo exato da mensagem para debug
             BOT2_LOGGER.info(f"[{horario_atual}] CONTEÚDO EXATO DA MENSAGEM DO SINAL: {mensagem}")
 
-            # Texto do botão de acordo com o idioma
-            texto_botao = "🔗 Abrir corretora"  # Padrão em português
+            # Texto do botão em português
+            texto_botao = "🔗 Abrir corretora"
 
-            if idioma == "en":
-                texto_botao = "🔗 Open broker"
-            elif idioma == "es":
-                texto_botao = "🔗 Abrir corredor"
-
-            # Configura o teclado inline com o link da corretora
+            # Configura o teclado inline com o link específico da corretora para este canal
             teclado_inline = {
                 "inline_keyboard": [
                     [
@@ -1572,7 +1397,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
                 ]
             }
 
-            # Envia a mensagem para o canal específico
+            # Envia a mensagem para o canal
             url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
 
             payload = {
@@ -1583,13 +1408,13 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
                 'reply_markup': json.dumps(teclado_inline)
             }
 
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM DO SINAL em {idioma} para o canal {chat_id}...")
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM DO SINAL para o canal {chat_id}...")
             resposta = requests.post(url_base, data=payload)
 
             if resposta.status_code != 200:
                 BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar sinal para o canal {chat_id}: {resposta.text}")
             else:
-                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM DO SINAL ENVIADA COM SUCESSO para o canal {chat_id} no idioma {idioma}")
+                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM DO SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
 
         # Registra estatísticas de envio
         bot2_registrar_envio(ativo, direcao, categoria)
@@ -1598,51 +1423,256 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         bot2_contador_sinais += 1
         BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado: {bot2_contador_sinais}")
         
-        # Agendar o envio do vídeo pós-sinal para 5 minutos depois (acontece em TODOS os sinais)
-        BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do vídeo pós-sinal para daqui a 5 minutos...")
+        # Nova lógica de temporização otimizada para ciclo de 10 minutos:
         import threading
-        timer_pos_sinal = threading.Timer(300.0, bot2_enviar_gif_pos_sinal)  # 300 segundos = 5 minutos
-        timer_pos_sinal.start()
         
-        # Verifica se é o terceiro sinal para enviar a sequência especial
+        # Agendar vídeo pós-sinal para 3 minutos após o sinal (reduzido de 5 para 3 minutos)
+        timer_pos_sinal = threading.Timer(180.0, bot2_enviar_gif_pos_sinal)  # 180 segundos = 3 minutos
+        timer_pos_sinal.start()
+        BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do VÍDEO PÓS-SINAL para daqui a 3 minutos...")
+        
+        # Verifica se é o terceiro sinal (divisível por 3) para iniciar a sequência especial
         if bot2_contador_sinais % 3 == 0:
-            BOT2_LOGGER.info(f"[{horario_atual}] Terceiro sinal detectado! Agendando sequência especial...")
+            BOT2_LOGGER.info(f"[{horario_atual}] Este é o TERCEIRO SINAL da sequência (#{bot2_contador_sinais}). Agendando sequência especial...")
             
-            # Função para agendar o envio sequencial
-            def agendar_sequencia_especial():
-                # 1. O vídeo pós-sinal já está agendado para 5 minutos após o sinal
-                
-                # 2. GIF especial PT (30 segundos após o vídeo pós-sinal = 5 minutos e 30 segundos após o sinal)
-                timer_gif_especial = threading.Timer(330.0, bot2_enviar_gif_especial_pt)
-                timer_gif_especial.start()
-                BOT2_LOGGER.info(f"[{horario_atual}] Agendando GIF especial PT para daqui a 5 minutos e 30 segundos...")
-                
-                # 3. Mensagem promocional especial (3 segundos após o GIF especial PT = 5 minutos e 33 segundos após o sinal)
-                timer_promo_especial = threading.Timer(333.0, bot2_enviar_promo_especial)
-                timer_promo_especial.start()
-                BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem promocional especial para daqui a 5 minutos e 33 segundos...")
-                
-                # 4. Vídeo pré-sinal (5 minutos após a mensagem promocional = 10 minutos e 33 segundos após o sinal)
-                timer_pre_sinal = threading.Timer(633.0, bot2_enviar_promo_pre_sinal)
-                timer_pre_sinal.start()
-                BOT2_LOGGER.info(f"[{horario_atual}] Agendando vídeo pré-sinal para daqui a 10 minutos e 33 segundos...")
-                
-                # 5. Mensagem pré-sinal (3 segundos após o vídeo pré-sinal = 10 minutos e 36 segundos após o sinal)
-                timer_msg_pre_sinal = threading.Timer(636.0, bot2_enviar_mensagem_pre_sinal)
-                timer_msg_pre_sinal.start()
-                BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem pré-sinal para daqui a 10 minutos e 36 segundos...")
+            # GIF especial PT 30 segundos após o vídeo pós-sinal (3:30 minutos após o sinal)
+            timer_gif_especial = threading.Timer(210.0, bot2_enviar_gif_especial_pt)  # 180 + 30 = 210 segundos
+            timer_gif_especial.start()
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF ESPECIAL PT para 3:30 minutos após o sinal...")
             
-            # Inicia o agendamento da sequência especial
-            agendar_sequencia_especial()
-
+            # Mensagem promocional especial 3 segundos após o GIF (3:33 minutos após o sinal)
+            timer_promo_especial = threading.Timer(213.0, bot2_enviar_promo_especial)  # 210 + 3 = 213 segundos
+            timer_promo_especial.start()
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio da MENSAGEM PROMOCIONAL ESPECIAL para 3:33 minutos após o sinal...")
+            
+            # Vídeo pré-sinal 2 minutos após a mensagem promocional (5:33 minutos após o sinal)
+            timer_video_pre_sinal = threading.Timer(333.0, lambda: bot2_enviar_video_pre_sinal())  # 213 + 120 = 333 segundos
+            timer_video_pre_sinal.start()
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do VÍDEO PRÉ-SINAL para 5:33 minutos após o sinal...")
+            
+            # Mensagem pré-sinal 3 segundos após o vídeo (5:36 minutos após o sinal)
+            timer_msg_pre_sinal = threading.Timer(336.0, lambda: bot2_enviar_mensagem_pre_sinal())  # 333 + 3 = 336 segundos
+            timer_msg_pre_sinal.start()
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio da MENSAGEM PRÉ-SINAL para 5:36 minutos após o sinal...")
+            
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem: {str(e)}")
         traceback.print_exc()
 
-# Inicializações para a função bot2_send_message
+# Função auxiliar para enviar apenas o vídeo pré-sinal
+def bot2_enviar_video_pre_sinal():
+    """
+    Envia apenas o vídeo promocional pré-sinal.
+    """
+    try:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO VÍDEO PRÉ-SINAL...")
+        
+        # Loop para enviar aos canais configurados
+        for chat_id in BOT2_CHAT_IDS:
+            # Obter caminho do vídeo
+            video_path = VIDEOS_PROMO.get("pt")
+            
+            # Usar a função auxiliar para enviar o vídeo padronizado
+            if bot2_enviar_video_padronizado(video_path, chat_id, "PROMOCIONAL PRÉ-SINAL", horario_atual):
+                BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PROMOCIONAL PRÉ-SINAL enviado com sucesso para o canal {chat_id}")
+            else:
+                BOT2_LOGGER.error(f"[{horario_atual}] Falha ao enviar VÍDEO PROMOCIONAL PRÉ-SINAL para o canal {chat_id}")
+    
+    except Exception as e:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pré-sinal: {str(e)}")
+        traceback.print_exc()
+
+# Função auxiliar para enviar apenas a mensagem pré-sinal
+def bot2_enviar_mensagem_pre_sinal():
+    """
+    Envia apenas a mensagem promocional pré-sinal.
+    """
+    try:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PRÉ-SINAL...")
+        
+        # Loop para enviar aos canais configurados
+        for chat_id in BOT2_CHAT_IDS:
+            # Pegar configuração do canal
+            config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            link_corretora = config_canal["link_corretora"]
+            
+            # Preparar texto com o link específico para cada canal
+            texto_mensagem = (
+                "👉🏼Abram a corretora Pessoal\n\n"
+                "⚠️FIQUEM ATENTOS⚠️\n\n"
+                "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
+            )
+            
+            # Enviar mensagem com link (agora incorporado diretamente no texto, não como botão)
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL PRÉ-SINAL para o canal {chat_id}...")
+            url_base_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+            
+            payload_msg = {
+                'chat_id': chat_id,
+                'text': texto_mensagem,
+                'parse_mode': 'HTML',
+                'disable_web_page_preview': True
+            }
+            
+            resposta_msg = requests.post(url_base_msg, data=payload_msg)
+            if resposta_msg.status_code != 200:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional para o canal {chat_id}: {resposta_msg.text}")
+            else:
+                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PROMOCIONAL PRÉ-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
+    
+    except Exception as e:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal: {str(e)}")
+        traceback.print_exc()
+
+# Inicializações para a função send_message
 bot2_send_message.ultimo_envio_timestamp = bot2_obter_hora_brasilia()
 bot2_send_message.contagem_por_hora = {bot2_obter_hora_brasilia().replace(minute=0, second=0, microsecond=0): 0}
+
+def bot2_schedule_messages():
+    """Agenda o envio de mensagens para o Bot 2."""
+    try:
+        # Verificar se já existe agendamento
+        if hasattr(bot2_schedule_messages, 'scheduled'):
+            BOT2_LOGGER.info("Agendamentos já existentes. Pulando...")
+            return
+
+        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
+
+        # Agendar envio de sinais a cada 10 minutos (00, 10, 20, 30, 40, 50)
+        for hora in range(24):
+            # Minutos 00, 10, 20, 30, 40, 50
+            for minuto in [0, 10, 20, 30, 40, 50]:
+                # Agendar o sinal principal
+                schedule.every().day.at(f"{hora:02d}:{minuto:02d}:02").do(bot2_send_message)
+                
+                BOT2_LOGGER.info(f"Sinal agendado para {hora:02d}:{minuto:02d}:02")
+
+        # Marcar como agendado
+        bot2_schedule_messages.scheduled = True
+
+        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído com sucesso")
+        BOT2_LOGGER.info("Sinais agendados a cada 10 minutos: XX:00, XX:10, XX:20, XX:30, XX:40, XX:50")
+
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
+        traceback.print_exc()
+
+def bot2_testar_envio_promocional():
+    """
+    Função para testar o envio das mensagens promocionais e vídeos.
+    """
+    BOT2_LOGGER.info("Iniciando teste de avisos pré-sinais...")
+    
+    # Testar mensagem promocional pré-sinal
+    BOT2_LOGGER.info("Testando envio de mensagem promocional pré-sinal...")
+    bot2_enviar_promo_pre_sinal()
+    
+    # Agendar o teste de envio do sinal para 30 segundos depois
+    BOT2_LOGGER.info("Agendando teste de envio do sinal para 30 segundos depois...")
+    import threading
+    timer_sinal = threading.Timer(30.0, lambda: bot2_send_message(ignorar_anti_duplicacao=True))
+    timer_sinal.start()
+    
+    BOT2_LOGGER.info("Iniciando operação normal do Bot 2...")
+
+# Função para testar toda a sequência de sinais imediatamente
+def bot2_testar_sequencia_completa():
+    """
+    Função para testar toda a sequência de sinais conforme a nova temporização para ciclo de 10min:
+    1. Sinal
+    2. Vídeo pós-sinal (3 minutos depois)
+    3. GIF especial PT (3:30 minutos após o sinal)
+    4. Mensagem promocional especial (3:33 minutos após o sinal)
+    5. Vídeo pré-sinal (5:33 minutos após o sinal)
+    6. Mensagem pré-sinal (5:36 minutos após o sinal)
+    """
+    BOT2_LOGGER.info("TESTE COMPLETO: Iniciando teste da sequência completa (nova temporização para ciclo de 10min)...")
+    
+    # Ajuste os tempos para teste (acelerados para facilitar o teste)
+    # Em um teste real, os tempos seriam muito longos para esperar
+    tempo_aceleracao = 0.1  # Fator de aceleração (0.1 = 10x mais rápido)
+    
+    # Função para executar cada etapa da sequência
+    def executar_etapa(etapa, func, delay_segundos=0):
+        delay_ajustado = delay_segundos * tempo_aceleracao
+        BOT2_LOGGER.info(f"TESTE COMPLETO: Etapa {etapa} será executada em {delay_ajustado:.1f} segundos (original: {delay_segundos}s)...")
+        if delay_segundos > 0:
+            import threading
+            timer = threading.Timer(delay_ajustado, func)
+            timer.start()
+        else:
+            func()
+    
+    # Etapa 1: Enviar o sinal
+    executar_etapa(1, lambda: bot2_send_message(ignorar_anti_duplicacao=True), 0)
+    
+    # Etapa 2: Enviar vídeo pós-sinal após 3 minutos (acelerado)
+    executar_etapa(2, lambda: bot2_enviar_gif_pos_sinal(), 180)
+    
+    # Etapa 3: Enviar GIF especial PT após 3:30 minutos (acelerado)
+    executar_etapa(3, lambda: bot2_enviar_gif_especial_pt(), 210)
+    
+    # Etapa 4: Enviar mensagem promocional especial após 3:33 minutos (acelerado)
+    executar_etapa(4, lambda: bot2_enviar_promo_especial(), 213)
+    
+    # Etapa 5: Enviar vídeo pré-sinal após 5:33 minutos (acelerado)
+    executar_etapa(5, lambda: bot2_enviar_video_pre_sinal(), 333)
+    
+    # Etapa 6: Enviar mensagem pré-sinal após 5:36 minutos (acelerado)
+    executar_etapa(6, lambda: bot2_enviar_mensagem_pre_sinal(), 336)
+    
+    BOT2_LOGGER.info(f"TESTE COMPLETO: Sequência de teste agendada com sucesso! (Aceleração: {tempo_aceleracao:.1f}x)")
+    BOT2_LOGGER.info(f"TESTE COMPLETO: A sequência completa levará aproximadamente {336 * tempo_aceleracao:.1f} segundos.")
+    
+    # Força o contador de sinais para simular o terceiro sinal
+    global bot2_contador_sinais
+    bot2_contador_sinais = 3
+
+# Modificar a função de inicialização para não executar a sequência de teste
+def iniciar_ambos_bots():
+    """
+    Inicializa ambos os bots quando executado como script principal.
+    """
+    # Não executar o teste, iniciar o bot normalmente
+    # bot2_testar_sequencia_completa()  # Comentado para executar normalmente
+    
+    # Inicializar o Bot 1 (original)
+    try:
+        logging.info("Inicializando Bot 1...")
+        # Verifica se já existe uma instância do bot rodando
+        if is_bot_already_running():
+            logging.error("O bot já está rodando em outra instância. Encerrando...")
+            sys.exit(1)
+        schedule_messages()      # Função original do bot 1
+    except Exception as e:
+        logging.error(f"Erro ao inicializar Bot 1: {str(e)}")
+    
+    # Inicializar o Bot 2
+    try:
+        BOT2_LOGGER.info("Inicializando Bot 2 em modo normal...")
+        bot2_schedule_messages()  # Agendar mensagens nos horários normais
+        bot2_keep_bot_running()  # Chamada direta para a função do Bot 2
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
+    
+    logging.info("Ambos os bots estão em execução!")
+    BOT2_LOGGER.info("Ambos os bots estão em execução em modo normal!")
+    
+    # Loop principal para verificar os agendamentos
+    while True:
+        try:
+            schedule.run_pending()
+            time.sleep(1)
+        except Exception as e:
+            logging.error(f"Erro no loop principal: {str(e)}")
+            BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
+            time.sleep(5)  # Pausa maior em caso de erro
 
 # Função para verificar se o bot já está em execução
 def is_bot_already_running():
@@ -1681,186 +1711,6 @@ def bot2_keep_bot_running():
         BOT2_LOGGER.error(f"Erro na função keep_bot_running do Bot 2: {str(e)}")
         traceback.print_exc()
 
-def bot2_schedule_messages():
-    """Agenda o envio de mensagens para o Bot 2."""
-    try:
-        # Verificar se já existe agendamento
-        if hasattr(bot2_schedule_messages, 'scheduled'):
-            BOT2_LOGGER.info("Agendamentos já existentes. Pulando...")
-            return
-
-        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
-
-        # Agendar envio de sinais a cada hora
-        for hora in range(24):
-            # Primeiro sinal
-            schedule.every().day.at(f"{hora:02d}:13:02").do(bot2_send_message)
-
-            # Segundo sinal
-            schedule.every().day.at(f"{hora:02d}:37:02").do(bot2_send_message)
-
-            # Terceiro sinal
-            schedule.every().day.at(f"{hora:02d}:53:02").do(bot2_send_message)
-
-        # Marcar como agendado
-        bot2_schedule_messages.scheduled = True
-
-        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído com sucesso")
-        BOT2_LOGGER.info("Horários configurados:")
-        BOT2_LOGGER.info("Sinais: XX:13:02, XX:37:02, XX:53:02")
-        BOT2_LOGGER.info("Para TODOS os sinais:")
-        BOT2_LOGGER.info("- Vídeo pós-sinal: 5 minutos após o sinal")
-        BOT2_LOGGER.info("Apenas para o terceiro sinal (ou múltiplos de 3):")
-        BOT2_LOGGER.info("- GIF especial PT: 5 minutos e 30 segundos após o sinal (30 segundos após o vídeo pós-sinal)")
-        BOT2_LOGGER.info("- Mensagem promocional especial: 5 minutos e 33 segundos após o sinal (3 segundos após o GIF especial)")
-        BOT2_LOGGER.info("- Vídeo pré-sinal: 10 minutos e 33 segundos após o sinal (5 minutos após a mensagem promocional)")
-        BOT2_LOGGER.info("- Mensagem pré-sinal: 10 minutos e 36 segundos após o sinal (3 segundos após o vídeo pré-sinal)")
-
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
-        traceback.print_exc()
-
-def iniciar_ambos_bots():
-    """
-    Inicializa ambos os bots quando executado como script principal.
-    """
-    # Inicializar o Bot 1 (original)
-    try:
-        logging.info("Inicializando Bot 1...")
-        # Verifica se já existe uma instância do bot rodando
-        if is_bot_already_running():
-            logging.error("O bot já está rodando em outra instância. Encerrando...")
-            sys.exit(1)
-        schedule_messages()      # Função original do bot 1
-    except Exception as e:
-        logging.error(f"Erro ao inicializar Bot 1: {str(e)}")
-    
-    # Inicializar o Bot 2
-    try:
-        BOT2_LOGGER.info("Inicializando Bot 2 em modo normal...")
-        bot2_schedule_messages()  # Agendar mensagens nos horários normais
-        bot2_keep_bot_running()  # Chamada direta para a função do Bot 2
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
-    
-    logging.info("Ambos os bots estão em execução!")
-    BOT2_LOGGER.info("Ambos os bots estão em execução em modo normal!")
-    
-    # Loop principal para verificar os agendamentos
-    while True:
-        try:
-            schedule.run_pending()
-            time.sleep(1)
-        except Exception as e:
-            logging.error(f"Erro no loop principal: {str(e)}")
-            BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
-            time.sleep(5)  # Pausa maior em caso de erro
-
-def bot2_enviar_mensagem_pre_sinal():
-    """
-    Envia uma mensagem promocional antes do sinal.
-    Esta função é chamada após o envio do vídeo pré-sinal.
-    """
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PRÉ-SINAL...")
-
-        # Mensagens pré-definidas por idioma
-        mensagens_pre_sinal = {
-            "pt": "⚠️ ATENÇÃO! Um novo sinal será enviado em breve! Prepare-se para lucrar! 💰",
-            "en": "⚠️ ATTENTION! A new signal will be sent soon! Get ready to profit! 💰",
-            "es": "⚠️ ¡ATENCIÓN! ¡Una nueva señal será enviada pronto! ¡Prepárate para ganar! 💰"
-        }
-
-        # Loop para enviar a mensagem para cada canal configurado
-        for chat_id in BOT2_CHAT_IDS:
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
-            link_corretora = config_canal["link_corretora"]
-            
-            # Texto do botão de acordo com o idioma
-            texto_botao = "🔗 Abrir corretora"  # Padrão em português
-            if idioma == "en":
-                texto_botao = "🔗 Open broker"
-            elif idioma == "es":
-                texto_botao = "🔗 Abrir corredor"
-
-            # Mensagem específica para o idioma
-            mensagem = mensagens_pre_sinal.get(idioma, mensagens_pre_sinal["pt"])
-            
-            # Configurar teclado inline com o link da corretora
-            teclado_inline = {
-                "inline_keyboard": [
-                    [
-                        {
-                            "text": texto_botao,
-                            "url": link_corretora
-                        }
-                    ]
-                ]
-            }
-            
-            # Enviar a mensagem para o canal específico
-            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-            
-            payload = {
-                'chat_id': chat_id,
-                'text': mensagem,
-                'parse_mode': 'HTML',
-                'disable_web_page_preview': True,
-                'reply_markup': json.dumps(teclado_inline)
-            }
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PRÉ-SINAL em {idioma} para o canal {chat_id}...")
-            resposta = requests.post(url_base, data=payload)
-            
-            if resposta.status_code != 200:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal para o canal {chat_id}: {resposta.text}")
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PRÉ-SINAL ENVIADA COM SUCESSO para o canal {chat_id} no idioma {idioma}")
-                
-    except Exception as e:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal: {str(e)}")
-        traceback.print_exc()
-
 # Executar se este arquivo for o script principal
 if __name__ == "__main__":
-    try:
-        print("=== INICIANDO O BOT TELEGRAM ===")
-        print(f"Diretório base: {BASE_DIR}")
-        print(f"Diretório de vídeos: {VIDEOS_DIR}")
-        print(f"Diretório de GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
-        print(f"Arquivo GIF especial PT: {VIDEO_GIF_ESPECIAL_PT}")
-        
-        # Exibir caminhos das imagens pós-sinal
-        print(f"Caminho da imagem pós-sinal padrão (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}")
-        print(f"Caminho da imagem pós-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}")
-        print(f"Caminho da imagem pós-sinal padrão (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}")
-        print(f"Caminho da imagem pós-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}")
-        print(f"Caminho da imagem pós-sinal padrão (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}")
-        print(f"Caminho da imagem pós-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}")
-        
-        # Verificar se os diretórios existem
-        print(f"Verificando pastas:")
-        print(f"VIDEOS_DIR existe: {os.path.exists(VIDEOS_DIR)}")
-        print(f"VIDEOS_POS_SINAL_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_DIR)}")
-        print(f"VIDEOS_POS_SINAL_PT_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_PT_DIR)}")
-        print(f"VIDEOS_ESPECIAL_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_DIR)}")
-        print(f"VIDEOS_ESPECIAL_PT_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_PT_DIR)}")
-        
-        # Criar pastas se não existirem
-        os.makedirs(VIDEOS_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
-        
-        # Iniciar os bots
-        iniciar_ambos_bots()
-    except Exception as e:
-        print(f"Erro ao iniciar bots: {str(e)}")
-        traceback.print_exc()
+    iniciar_ambos_bots()
