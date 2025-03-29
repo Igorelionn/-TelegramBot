@@ -419,7 +419,7 @@ assets = {
     "SOL/USD (OTC)": HORARIOS_PADRAO["SOL/USD_OTC"],
     "1000Sats (OTC)": HORARIOS_PADRAO["1000Sats_OTC"],
     "XAUUSD (OTC)": HORARIOS_PADRAO["XAUUSD_OTC"],
-    "McDonalds Corporation (OTC)": HORARIOS_PADRAO["McDonalds_Corporation_OTC"],
+    "McDonald´s Corporation (OTC)": HORARIOS_PADRAO["McDonalds_Corporation_OTC"],
     "Meta (OTC)": HORARIOS_PADRAO["Meta_OTC"],
     "Coca-Cola Company (OTC)": HORARIOS_PADRAO["Coca_Cola_Company_OTC"],
     "CARDANO (OTC)": HORARIOS_PADRAO["CARDANO_OTC"],
@@ -1181,13 +1181,13 @@ def bot2_enviar_promo_pre_sinal():
                 
                 # Texto da mensagem promocional
                 if idioma == "pt":
-                    mensagem = "⚠️ IMPORTANTE! Se você ainda não é nosso parceiro, clique no botão abaixo e abra sua conta na corretora. Aproveite os sinais! 💰"
+                    mensagem = ""
                 elif idioma == "en":
-                    mensagem = "⚠️ IMPORTANT! If you are not yet our partner, click the button below and open your broker account. Enjoy the signals! 💰"
+                    mensagem = ""
                 elif idioma == "es":
-                    mensagem = "⚠️ ¡IMPORTANTE! Si aún no eres nuestro socio, haz clic en el botón de abajo y abre tu cuenta de corredor. ¡Disfruta de las señales! 💰"
+                    mensagem = ""
                 else:
-                    mensagem = "⚠️ IMPORTANTE! Se você ainda não é nosso parceiro, clique no botão abaixo e abra sua conta na corretora. Aproveite os sinais! 💰"
+                    mensagem = ""
                 
                 # Texto do botão de acordo com o idioma
                 if idioma == "pt":
@@ -1772,9 +1772,9 @@ def bot2_enviar_mensagem_pre_sinal():
 
         # Mensagens pré-definidas por idioma
         mensagens_pre_sinal = {
-            "pt": "⚠️ ATENÇÃO! Um novo sinal será enviado em breve! Prepare-se para lucrar! 💰",
-            "en": "⚠️ ATTENTION! A new signal will be sent soon! Get ready to profit! 💰",
-            "es": "⚠️ ¡ATENCIÓN! ¡Una nueva señal será enviada pronto! ¡Prepárate para ganar! 💰"
+            "pt": "",
+            "en": "",
+            "es": ""
         }
 
         # Loop para enviar a mensagem para cada canal configurado
