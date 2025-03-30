@@ -1768,16 +1768,25 @@ def bot2_enviar_mensagem_pre_sinal():
 
         # Mensagens pré-definidas por idioma
         mensagens_pre_sinal = {
-            "pt": "",
-            "en": "",
-            "es": ""
+            "pt": "👉🏼Abram a corretora Pessoal\n\n⚠️FIQUEM ATENTOS⚠️\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n➡️ CLICANDO AQUI",
+            "en": "👉🏼Open your broker\n\n⚠️STAY ALERT⚠️\n\n🔥Register at XXBROKER right now🔥\n\n➡️ CLICK HERE",
+            "es": "👉🏼Abran su corredor\n\n⚠️ESTÉN ATENTOS⚠️\n\n🔥Regístrese en XXBROKER ahora mismo🔥\n\n➡️ HAGA CLIC AQUÍ"
+        }
+
+        # Links específicos para cada canal
+        links_corretora = {
+            "pt": "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack=",
+            "en": "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack=",
+            "es": "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
         }
 
         # Loop para enviar a mensagem para cada canal configurado
         for chat_id in BOT2_CHAT_IDS:
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal["idioma"]
-            link_corretora = config_canal["link_corretora"]
+            
+            # Obter o link correto para o idioma do canal
+            link_corretora = links_corretora.get(idioma, links_corretora["pt"])
             
             # Texto do botão de acordo com o idioma
             texto_botao = "🔗 Abrir corretora"  # Padrão em português
@@ -1789,6 +1798,10 @@ def bot2_enviar_mensagem_pre_sinal():
             # Mensagem específica para o idioma
             mensagem = mensagens_pre_sinal.get(idioma, mensagens_pre_sinal["pt"])
             
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PRÉ-SINAL em {idioma} para o canal {chat_id}...")
+            BOT2_LOGGER.info(f"[{horario_atual}] CONTEÚDO DA MENSAGEM: {mensagem}")
+            BOT2_LOGGER.info(f"[{horario_atual}] LINK DA CORRETORA: {link_corretora}")
+
             # Configurar teclado inline com o link da corretora
             teclado_inline = {
                 "inline_keyboard": [
@@ -1800,10 +1813,10 @@ def bot2_enviar_mensagem_pre_sinal():
                     ]
                 ]
             }
-            
+
             # Enviar a mensagem para o canal específico
             url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-            
+
             payload = {
                 'chat_id': chat_id,
                 'text': mensagem,
@@ -1811,15 +1824,13 @@ def bot2_enviar_mensagem_pre_sinal():
                 'disable_web_page_preview': True,
                 'reply_markup': json.dumps(teclado_inline)
             }
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PRÉ-SINAL em {idioma} para o canal {chat_id}...")
+
             resposta = requests.post(url_base, data=payload)
-            
             if resposta.status_code != 200:
                 BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal para o canal {chat_id}: {resposta.text}")
             else:
-                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PRÉ-SINAL ENVIADA COM SUCESSO para o canal {chat_id} no idioma {idioma}")
-                
+                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PRÉ-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
+
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal: {str(e)}")
