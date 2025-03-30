@@ -1374,67 +1374,123 @@ def bot2_enviar_video_especial(video_path, chat_id, horario_atual):
 # Função para enviar o GIF especial a cada 3 sinais (apenas para o canal português)
 def bot2_enviar_gif_especial_pt():
     """
-    Envia um GIF especial apenas para o canal PT.
-    Esta função deve ser chamada 30 segundos após o vídeo pós-sinal.
+    FUNÇÃO LEGADA: Agora apenas redireciona para bot2_enviar_gif_especial.
+    Esta função existe apenas para compatibilidade com código mais antigo.
+    """
+    BOT2_LOGGER.warning(f"Chamada à função legada bot2_enviar_gif_especial_pt - redirecionando para bot2_enviar_gif_especial")
+    # Redirecionar para a nova função que gerencia corretamente o envio
+    bot2_enviar_gif_especial()
+    return
+
+def bot2_enviar_gif_especial():
+    """
+    Função que envia um vídeo especial para o canal português e apenas texto para os outros canais.
+    Esta função é chamada automaticamente a cada 3 sinais.
+    O vídeo 'videos/gif_especial/pt/especial.mp4' só deve ser enviado para o canal português (uma vez).
+    Para os outros canais, enviar apenas texto traduzido.
     """
     try:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO GIF ESPECIAL PT...")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO GIF/MENSAGEM ESPECIAL (A CADA 3 SINAIS)...")
         
-        # Verificar se a pasta de vídeos especiais existe, se não, criar
-        if not os.path.exists(VIDEOS_ESPECIAL_DIR):
-            os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
-            BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta para GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
-
-        if not os.path.exists(VIDEOS_ESPECIAL_PT_DIR):
-            os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
-            BOT2_LOGGER.info(f"[{horario_atual}] Criada pasta PT para GIFs especiais: {VIDEOS_ESPECIAL_PT_DIR}")
-
-        # Verificar se o arquivo do GIF especial existe
-        BOT2_LOGGER.info(f"[{horario_atual}] Procurando GIF especial em: {VIDEO_GIF_ESPECIAL_PT}")
-        if not os.path.exists(VIDEO_GIF_ESPECIAL_PT):
-            BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {VIDEO_GIF_ESPECIAL_PT}")
-            return
+        # Flag para controlar se o vídeo já foi enviado para o canal português
+        video_enviado_pt = False
         
-        # Configurações específicas para o canal de idioma português
-        chat_id = BOT2_CHAT_IDS[0]
-        
-        # Se o canal estiver desativado, não enviar mensagem
-        if chat_id == "":
-            BOT2_LOGGER.warning(f"[{horario_atual}] Canal PT está desativado. GIF ESPECIAL PT não foi enviado.")
-            return
-        
-        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF ESPECIAL PT para o canal: {chat_id}")
-        
-        try:
-            # Enviar o GIF como vídeo diretamente
-            BOT2_LOGGER.info(f"[{horario_atual}] Arquivo GIF encontrado: {VIDEO_GIF_ESPECIAL_PT}")
-            arquivo_gif = VIDEO_GIF_ESPECIAL_PT
+        # Loop através dos canais configurados
+        for chat_id in BOT2_CHAT_IDS:
+            # Obter idioma do canal
+            config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            idioma = config_canal.get("idioma", "pt")  # Default para português
             
-            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-            
-            # Parâmetros para vídeo (sem definição de tamanho)
-            params = {
-                'chat_id': chat_id,
-                'supports_streaming': True,
-            }
-            
-            with open(arquivo_gif, 'rb') as video_file:
-                files = {'video': video_file}
+            # Para o canal português, verificar se já enviamos o vídeo para evitar duplicação
+            if idioma == "pt" and not video_enviado_pt:
+                video_path = os.path.join("videos", "gif_especial", "pt", "especial.mp4")
                 
-                resposta = requests.post(url_base, data=params, files=files)
+                # Verificar se o arquivo existe
+                if not os.path.exists(video_path):
+                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo especial não encontrado: {video_path}")
+                    # Enviar texto como fallback
+                    mensagem = "Seguimos com as operações ✅\n\nMantenham a corretora aberta!!\n\nPra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n➡️ CLICANDO AQUI"
+                    try:
+                        url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                        data = {
+                            'chat_id': chat_id,
+                            'text': mensagem,
+                            'parse_mode': 'HTML',
+                            'disable_notification': False
+                        }
+                        response = requests.post(url, json=data)
+                        
+                        if response.status_code == 200:
+                            BOT2_LOGGER.info(f"[{horario_atual}] ✅ TEXTO ESPECIAL (fallback) enviado com sucesso para o canal PT {chat_id}")
+                        else:
+                            BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar TEXTO ESPECIAL (fallback) para o canal PT {chat_id}: {response.text}")
+                    except Exception as e:
+                        BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar TEXTO ESPECIAL (fallback) para o canal PT {chat_id}: {str(e)}")
+                    continue
                 
-                if resposta.status_code != 200:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial como vídeo para o canal {chat_id}: {resposta.text}")
-                else:
-                    BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL PT ENVIADO COMO VÍDEO com sucesso para o canal {chat_id}")
-        except Exception as e:
-            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {str(e)}")
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL em português para o canal {chat_id}...")
+                
+                # Enviar vídeo especial
+                try:
+                    with open(video_path, 'rb') as video_file:
+                        url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+                        files = {'video': video_file}
+                        data = {
+                            'chat_id': chat_id,
+                            'width': 217,
+                            'height': 85,
+                            'disable_notification': False
+                        }
+                        response = requests.post(url, data=data, files=files)
+                    
+                    if response.status_code == 200:
+                        BOT2_LOGGER.info(f"[{horario_atual}] ✅ VÍDEO ESPECIAL enviado com sucesso para o canal PT {chat_id}")
+                        # Marcar como enviado para não duplicar em outros canais PT
+                        video_enviado_pt = True
+                    else:
+                        BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar VÍDEO ESPECIAL para o canal PT {chat_id}: {response.text}")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar VÍDEO ESPECIAL para o canal PT {chat_id}: {str(e)}")
+            
+            # Para os outros canais ou para canais PT após o primeiro envio, enviar apenas texto traduzido
+            else:
+                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO TEXTO ESPECIAL para o canal {chat_id} no idioma {idioma}...")
+                
+                # Definir mensagem para cada idioma
+                mensagens = {
+                    "pt": "Seguimos com as operações ✅\n\nMantenham a corretora aberta!!\n\nPra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n➡️ CLICANDO AQUI",
+                    "en": "We continue with the operations ✅\n\nKeep your broker open!!\n\nFor those who haven't started making money with us yet👇🏻\n\n🔥Register at XXBROKER right now🔥\n\n➡️ CLICK HERE",
+                    "es": "Continuamos con las operaciones ✅\n\nMantengan la corredora abierta!!\n\nPara quienes aún no han comenzado a ganar dinero con nosotros👇🏻\n\n🔥Regístrese en XXBROKER ahora mismo🔥\n\n➡️ HAGA CLIC AQUÍ"
+                }
+                
+                # Selecionar mensagem com base no idioma ou usar inglês como fallback
+                mensagem = mensagens.get(idioma, mensagens["en"])
+                
+                # Enviar a mensagem
+                try:
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                    data = {
+                        'chat_id': chat_id,
+                        'text': mensagem,
+                        'parse_mode': 'HTML',
+                        'disable_notification': False
+                    }
+                    response = requests.post(url, json=data)
+                    
+                    if response.status_code == 200:
+                        BOT2_LOGGER.info(f"[{horario_atual}] ✅ TEXTO ESPECIAL enviado com sucesso para o canal {chat_id} no idioma {idioma}")
+                    else:
+                        BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar TEXTO ESPECIAL para o canal {chat_id} no idioma {idioma}: {response.text}")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar TEXTO ESPECIAL para o canal {chat_id} no idioma {idioma}: {str(e)}")
+        
+        BOT2_LOGGER.info(f"[{horario_atual}] ✅ CONCLUÍDO o envio do GIF/mensagem especial para todos os canais")
         
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial PT: {str(e)}")
+        BOT2_LOGGER.error(f"[{horario_atual}] ❌ Erro ao enviar GIF/mensagem especial: {str(e)}")
         traceback.print_exc()
 
 # Modificar a função bot2_send_message para alterar os tempos de agendamento
@@ -1780,117 +1836,6 @@ def bot2_enviar_mensagem_pre_sinal():
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal: {str(e)}")
-        traceback.print_exc()
-
-def bot2_enviar_gif_especial():
-    """
-    Função que envia um vídeo especial para o canal português e apenas texto para os outros canais.
-    Esta função é chamada automaticamente a cada 3 sinais.
-    O vídeo 'videos/gif_especial/pt/especial.mp4' só deve ser enviado para o canal português (uma vez).
-    Para os outros canais, enviar apenas texto traduzido.
-    """
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO GIF/MENSAGEM ESPECIAL (A CADA 3 SINAIS)...")
-        
-        # Flag para controlar se o vídeo já foi enviado para o canal português
-        video_enviado_pt = False
-        
-        # Loop através dos canais configurados
-        for chat_id in BOT2_CHAT_IDS:
-            # Obter idioma do canal
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal.get("idioma", "pt")  # Default para português
-            
-            # Para o canal português, verificar se já enviamos o vídeo para evitar duplicação
-            if idioma == "pt" and not video_enviado_pt:
-                video_path = os.path.join("videos", "gif_especial", "pt", "especial.mp4")
-                
-                # Verificar se o arquivo existe
-                if not os.path.exists(video_path):
-                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo especial não encontrado: {video_path}")
-                    # Enviar texto como fallback
-                    mensagem = "Seguimos com as operações ✅\n\nMantenham a corretora aberta!!\n\nPra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n➡️ CLICANDO AQUI"
-                    try:
-                        url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                        data = {
-                            'chat_id': chat_id,
-                            'text': mensagem,
-                            'parse_mode': 'HTML',
-                            'disable_notification': False
-                        }
-                        response = requests.post(url, json=data)
-                        
-                        if response.status_code == 200:
-                            BOT2_LOGGER.info(f"[{horario_atual}] ✅ TEXTO ESPECIAL (fallback) enviado com sucesso para o canal PT {chat_id}")
-                        else:
-                            BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar TEXTO ESPECIAL (fallback) para o canal PT {chat_id}: {response.text}")
-                    except Exception as e:
-                        BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar TEXTO ESPECIAL (fallback) para o canal PT {chat_id}: {str(e)}")
-                    continue
-                
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL em português para o canal {chat_id}...")
-                
-                # Enviar vídeo especial
-                try:
-                    with open(video_path, 'rb') as video_file:
-                        url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-                        files = {'video': video_file}
-                        data = {
-                            'chat_id': chat_id,
-                            'width': 217,
-                            'height': 85,
-                            'disable_notification': False
-                        }
-                        response = requests.post(url, data=data, files=files)
-                    
-                    if response.status_code == 200:
-                        BOT2_LOGGER.info(f"[{horario_atual}] ✅ VÍDEO ESPECIAL enviado com sucesso para o canal PT {chat_id}")
-                        # Marcar como enviado para não duplicar em outros canais PT
-                        video_enviado_pt = True
-                    else:
-                        BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar VÍDEO ESPECIAL para o canal PT {chat_id}: {response.text}")
-                except Exception as e:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar VÍDEO ESPECIAL para o canal PT {chat_id}: {str(e)}")
-            
-            # Para os outros canais ou para canais PT após o primeiro envio, enviar apenas texto traduzido
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO TEXTO ESPECIAL para o canal {chat_id} no idioma {idioma}...")
-                
-                # Definir mensagem para cada idioma
-                mensagens = {
-                    "pt": "Seguimos com as operações ✅\n\nMantenham a corretora aberta!!\n\nPra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n➡️ CLICANDO AQUI",
-                    "en": "We continue with the operations ✅\n\nKeep your broker open!!\n\nFor those who haven't started making money with us yet👇🏻\n\n🔥Register at XXBROKER right now🔥\n\n➡️ CLICK HERE",
-                    "es": "Continuamos con las operaciones ✅\n\nMantengan la corredora abierta!!\n\nPara quienes aún no han comenzado a ganar dinero con nosotros👇🏻\n\n🔥Regístrese en XXBROKER ahora mismo🔥\n\n➡️ HAGA CLIC AQUÍ"
-                }
-                
-                # Selecionar mensagem com base no idioma ou usar inglês como fallback
-                mensagem = mensagens.get(idioma, mensagens["en"])
-                
-                # Enviar a mensagem
-                try:
-                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                    data = {
-                        'chat_id': chat_id,
-                        'text': mensagem,
-                        'parse_mode': 'HTML',
-                        'disable_notification': False
-                    }
-                    response = requests.post(url, json=data)
-                    
-                    if response.status_code == 200:
-                        BOT2_LOGGER.info(f"[{horario_atual}] ✅ TEXTO ESPECIAL enviado com sucesso para o canal {chat_id} no idioma {idioma}")
-                    else:
-                        BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar TEXTO ESPECIAL para o canal {chat_id} no idioma {idioma}: {response.text}")
-                except Exception as e:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar TEXTO ESPECIAL para o canal {chat_id} no idioma {idioma}: {str(e)}")
-        
-        BOT2_LOGGER.info(f"[{horario_atual}] ✅ CONCLUÍDO o envio do GIF/mensagem especial para todos os canais")
-        
-    except Exception as e:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] ❌ Erro ao enviar GIF/mensagem especial: {str(e)}")
         traceback.print_exc()
 
 # Executar se este arquivo for o script principal
