@@ -1242,18 +1242,18 @@ def bot2_enviar_promo_pre_sinal():
 def bot2_enviar_promo_especial():
     """
     Envia uma mensagem promocional especial a cada 3 sinais enviados.
-    Para todos os canais: envia o vídeo específico do idioma e depois a mensagem.
+    Envia apenas uma mensagem de texto para todos os canais.
     """
     try:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) - Contador: {bot2_contador_sinais}...")
-        
+
         # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
             # Pegar configuração do canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal["idioma"]
-            
+
             # Preparar textos baseados no idioma com links diretamente no texto
             if idioma == "pt":
                 texto_mensagem = (
@@ -1291,46 +1291,24 @@ def bot2_enviar_promo_especial():
                     "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
                     f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
                 )
-            
-            # Obter o caminho do vídeo especial específico para este idioma
-            if idioma == "pt" and VIDEOS_ESPECIAIS["pt"] is not None:
-                video_path = VIDEOS_ESPECIAIS["pt"]
-                
-                # Verificar se o arquivo existe
-                if not os.path.exists(video_path):
-                    BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo especial não encontrado: {video_path}")
-                    # Prosseguir para enviar apenas a mensagem de texto
-                    video_path = None
-            else:
-                # Para outros idiomas, não enviar vídeo
-                video_path = None
-                
-            # Enviar vídeo apenas se for canal em português e o vídeo existir
-            if video_path is not None:
-                # Enviar vídeo
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em português para o canal {chat_id}...")
-                bot2_enviar_video_especial(video_path, chat_id, horario_atual)
-            else:
-                # Enviar apenas a mensagem de texto
-                pass
-            
-            # Enviar mensagem com links (agora incorporados diretamente no texto)
+
+            # Enviar apenas mensagem de texto, nenhum vídeo
             BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) para o canal {chat_id}...")
             url_base_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-            
+
             payload_msg = {
                 'chat_id': chat_id,
                 'text': texto_mensagem,
                 'parse_mode': 'HTML',
                 'disable_web_page_preview': True
             }
-            
+
             resposta_msg = requests.post(url_base_msg, data=payload_msg)
             if resposta_msg.status_code != 200:
                 BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional especial para o canal {chat_id}: {resposta_msg.text}")
             else:
                 BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) ENVIADA COM SUCESSO para o canal {chat_id}")
-    
+
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional especial: {str(e)}")
@@ -1384,13 +1362,25 @@ def bot2_enviar_gif_especial():
     Para os outros canais, enviar apenas texto traduzido.
     """
     try:
+        # Usar variável global para rastrear quais canais já receberam o vídeo
+        # para evitar envio duplicado quando a função é chamada múltiplas vezes
+        global canais_pt_ja_receberam_video
+        
+        # Inicializar se não existir
+        if 'canais_pt_ja_receberam_video' not in globals():
+            canais_pt_ja_receberam_video = set()
+            
+        # Limpar a cada 3 horas para permitir novos envios no futuro
         agora = bot2_obter_hora_brasilia()
+        hora_atual = agora.replace(minute=0, second=0, microsecond=0)
+        if 'ultima_hora_video_enviado' not in globals() or hora_atual.hour % 3 == 0 and ultima_hora_video_enviado != hora_atual.hour:
+            canais_pt_ja_receberam_video = set()
+            globals()['ultima_hora_video_enviado'] = hora_atual.hour
+            BOT2_LOGGER.info(f"[{agora.strftime('%H:%M:%S')}] Resetando rastreamento de canais que receberam vídeo")
+        
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO GIF/MENSAGEM ESPECIAL (A CADA 3 SINAIS)...")
-        
-        # Flag para controlar se o vídeo já foi enviado para o canal português
-        video_enviado_pt = False
-        
+
         # Caminho específico para o único vídeo que deve ser enviado a cada 3 sinais
         video_path = os.path.join("videos", "gif_especial", "pt", "especial.mp4")
 
@@ -1400,8 +1390,8 @@ def bot2_enviar_gif_especial():
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal.get("idioma", "pt")  # Default para português
 
-            # Apenas para o canal português, enviar o vídeo
-            if idioma == "pt" and not video_enviado_pt:
+            # Apenas para o canal português, enviar o vídeo (se ainda não foi enviado)
+            if idioma == "pt" and chat_id not in canais_pt_ja_receberam_video:
                 # Verificar se o arquivo existe
                 if not os.path.exists(video_path):
                     BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo especial não encontrado: {video_path}")
@@ -1441,15 +1431,20 @@ def bot2_enviar_gif_especial():
 
                         if response.status_code == 200:
                             BOT2_LOGGER.info(f"[{horario_atual}] ✅ VÍDEO ESPECIAL enviado com sucesso para o canal PT {chat_id}")
-                            # Marcar como enviado para não duplicar em outros canais PT
-                            video_enviado_pt = True
+                            # Marcar como enviado para não duplicar em outros canais PT e em chamadas futuras
+                            canais_pt_ja_receberam_video.add(chat_id)
                         else:
                             BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar VÍDEO ESPECIAL para o canal PT {chat_id}: {response.text}")
                     except Exception as e:
                         BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar VÍDEO ESPECIAL para o canal PT {chat_id}: {str(e)}")
 
-            # Para os outros canais ou para canais PT após o primeiro envio, enviar apenas texto traduzido
+            # Para os outros canais ou para canais PT que já receberam, enviar apenas texto traduzido
             else:
+                # Se é canal PT que já recebeu o vídeo, pular
+                if idioma == "pt" and chat_id in canais_pt_ja_receberam_video:
+                    BOT2_LOGGER.info(f"[{horario_atual}] Canal PT {chat_id} já recebeu o vídeo, pulando...")
+                    continue
+                
                 BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO TEXTO ESPECIAL para o canal {chat_id} no idioma {idioma}...")
 
                 # Definir mensagem para cada idioma
