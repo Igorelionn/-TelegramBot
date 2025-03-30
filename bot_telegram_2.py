@@ -852,6 +852,8 @@ bot2_contador_sinais = 0  # Contador para rastrear quantos sinais foram enviados
 # URLs promocionais
 XXBROKER_URL = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
 VIDEO_TELEGRAM_URL = "https://t.me/trendingbrazil/215"
+VIDEO_TELEGRAM_ES_URL = "https://t.me/trendingespanish/212"
+VIDEO_TELEGRAM_EN_URL = "https://t.me/trendingenglish/226"
 
 # Base directory para os arquivos do projeto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1246,13 +1248,14 @@ def bot2_enviar_promo_especial():
     try:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) - Contador: {bot2_contador_sinais}...")
-        
+
         # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
             # Pegar configuração do canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal["idioma"]
-            
+            link_corretora = config_canal["link_corretora"]
+
             # Preparar textos baseados no idioma com links diretamente no texto
             if idioma == "pt":
                 texto_mensagem = (
@@ -1261,25 +1264,25 @@ def bot2_enviar_promo_especial():
                     "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
                     f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
                     "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
+                    f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
                 )
             elif idioma == "en":
                 texto_mensagem = (
                     "We continue with operations ✅\n\n"
                     "Keep the broker open!!\n\n\n"
                     "For those who haven't started making money with us yet👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLICK HERE AND WATCH THE VIDEO</a>\n\n"
+                    f"<a href=\"{VIDEO_TELEGRAM_EN_URL}\">CLICK HERE AND WATCH THE VIDEO</a>\n\n"
                     "🔥Register on XXBROKER right now🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICK HERE</a>"
+                    f"➡️ <a href=\"{link_corretora}\">CLICK HERE</a>"
                 )
             elif idioma == "es":
                 texto_mensagem = (
                     "Continuamos con las operaciones ✅\n\n"
                     "¡Mantengan el corredor abierto!\n\n\n"
                     "Para quienes aún no han comenzado a ganar dinero con nosotros👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">HAZ CLIC AQUÍ Y MIRA EL VIDEO</a>\n\n"
+                    f"<a href=\"{VIDEO_TELEGRAM_ES_URL}\">HAZ CLIC AQUÍ Y MIRA EL VIDEO</a>\n\n"
                     "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLIC AQUÍ</a>"
+                    f"➡️ <a href=\"{link_corretora}\">CLIC AQUÍ</a>"
                 )
             else:
                 texto_mensagem = (
@@ -1288,54 +1291,28 @@ def bot2_enviar_promo_especial():
                     "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
                     f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
                     "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
+                    f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
                 )
-            
-            # Obter o caminho do vídeo especial específico para este idioma
-            if idioma in VIDEOS_ESPECIAIS:
-                video_path = VIDEOS_ESPECIAIS[idioma]
-            else:
-                video_path = VIDEOS_ESPECIAIS["pt"]  # Fallback para português
-                
-            # Verificar se o arquivo existe
-            if not os.path.exists(video_path):
-                BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de vídeo especial não encontrado: {video_path}")
-                # Tentar usar o vídeo em português como backup se o idioma não for PT
-                if idioma != "pt":
-                    video_path = VIDEOS_ESPECIAIS["pt"]
-                    BOT2_LOGGER.info(f"[{horario_atual}] Tentando usar vídeo especial em português como backup: {video_path}")
-                    if not os.path.exists(video_path):
-                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo especial backup também não encontrado: {video_path}")
-                        # Prosseguir para enviar apenas a mensagem de texto
-                    else:
-                        # Enviar vídeo
-                        BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em português para o canal {chat_id}...")
-                        bot2_enviar_video_especial(video_path, chat_id, horario_atual)
-                else:
-                    # Prosseguir para enviar apenas a mensagem de texto
-                    pass
-            else:
-                # Enviar vídeo
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO VÍDEO ESPECIAL (A CADA 3 SINAIS) em {idioma} para o canal {chat_id}...")
-                bot2_enviar_video_especial(video_path, chat_id, horario_atual)
-            
+
             # Enviar mensagem com links (agora incorporados diretamente no texto)
             BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) para o canal {chat_id}...")
             url_base_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-            
+
             payload_msg = {
                 'chat_id': chat_id,
                 'text': texto_mensagem,
                 'parse_mode': 'HTML',
                 'disable_web_page_preview': True
             }
-            
+
+            # Enviar a mensagem
             resposta_msg = requests.post(url_base_msg, data=payload_msg)
+
             if resposta_msg.status_code != 200:
                 BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional especial para o canal {chat_id}: {resposta_msg.text}")
             else:
                 BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) ENVIADA COM SUCESSO para o canal {chat_id}")
-    
+
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional especial: {str(e)}")
@@ -1380,7 +1357,7 @@ def bot2_enviar_gif_especial_pt():
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO GIF ESPECIAL PT...")
-        
+
         # Verificar se a pasta de vídeos especiais existe, se não, criar
         if not os.path.exists(VIDEOS_ESPECIAL_DIR):
             os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
@@ -1395,42 +1372,52 @@ def bot2_enviar_gif_especial_pt():
         if not os.path.exists(VIDEO_GIF_ESPECIAL_PT):
             BOT2_LOGGER.error(f"[{horario_atual}] Arquivo de GIF especial não encontrado: {VIDEO_GIF_ESPECIAL_PT}")
             return
-        
+
         # Configurações específicas para o canal de idioma português
-        chat_id = BOT2_CHAT_IDS[0]
-        
-        # Se o canal estiver desativado, não enviar mensagem
-        if chat_id == "":
+        # Usar apenas o canal português (primeiro canal)
+        canal_pt = None
+        for chat_id in BOT2_CHAT_IDS:
+            config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            if config_canal["idioma"] == "pt":
+                canal_pt = chat_id
+                break
+                
+        # Se não encontrou canal PT, usar o primeiro canal
+        if canal_pt is None:
+            canal_pt = BOT2_CHAT_IDS[0]
+            BOT2_LOGGER.warning(f"[{horario_atual}] Não foi encontrado canal PT. Usando primeiro canal: {canal_pt}")
+
+        # Verificar se canal português está habilitado
+        if canal_pt == "":
             BOT2_LOGGER.warning(f"[{horario_atual}] Canal PT está desativado. GIF ESPECIAL PT não foi enviado.")
             return
-        
-        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF ESPECIAL PT para o canal: {chat_id}")
-        
+
+        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF ESPECIAL PT para o canal: {canal_pt}")
+
         try:
             # Enviar o GIF como vídeo diretamente
             BOT2_LOGGER.info(f"[{horario_atual}] Arquivo GIF encontrado: {VIDEO_GIF_ESPECIAL_PT}")
             arquivo_gif = VIDEO_GIF_ESPECIAL_PT
-            
+
             url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
-            
+
             # Parâmetros para vídeo (sem definição de tamanho)
             params = {
-                'chat_id': chat_id,
+                'chat_id': canal_pt,
                 'supports_streaming': True,
             }
-            
+
             with open(arquivo_gif, 'rb') as video_file:
                 files = {'video': video_file}
-                
                 resposta = requests.post(url_base, data=params, files=files)
-                
+
                 if resposta.status_code != 200:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial como vídeo para o canal {chat_id}: {resposta.text}")
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial como vídeo para o canal {canal_pt}: {resposta.text}")
                 else:
-                    BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL PT ENVIADO COMO VÍDEO com sucesso para o canal {chat_id}")
+                    BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL PT ENVIADO COMO VÍDEO com sucesso para o canal {canal_pt}")
         except Exception as e:
-            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {str(e)}")
-        
+            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {canal_pt}: {str(e)}")
+            
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial PT: {str(e)}")
@@ -1724,9 +1711,9 @@ def bot2_enviar_mensagem_pre_sinal():
 
         # Mensagens pré-definidas por idioma
         mensagens_pre_sinal = {
-            "pt": "",
-            "en": "",
-            "es": ""
+            "pt": "👉🏼Abram a corretora Pessoal\n\n⚠️FIQUEM ATENTOS⚠️\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥",
+            "en": "👉🏼Open the broker now\n\n⚠️STAY ALERT⚠️\n\n🔥Register on XXBROKER right now🔥",
+            "es": "👉🏼Abran el corredor ahora\n\n⚠️MANTÉNGANSE ATENTOS⚠️\n\n🔥Regístrese en XXBROKER ahora mismo🔥"
         }
 
         # Loop para enviar a mensagem para cada canal configurado
@@ -1735,6 +1722,13 @@ def bot2_enviar_mensagem_pre_sinal():
             idioma = config_canal["idioma"]
             link_corretora = config_canal["link_corretora"]
             
+            # Definir link do vídeo com base no idioma
+            video_link = VIDEO_TELEGRAM_URL  # Padrão em português
+            if idioma == "en":
+                video_link = VIDEO_TELEGRAM_EN_URL
+            elif idioma == "es":
+                video_link = VIDEO_TELEGRAM_ES_URL
+
             # Texto do botão de acordo com o idioma
             texto_botao = "🔗 Abrir corretora"  # Padrão em português
             if idioma == "en":
@@ -1744,14 +1738,20 @@ def bot2_enviar_mensagem_pre_sinal():
 
             # Mensagem específica para o idioma
             mensagem = mensagens_pre_sinal.get(idioma, mensagens_pre_sinal["pt"])
-            
-            # Configurar teclado inline com o link da corretora
+
+            # Configurar teclado inline com o link da corretora e do vídeo
             teclado_inline = {
                 "inline_keyboard": [
                     [
                         {
                             "text": texto_botao,
                             "url": link_corretora
+                        }
+                    ],
+                    [
+                        {
+                            "text": "📺 Assistir Vídeo",
+                            "url": video_link
                         }
                     ]
                 ]
