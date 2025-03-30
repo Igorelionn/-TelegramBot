@@ -1613,14 +1613,16 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
                 BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem promocional especial para daqui a 5 minutos e 40 segundos...")
                 
                 # 4. Vídeo pré-sinal (5 minutos após a mensagem promocional = 10 minutos e 40 segundos após o sinal)
+                # Para canal espanhol, enviamos primeiro a mensagem pré-sinal para evitar que ela venha antes do vídeo
                 timer_pre_sinal = threading.Timer(640.0, bot2_enviar_promo_pre_sinal)
                 timer_pre_sinal.start()
                 BOT2_LOGGER.info(f"[{horario_atual}] Agendando vídeo pré-sinal para daqui a 10 minutos e 40 segundos...")
-                
-                # 5. Mensagem pré-sinal (3 segundos após o vídeo pré-sinal = 10 minutos e 43 segundos após o sinal)
-                timer_msg_pre_sinal = threading.Timer(643.0, bot2_enviar_mensagem_pre_sinal)
+
+                # 5. Mensagem pré-sinal para outros idiomas (3 segundos após o vídeo pré-sinal = 10 minutos e 43 segundos após o sinal)
+                # MODIFICADO: Para o canal espanhol, a mensagem pré-sinal será enviada 3 segundos ANTES do vídeo
+                timer_msg_pre_sinal = threading.Timer(637.0, lambda: bot2_enviar_mensagem_pre_sinal(canal_es_primeiro=True))
                 timer_msg_pre_sinal.start()
-                BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem pré-sinal para daqui a 10 minutos e 43 segundos...")
+                BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem pré-sinal para daqui a 10 minutos e 37 segundos...")
             
             # Inicia o agendamento da sequência especial
             agendar_sequencia_especial()
@@ -1746,7 +1748,7 @@ def iniciar_ambos_bots():
             BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
             time.sleep(5)  # Pausa maior em caso de erro
 
-def bot2_enviar_mensagem_pre_sinal():
+def bot2_enviar_mensagem_pre_sinal(canal_es_primeiro=False):
     """
     Envia uma mensagem promocional antes do sinal.
     Esta função é chamada após o envio do vídeo pré-sinal.
@@ -1775,9 +1777,18 @@ def bot2_enviar_mensagem_pre_sinal():
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal["idioma"]
             
+            # Se for canal_es_primeiro=True, então apenas processa canais em espanhol neste momento
+            if canal_es_primeiro:
+                if idioma != "es":
+                    continue  # Pula canais que não são em espanhol
+            else:
+                # Na chamada normal, pula canais em espanhol que já foram processados
+                if idioma == "es" and canal_es_primeiro:
+                    continue
+
             # Mensagem específica para o idioma
             mensagem = mensagens_pre_sinal.get(idioma, mensagens_pre_sinal["pt"])
-            
+
             BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PRÉ-SINAL em {idioma} para o canal {chat_id}...")
             BOT2_LOGGER.info(f"[{horario_atual}] CONTEÚDO DA MENSAGEM: {mensagem}")
 
@@ -1796,7 +1807,7 @@ def bot2_enviar_mensagem_pre_sinal():
                 BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal para o canal {chat_id}: {resposta.text}")
             else:
                 BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PRÉ-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
-
+                
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal: {str(e)}")
