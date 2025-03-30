@@ -852,7 +852,14 @@ bot2_contador_sinais = 0  # Contador para rastrear quantos sinais foram enviados
 
 # URLs promocionais
 XXBROKER_URL = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
-VIDEO_TELEGRAM_URL = "https://t.me/trendingbrazil/215"
+
+# URLs para os vídeos em diferentes idiomas
+VIDEO_TELEGRAM_URLS = {
+    "pt": "https://t.me/trendingbrazil/215",  # URL para português
+    "en": "https://t.me/trendingenglish/226",  # URL para inglês
+    "es": "https://t.me/trendingespanish/212"  # URL para espanhol
+}
+VIDEO_TELEGRAM_URL = VIDEO_TELEGRAM_URLS["pt"]  # Mantida para compatibilidade com código existente
 
 # Base directory para os arquivos do projeto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1248,11 +1255,22 @@ def bot2_enviar_promo_especial():
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) - Contador: {bot2_contador_sinais}...")
 
+        # Links específicos para cada canal
+        links_corretora = {
+            "pt": "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack=",
+            "en": "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack=",
+            "es": "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+        }
+
         # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
             # Pegar configuração do canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal["idioma"]
+            
+            # Obter URL do vídeo específico para o idioma
+            video_url = VIDEO_TELEGRAM_URLS.get(idioma, VIDEO_TELEGRAM_URLS["pt"])
+            link_corretora = links_corretora.get(idioma, links_corretora["pt"])
 
             # Preparar textos baseados no idioma com links diretamente no texto
             if idioma == "pt":
@@ -1260,36 +1278,36 @@ def bot2_enviar_promo_especial():
                     "Seguimos com as operações ✅\n\n"
                     "Mantenham a corretora aberta!!\n\n\n"
                     "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
+                    f"<a href=\"{video_url}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
                     "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
+                    f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
                 )
             elif idioma == "en":
                 texto_mensagem = (
                     "We continue with operations ✅\n\n"
                     "Keep the broker open!!\n\n\n"
                     "For those who haven't started making money with us yet👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLICK HERE AND WATCH THE VIDEO</a>\n\n"
+                    f"<a href=\"{video_url}\">CLICK HERE AND WATCH THE VIDEO</a>\n\n"
                     "🔥Register on XXBROKER right now🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICK HERE</a>"
+                    f"➡️ <a href=\"{link_corretora}\">CLICK HERE</a>"
                 )
             elif idioma == "es":
                 texto_mensagem = (
                     "Continuamos con las operaciones ✅\n\n"
                     "¡Mantengan el corredor abierto!\n\n\n"
                     "Para quienes aún no han comenzado a ganar dinero con nosotros👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">HAZ CLIC AQUÍ Y MIRA EL VIDEO</a>\n\n"
+                    f"<a href=\"{video_url}\">HAZ CLIC AQUÍ Y MIRA EL VIDEO</a>\n\n"
                     "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLIC AQUÍ</a>"
+                    f"➡️ <a href=\"{link_corretora}\">CLIC AQUÍ</a>"
                 )
             else:
                 texto_mensagem = (
                     "Seguimos com as operações ✅\n\n"
                     "Mantenham a corretora aberta!!\n\n\n"
                     "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
+                    f"<a href=\"{video_url}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
                     "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{XXBROKER_URL}\">CLICANDO AQUI</a>"
+                    f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
                 )
 
             # Enviar apenas mensagem de texto, nenhum vídeo
@@ -1359,7 +1377,7 @@ def bot2_enviar_gif_especial():
     Função que envia um vídeo especial para o canal português e apenas texto para os outros canais.
     Esta função é chamada automaticamente a cada 3 sinais.
     O vídeo 'videos/gif_especial/pt/especial.mp4' só deve ser enviado para o canal português (uma vez).
-    Para os outros canais, enviar apenas texto traduzido.
+    Para os outros canais, não enviamos nada aqui, pois o texto será enviado pela função bot2_enviar_promo_especial.
     """
     try:
         # Usar variável global para rastrear quais canais já receberam o vídeo
@@ -1390,8 +1408,13 @@ def bot2_enviar_gif_especial():
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal.get("idioma", "pt")  # Default para português
 
-            # Apenas para o canal português, enviar o vídeo (se ainda não foi enviado)
-            if idioma == "pt" and chat_id not in canais_pt_ja_receberam_video:
+            # Apenas processar canais em português
+            if idioma == "pt":
+                # Verificar se já recebeu o vídeo
+                if chat_id in canais_pt_ja_receberam_video:
+                    BOT2_LOGGER.info(f"[{horario_atual}] Canal PT {chat_id} já recebeu o vídeo, pulando...")
+                    continue
+
                 # Verificar se o arquivo existe
                 if not os.path.exists(video_path):
                     BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vídeo especial não encontrado: {video_path}")
@@ -1437,43 +1460,10 @@ def bot2_enviar_gif_especial():
                             BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar VÍDEO ESPECIAL para o canal PT {chat_id}: {response.text}")
                     except Exception as e:
                         BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar VÍDEO ESPECIAL para o canal PT {chat_id}: {str(e)}")
-
-            # Para os outros canais ou para canais PT que já receberam, enviar apenas texto traduzido
             else:
-                # Se é canal PT que já recebeu o vídeo, pular
-                if idioma == "pt" and chat_id in canais_pt_ja_receberam_video:
-                    BOT2_LOGGER.info(f"[{horario_atual}] Canal PT {chat_id} já recebeu o vídeo, pulando...")
-                    continue
-                
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO TEXTO ESPECIAL para o canal {chat_id} no idioma {idioma}...")
-
-                # Definir mensagem para cada idioma
-                mensagens = {
-                    "pt": "Seguimos com as operações ✅\n\nMantenham a corretora aberta!!\n\nPra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n➡️ CLICANDO AQUI",
-                    "en": "We continue with the operations ✅\n\nKeep your broker open!!\n\nFor those who haven't started making money with us yet👇🏻\n\n🔥Register at XXBROKER right now🔥\n\n➡️ CLICK HERE",
-                    "es": "Continuamos con las operaciones ✅\n\nMantengan la corredora abierta!!\n\nPara quienes aún no han comenzado a ganar dinero con nosotros👇🏻\n\n🔥Regístrese en XXBROKER ahora mismo🔥\n\n➡️ HAGA CLIC AQUÍ"
-                }
-
-                # Selecionar mensagem com base no idioma ou usar inglês como fallback
-                mensagem = mensagens.get(idioma, mensagens["en"])
-
-                # Enviar a mensagem
-                try:
-                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                    data = {
-                        'chat_id': chat_id,
-                        'text': mensagem,
-                        'parse_mode': 'HTML',
-                        'disable_notification': False
-                    }
-                    response = requests.post(url, json=data)
-
-                    if response.status_code == 200:
-                        BOT2_LOGGER.info(f"[{horario_atual}] ✅ TEXTO ESPECIAL enviado com sucesso para o canal {chat_id} no idioma {idioma}")
-                    else:
-                        BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar TEXTO ESPECIAL para o canal {chat_id} no idioma {idioma}: {response.text}")
-                except Exception as e:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ❌ ERRO ao enviar TEXTO ESPECIAL para o canal {chat_id} no idioma {idioma}: {str(e)}")
+                # Para canais não-PT, não fazemos nada aqui, pois a mensagem será enviada pela função bot2_enviar_promo_especial
+                BOT2_LOGGER.info(f"[{horario_atual}] Canal não-PT {chat_id} (idioma {idioma}): Pulando envio de mensagem, será feito por bot2_enviar_promo_especial")
+                continue
 
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
@@ -1617,20 +1607,20 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
                 timer_gif_especial.start()
                 BOT2_LOGGER.info(f"[{horario_atual}] Agendando gif/mensagem especial para o canal PT e texto para outros canais em {(agora + timedelta(seconds=330)).strftime('%H:%M:%S')}")
                 
-                # 3. Mensagem promocional especial (3 segundos após o GIF especial PT = 5 minutos e 33 segundos após o sinal)
-                timer_promo_especial = threading.Timer(333.0, bot2_enviar_promo_especial)
+                # 3. Mensagem promocional especial (10 segundos após o GIF especial PT = 5 minutos e 40 segundos após o sinal)
+                timer_promo_especial = threading.Timer(340.0, bot2_enviar_promo_especial)
                 timer_promo_especial.start()
-                BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem promocional especial para daqui a 5 minutos e 33 segundos...")
+                BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem promocional especial para daqui a 5 minutos e 40 segundos...")
                 
-                # 4. Vídeo pré-sinal (5 minutos após a mensagem promocional = 10 minutos e 33 segundos após o sinal)
-                timer_pre_sinal = threading.Timer(633.0, bot2_enviar_promo_pre_sinal)
+                # 4. Vídeo pré-sinal (5 minutos após a mensagem promocional = 10 minutos e 40 segundos após o sinal)
+                timer_pre_sinal = threading.Timer(640.0, bot2_enviar_promo_pre_sinal)
                 timer_pre_sinal.start()
-                BOT2_LOGGER.info(f"[{horario_atual}] Agendando vídeo pré-sinal para daqui a 10 minutos e 33 segundos...")
+                BOT2_LOGGER.info(f"[{horario_atual}] Agendando vídeo pré-sinal para daqui a 10 minutos e 40 segundos...")
                 
-                # 5. Mensagem pré-sinal (3 segundos após o vídeo pré-sinal = 10 minutos e 36 segundos após o sinal)
-                timer_msg_pre_sinal = threading.Timer(636.0, bot2_enviar_mensagem_pre_sinal)
+                # 5. Mensagem pré-sinal (3 segundos após o vídeo pré-sinal = 10 minutos e 43 segundos após o sinal)
+                timer_msg_pre_sinal = threading.Timer(643.0, bot2_enviar_mensagem_pre_sinal)
                 timer_msg_pre_sinal.start()
-                BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem pré-sinal para daqui a 10 minutos e 36 segundos...")
+                BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem pré-sinal para daqui a 10 minutos e 43 segundos...")
             
             # Inicia o agendamento da sequência especial
             agendar_sequencia_especial()
@@ -1712,9 +1702,9 @@ def bot2_schedule_messages():
         BOT2_LOGGER.info("- Vídeo pós-sinal: 5 minutos após o sinal")
         BOT2_LOGGER.info("Apenas para o terceiro sinal (ou múltiplos de 3):")
         BOT2_LOGGER.info("- GIF especial PT: 5 minutos e 30 segundos após o sinal (30 segundos após o vídeo pós-sinal)")
-        BOT2_LOGGER.info("- Mensagem promocional especial: 5 minutos e 33 segundos após o sinal (3 segundos após o GIF especial)")
-        BOT2_LOGGER.info("- Vídeo pré-sinal: 10 minutos e 33 segundos após o sinal (5 minutos após a mensagem promocional)")
-        BOT2_LOGGER.info("- Mensagem pré-sinal: 10 minutos e 36 segundos após o sinal (3 segundos após o vídeo pré-sinal)")
+        BOT2_LOGGER.info("- Mensagem promocional especial: 5 minutos e 40 segundos após o sinal (10 segundos após o GIF especial)")
+        BOT2_LOGGER.info("- Vídeo pré-sinal: 10 minutos e 40 segundos após o sinal (5 minutos após a mensagem promocional)")
+        BOT2_LOGGER.info("- Mensagem pré-sinal: 10 minutos e 43 segundos após o sinal (3 segundos após o vídeo pré-sinal)")
 
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao agendar mensagens do Bot 2: {str(e)}")
@@ -1766,13 +1756,6 @@ def bot2_enviar_mensagem_pre_sinal():
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PRÉ-SINAL...")
 
-        # Mensagens pré-definidas por idioma
-        mensagens_pre_sinal = {
-            "pt": "👉🏼Abram a corretora Pessoal\n\n⚠️FIQUEM ATENTOS⚠️\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n➡️ CLICANDO AQUI",
-            "en": "👉🏼Open your broker\n\n⚠️STAY ALERT⚠️\n\n🔥Register at XXBROKER right now🔥\n\n➡️ CLICK HERE",
-            "es": "👉🏼Abran su corredor\n\n⚠️ESTÉN ATENTOS⚠️\n\n🔥Regístrese en XXBROKER ahora mismo🔥\n\n➡️ HAGA CLIC AQUÍ"
-        }
-
         # Links específicos para cada canal
         links_corretora = {
             "pt": "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack=",
@@ -1780,49 +1763,32 @@ def bot2_enviar_mensagem_pre_sinal():
             "es": "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
         }
 
+        # Mensagens pré-definidas por idioma com o link da corretora embutido no texto
+        mensagens_pre_sinal = {
+            "pt": f"👉🏼Abram a corretora Pessoal\n\n⚠️FIQUEM ATENTOS⚠️\n\n🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n➡️ <a href=\"{links_corretora['pt']}\">CLICANDO AQUI</a>",
+            "en": f"👉🏼Open your broker\n\n⚠️STAY ALERT⚠️\n\n🔥Register at XXBROKER right now🔥\n\n➡️ <a href=\"{links_corretora['en']}\">CLICK HERE</a>",
+            "es": f"👉🏼Abran su corredor\n\n⚠️ESTÉN ATENTOS⚠️\n\n🔥Regístrese en XXBROKER ahora mismo🔥\n\n➡️ <a href=\"{links_corretora['es']}\">HAGA CLIC AQUÍ</a>"
+        }
+
         # Loop para enviar a mensagem para cada canal configurado
         for chat_id in BOT2_CHAT_IDS:
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal["idioma"]
             
-            # Obter o link correto para o idioma do canal
-            link_corretora = links_corretora.get(idioma, links_corretora["pt"])
-            
-            # Texto do botão de acordo com o idioma
-            texto_botao = "🔗 Abrir corretora"  # Padrão em português
-            if idioma == "en":
-                texto_botao = "🔗 Open broker"
-            elif idioma == "es":
-                texto_botao = "🔗 Abrir corredor"
-
             # Mensagem específica para o idioma
             mensagem = mensagens_pre_sinal.get(idioma, mensagens_pre_sinal["pt"])
             
             BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PRÉ-SINAL em {idioma} para o canal {chat_id}...")
             BOT2_LOGGER.info(f"[{horario_atual}] CONTEÚDO DA MENSAGEM: {mensagem}")
-            BOT2_LOGGER.info(f"[{horario_atual}] LINK DA CORRETORA: {link_corretora}")
 
-            # Configurar teclado inline com o link da corretora
-            teclado_inline = {
-                "inline_keyboard": [
-                    [
-                        {
-                            "text": texto_botao,
-                            "url": link_corretora
-                        }
-                    ]
-                ]
-            }
-
-            # Enviar a mensagem para o canal específico
+            # Enviar a mensagem para o canal específico com o link embutido no texto
             url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
 
             payload = {
                 'chat_id': chat_id,
                 'text': mensagem,
                 'parse_mode': 'HTML',
-                'disable_web_page_preview': True,
-                'reply_markup': json.dumps(teclado_inline)
+                'disable_web_page_preview': True
             }
 
             resposta = requests.post(url_base, data=payload)
