@@ -1425,156 +1425,126 @@ def bot2_enviar_gif_especial_pt():
 
 # Modificar a função bot2_send_message para alterar os tempos de agendamento
 def bot2_send_message(ignorar_anti_duplicacao=False):
+    """
+    Envia uma mensagem para todos os canais configurados.
+    """
     global bot2_contador_sinais
-    
     try:
-        # Verifica se já enviou muito recentemente (anti-duplicação)
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
-        
-        if not ignorar_anti_duplicacao and hasattr(bot2_send_message, 'ultimo_envio_timestamp'):
-            ultimo_envio = bot2_send_message.ultimo_envio_timestamp
-            diferenca = (agora - ultimo_envio).total_seconds()
-            if diferenca < 60:  # Se a última mensagem foi enviada há menos de 1 minuto
-                BOT2_LOGGER.info(f"[{horario_atual}] Anti-duplicação: Mensagem ignorada. Última enviada há {diferenca:.1f} segundos.")
-                return
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DE MENSAGEM PARA TODOS OS CANAIS...")
 
-        # Atualiza o timestamp da última mensagem enviada para evitar duplicações
-        bot2_send_message.ultimo_envio_timestamp = agora
-
-        # Verifica se não excedeu o limite por hora
-        hora_atual = agora.replace(minute=0, second=0, microsecond=0)
-        if hora_atual not in bot2_send_message.contagem_por_hora:
-            bot2_send_message.contagem_por_hora = {hora_atual: 0}
-
-        if not ignorar_anti_duplicacao and bot2_send_message.contagem_por_hora[hora_atual] >= BOT2_LIMITE_SINAIS_POR_HORA:
-            BOT2_LOGGER.info(f"[{horario_atual}] Limite de {BOT2_LIMITE_SINAIS_POR_HORA} sinais por hora atingido. Ignorando este sinal.")
-            return
-
-        # Gera um sinal aleatório para enviar
+        # Gerar sinal aleatório
         sinal = bot2_gerar_sinal_aleatorio()
         if not sinal:
-            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao gerar sinal. Abortando envio.")
+            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Não foi possível gerar um sinal válido")
             return
 
-        # Incrementa o contador de mensagens enviadas nesta hora
-        bot2_send_message.contagem_por_hora[hora_atual] += 1
-
-        # Registra a hora de geração do sinal
-        BOT2_LOGGER.info(f"[{horario_atual}] SINAL GERADO. Enviando para todos os canais configurados...")
-
-        # Obter dados do sinal
-        ativo = sinal['ativo']
-        direcao = sinal['direcao']
-        categoria = sinal['categoria']
-        tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
-
-        # Calcular horários para a operação
-        hora_entrada = agora + timedelta(minutes=2)
-        hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
-        hora_reentrada1 = hora_expiracao + timedelta(minutes=1)
-        hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos)
-        
-        BOT2_LOGGER.info(f"[{horario_atual}] Detalhes do sinal: Ativo={ativo}, Direção={direcao}, Categoria={categoria}, Expiração={tempo_expiracao_minutos}min")
-        BOT2_LOGGER.info(f"[{horario_atual}] Horários: Entrada={hora_entrada.strftime('%H:%M:%S')}, Expiração={hora_expiracao.strftime('%H:%M:%S')}, Reentrada1={hora_reentrada1.strftime('%H:%M:%S')}, Reentrada2={hora_reentrada2.strftime('%H:%M:%S')}")
-
-        # Obtém a hora atual para formatação na mensagem
-        hora_formatada = agora.strftime("%H:%M")
-
-        # Loop para enviar aos canais configurados com base no idioma
-        for chat_id in BOT2_CHAT_IDS:
-            # Pegar configuração do canal
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
-            link_corretora = config_canal["link_corretora"]
-
-            # Enviar apenas no idioma configurado para este canal
-            mensagem = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
-            
-            # IMPORTANTE: Log detalhado do conteúdo exato da mensagem para debug
-            BOT2_LOGGER.info(f"[{horario_atual}] CONTEÚDO EXATO DA MENSAGEM DO SINAL: {mensagem}")
-
-            # Texto do botão de acordo com o idioma
-            texto_botao = "🔗 Abrir corretora"  # Padrão em português
-
-            if idioma == "en":
-                texto_botao = "🔗 Open broker"
-            elif idioma == "es":
-                texto_botao = "🔗 Abrir corredor"
-
-            # Configura o teclado inline com o link da corretora
-            teclado_inline = {
-                "inline_keyboard": [
-                    [
-                        {
-                            "text": texto_botao,
-                            "url": link_corretora
-                        }
-                    ]
-                ]
-            }
-
-            # Envia a mensagem para o canal específico
-            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-
-            payload = {
-                'chat_id': chat_id,
-                'text': mensagem,
-                'parse_mode': 'HTML',
-                'disable_web_page_preview': True,
-                'reply_markup': json.dumps(teclado_inline)
-            }
-
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM DO SINAL em {idioma} para o canal {chat_id}...")
-            resposta = requests.post(url_base, data=payload)
-
-            if resposta.status_code != 200:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar sinal para o canal {chat_id}: {resposta.text}")
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM DO SINAL ENVIADA COM SUCESSO para o canal {chat_id} no idioma {idioma}")
-
-        # Registra estatísticas de envio
-        bot2_registrar_envio(ativo, direcao, categoria)
-        
-        # Incrementa o contador global de sinais
+        # Incrementar contador de sinais
         bot2_contador_sinais += 1
         BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado: {bot2_contador_sinais}")
-        
+
+        # Loop para enviar aos canais configurados
+        for chat_id in BOT2_CHAT_IDS:
+            try:
+                # Pegar configuração do canal
+                config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                idioma = config_canal.get("idioma", "pt")  # Usar português como padrão
+
+                # Nomes dos arquivos (padronizados sem acentos)
+                nome_padrao = "padrao"
+                nome_especial = "especial"
+
+                # Verificar todos os formatos possíveis para as imagens - priorizando formatos com transparência
+                formatos = [".webp", ".png", ".jpg", ".jpeg"]
+
+                # Determinar qual imagem enviar com base no contador de sinais
+                imagem_selecionada = None
+                nome_arquivo = nome_padrao  # Sempre começa com padrão
+                
+                # Verificar se é o momento de enviar a imagem especial (a cada 12 sinais)
+                if bot2_contador_sinais % 12 == 0:
+                    nome_arquivo = nome_especial
+                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem especial (a cada 12 sinais) para o canal {chat_id}")
+                else:
+                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem padrão para o canal {chat_id}")
+
+                # Tentar encontrar o arquivo no formato correto
+                for formato in formatos:
+                    caminho_completo = os.path.join(BOT2_IMAGENS_DIR, f"{nome_arquivo}{formato}")
+                    if os.path.exists(caminho_completo):
+                        imagem_selecionada = caminho_completo
+                        break
+
+                if not imagem_selecionada:
+                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Nenhuma imagem encontrada para o canal {chat_id}")
+                    continue
+
+                # Preparar a mensagem com o sinal
+                hora_formatada = agora.strftime("%H:%M")
+                mensagem = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
+
+                # IMPORTANTE: Log detalhado do conteúdo exato da mensagem para debug
+                BOT2_LOGGER.info(f"[{horario_atual}] CONTEÚDO EXATO DA MENSAGEM DO SINAL: {mensagem}")
+
+                # Enviar a mensagem com a imagem
+                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
+                with open(imagem_selecionada, 'rb') as foto:
+                    files = {'photo': foto}
+                    payload = {
+                        'chat_id': chat_id,
+                        'caption': mensagem,
+                        'parse_mode': 'HTML'
+                    }
+                    resposta = requests.post(url_base, files=files, data=payload)
+
+                if resposta.status_code != 200:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem para o canal {chat_id}: {resposta.text}")
+                else:
+                    BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM ENVIADA COM SUCESSO para o canal {chat_id}")
+
+            except Exception as e:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar canal {chat_id}: {str(e)}")
+                continue
+
+        # Registrar o envio do sinal
+        bot2_registrar_envio(sinal["ativo"], sinal["direcao"], sinal["categoria"])
+
         # Agendar o envio do vídeo pós-sinal para 5 minutos depois (acontece em TODOS os sinais)
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do vídeo pós-sinal para daqui a 5 minutos...")
         import threading
         timer_pos_sinal = threading.Timer(300.0, bot2_enviar_gif_pos_sinal)  # 300 segundos = 5 minutos
         timer_pos_sinal.start()
-        
+
         # Verifica se é o terceiro sinal para enviar a sequência especial
         if bot2_contador_sinais % 3 == 0:
             BOT2_LOGGER.info(f"[{horario_atual}] Terceiro sinal detectado! Agendando sequência especial...")
-            
+
             # Função para agendar o envio sequencial
             def agendar_sequencia_especial():
                 # 1. O vídeo pós-sinal já está agendado para 5 minutos após o sinal
-                
+
                 # 2. GIF especial PT (30 segundos após o vídeo pós-sinal = 5 minutos e 30 segundos após o sinal)
                 timer_gif_especial = threading.Timer(330.0, bot2_enviar_gif_especial_pt)
                 timer_gif_especial.start()
                 BOT2_LOGGER.info(f"[{horario_atual}] Agendando GIF especial PT para daqui a 5 minutos e 30 segundos...")
-                
+
                 # 3. Mensagem promocional especial (3 segundos após o GIF especial PT = 5 minutos e 33 segundos após o sinal)
                 timer_promo_especial = threading.Timer(333.0, bot2_enviar_promo_especial)
                 timer_promo_especial.start()
                 BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem promocional especial para daqui a 5 minutos e 33 segundos...")
-                
+
                 # 4. Vídeo pré-sinal (5 minutos após a mensagem promocional = 10 minutos e 33 segundos após o sinal)
                 timer_pre_sinal = threading.Timer(633.0, bot2_enviar_promo_pre_sinal)
                 timer_pre_sinal.start()
                 BOT2_LOGGER.info(f"[{horario_atual}] Agendando vídeo pré-sinal para daqui a 10 minutos e 33 segundos...")
-                
+
                 # 5. Mensagem pré-sinal (1 minuto após o vídeo pré-sinal = 11 minutos e 33 segundos após o sinal)
                 timer_msg_pre_sinal = threading.Timer(693.0, bot2_enviar_mensagem_pre_sinal)
                 timer_msg_pre_sinal.start()
                 BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem pré-sinal para daqui a 11 minutos e 33 segundos...")
-            
+
             # Inicia o agendamento da sequência especial
             agendar_sequencia_especial()
 
