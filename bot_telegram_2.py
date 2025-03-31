@@ -1261,7 +1261,7 @@ def bot2_enviar_promo_especial():
                 texto_mensagem = (
                     "Seguimos com as operações ✅\n\n"
                     "Mantenham a corretora aberta!!\n\n\n"
-                    "Pra quem ainda não começou a ganhar dinheiro com a gente 🔥\n\n"
+                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
                     "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
                     f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
                 )
@@ -1269,7 +1269,7 @@ def bot2_enviar_promo_especial():
                 texto_mensagem = (
                     "We continue with operations ✅\n\n"
                     "Keep the broker open!!\n\n\n"
-                    "For those who haven't started making money with us yet 🔥\n\n"
+                    "For those who haven't started making money with us yet👇🏻\n\n"
                     "🔥Register on XXBROKER right now🔥\n\n"
                     f"➡️ <a href=\"{link_corretora}\">CLICK HERE</a>"
                 )
@@ -1277,7 +1277,7 @@ def bot2_enviar_promo_especial():
                 texto_mensagem = (
                     "Continuamos con las operaciones ✅\n\n"
                     "¡Mantengan el corredor abierto!\n\n\n"
-                    "Para quienes aún no han comenzado a ganar dinero con nosotros 🔥\n\n"
+                    "Para quienes aún no han comenzado a ganar dinero con nosotros👇🏻\n\n"
                     "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
                     f"➡️ <a href=\"{link_corretora}\">HAZ CLIC AQUÍ</a>"
                 )
@@ -1285,7 +1285,7 @@ def bot2_enviar_promo_especial():
                 texto_mensagem = (
                     "Seguimos com as operações ✅\n\n"
                     "Mantenham a corretora aberta!!\n\n\n"
-                    "Pra quem ainda não começou a ganhar dinheiro com a gente 🔥\n\n"
+                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
                     "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
                     f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
                 )
