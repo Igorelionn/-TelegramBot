@@ -968,31 +968,16 @@ def bot2_enviar_gif_pos_sinal():
         BOT2_LOGGER.info(f"[{horario_atual}] Contador pós-sinal: {contador_pos_sinal}, Contador desde último especial: {contador_desde_ultimo_especial}")
         
         # Verifica se deve enviar imagem especial (a cada 12 sinais)
+        escolha_imagem = 0  # Índice da primeira imagem por padrão (padrão)
+        
         if contador_pos_sinal % 12 == 0:
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem especial (sinal {contador_pos_sinal})")
+            # Envia a imagem especial no 12º sinal (e múltiplos de 12)
+            escolha_imagem = 1  # Índice da segunda imagem (especial)
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM ESPECIAL (sinal {contador_pos_sinal})")
             contador_desde_ultimo_especial = 0
         else:
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem padrão (sinal {contador_pos_sinal})")
-            
-        # Decidir qual imagem enviar (9/10 a primeira, 1/10 a segunda)
-        escolha_imagem = 0  # Índice da primeira imagem por padrão
-        
-        # Lógica para seleção aleatória da imagem especial
-        if contador_desde_ultimo_especial >= 10:
-            # Forçar a imagem especial se já passaram 10 sinais desde o último
-            escolha_imagem = 1
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM ESPECIAL (forçado após 10 sinais)")
-            contador_desde_ultimo_especial = 0
-        elif contador_desde_ultimo_especial > 1:
-            # A probabilidade de enviar a imagem especial aumenta conforme
-            # mais sinais passam sem que o especial seja enviado
-            probabilidade = (contador_desde_ultimo_especial - 1) / 10.0
-            if random.random() < probabilidade:
-                escolha_imagem = 1
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM ESPECIAL (aleatório com probabilidade {probabilidade:.2f})")
-                contador_desde_ultimo_especial = 0
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM PADRÃO (probabilidade de especial era {probabilidade:.2f})")
+            # Envia a imagem padrão em todos os outros sinais
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM PADRÃO (sinal {contador_pos_sinal})")
         
         # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
