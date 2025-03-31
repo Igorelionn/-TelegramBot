@@ -783,17 +783,21 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
 
     # Reentrada 2: Reentrada 1 + tempo_expiracao_minutos + 2 minutos
     hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos) + timedelta(minutes=2)
-
-    # Formatação dos horários
+    
+    # Reentrada 3: Expiração + horário da reentrada 2
+    hora_reentrada3 = hora_expiracao + (hora_reentrada2 - hora_entrada)
+    
+    # Formatar os horários para exibição
     hora_entrada_formatada = hora_entrada_ajustada.strftime("%H:%M")
-    hora_exp_formatada = hora_expiracao.strftime("%H:%M")
+    hora_expiracao_formatada = hora_expiracao.strftime("%H:%M")
     hora_reentrada1_formatada = hora_reentrada1.strftime("%H:%M")
     hora_reentrada2_formatada = hora_reentrada2.strftime("%H:%M")
+    hora_reentrada3_formatada = hora_reentrada3.strftime("%H:%M")
 
     # Textos de expiração em diferentes idiomas
-    expiracao_texto_pt = f"⏳ Expiração: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
-    expiracao_texto_en = f"⏳ Expiration: {tempo_expiracao_minutos} minute{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
-    expiracao_texto_es = f"⏳ Expiración: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_exp_formatada})"
+    expiracao_texto_pt = f"⏳ Expiração: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_expiracao_formatada})"
+    expiracao_texto_en = f"⏳ Expiration: {tempo_expiracao_minutos} minute{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_expiracao_formatada})"
+    expiracao_texto_es = f"⏳ Expiración: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_expiracao_formatada})"
     
     # Mensagem em PT
     mensagem_pt = (f"⚠️TRADE RÁPIDO⚠️\n\n"
@@ -803,7 +807,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"➡ Entrada: {hora_entrada_formatada}\n"
             f"{expiracao_texto_pt}\n"
             f"Reentrada 1 - {hora_reentrada1_formatada}\n"
-            f"Reentrada 2 - {hora_reentrada2_formatada}")
+            f"Reentrada 2 - {hora_reentrada2_formatada}\n"
+            f"Reentrada 3 - {hora_reentrada3_formatada}")
             
     # Mensagem em EN
     mensagem_en = (f"⚠️QUICK TRADE⚠️\n\n"
@@ -813,7 +818,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"➡ Entry: {hora_entrada_formatada}\n"
             f"{expiracao_texto_en}\n"
             f"Re-entry 1 - {hora_reentrada1_formatada}\n"
-            f"Re-entry 2 - {hora_reentrada2_formatada}")
+            f"Re-entry 2 - {hora_reentrada2_formatada}\n"
+            f"Re-entry 3 - {hora_reentrada3_formatada}")
             
     # Mensagem em ES
     mensagem_es = (f"⚠️COMERCIO RÁPIDO⚠️\n\n"
@@ -823,7 +829,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"➡ Entrada: {hora_entrada_formatada}\n"
             f"{expiracao_texto_es}\n"
             f"Reentrada 1 - {hora_reentrada1_formatada}\n"
-            f"Reentrada 2 - {hora_reentrada2_formatada}")
+            f"Reentrada 2 - {hora_reentrada2_formatada}\n"
+            f"Reentrada 3 - {hora_reentrada3_formatada}")
             
     # Verificar se há algum texto não esperado antes de retornar a mensagem
     if idioma == "pt":
@@ -1466,9 +1473,11 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
         hora_reentrada1 = hora_expiracao + timedelta(minutes=1)
         hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos)
-        
+        # Reentrada 3: Expiração + horário da reentrada 2
+        hora_reentrada3 = hora_expiracao + (hora_reentrada2 - hora_entrada)
+
         BOT2_LOGGER.info(f"[{horario_atual}] Detalhes do sinal: Ativo={ativo}, Direção={direcao}, Categoria={categoria}, Expiração={tempo_expiracao_minutos}min")
-        BOT2_LOGGER.info(f"[{horario_atual}] Horários: Entrada={hora_entrada.strftime('%H:%M:%S')}, Expiração={hora_expiracao.strftime('%H:%M:%S')}, Reentrada1={hora_reentrada1.strftime('%H:%M:%S')}, Reentrada2={hora_reentrada2.strftime('%H:%M:%S')}")
+        BOT2_LOGGER.info(f"[{horario_atual}] Horários: Entrada={hora_entrada.strftime('%H:%M:%S')}, Expiração={hora_expiracao.strftime('%H:%M:%S')}, Reentrada1={hora_reentrada1.strftime('%H:%M:%S')}, Reentrada2={hora_reentrada2.strftime('%H:%M:%S')}, Reentrada3={hora_reentrada3.strftime('%H:%M:%S')}")
 
         # Obtém a hora atual para formatação na mensagem
         hora_formatada = agora.strftime("%H:%M")
