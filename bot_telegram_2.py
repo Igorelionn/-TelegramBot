@@ -786,8 +786,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos)
     hora_reentrada2_str = hora_reentrada2.strftime("%H:%M")
     
-    # Reentrada 3: Expiração + horário da reentrada 2
-    hora_reentrada3 = hora_expiracao + (hora_reentrada2 - hora_entrada)
+    # Reentrada 3: Exatamente após a reentrada 2
+    hora_reentrada3 = hora_reentrada2 + timedelta(minutes=tempo_expiracao_minutos)
     hora_reentrada3_str = hora_reentrada3.strftime("%H:%M")
     
     # Formatar os horários para exibição
@@ -1476,8 +1476,8 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
         hora_reentrada1 = hora_expiracao + timedelta(minutes=1)
         hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos)
-        # Reentrada 3: Expiração + horário da reentrada 2
-        hora_reentrada3 = hora_expiracao + (hora_reentrada2 - hora_entrada)
+        # Reentrada 3: Exatamente após a reentrada 2
+        hora_reentrada3 = hora_reentrada2 + timedelta(minutes=tempo_expiracao_minutos)
 
         BOT2_LOGGER.info(f"[{horario_atual}] Detalhes do sinal: Ativo={ativo}, Direção={direcao}, Categoria={categoria}, Expiração={tempo_expiracao_minutos}min")
         BOT2_LOGGER.info(f"[{horario_atual}] Horários: Entrada={hora_entrada.strftime('%H:%M:%S')}, Expiração={hora_expiracao.strftime('%H:%M:%S')}, Reentrada1={hora_reentrada1.strftime('%H:%M:%S')}, Reentrada2={hora_reentrada2.strftime('%H:%M:%S')}, Reentrada3={hora_reentrada3.strftime('%H:%M:%S')}")
