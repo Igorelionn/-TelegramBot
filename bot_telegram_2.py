@@ -712,7 +712,7 @@ def bot2_gerar_sinal_aleatorio():
         expiracao_texto = f"⏳ Expiração: {expiracao_segundos} segundos"
 
     elif categoria == "Digital":
-        tempo_expiracao_minutos = random.choice([1, 3, 5])
+        tempo_expiracao_minutos = random.choice([1, 5])
         expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
         if tempo_expiracao_minutos == 1:
             expiracao_texto = f"⏳ Expiração: 1 minuto ({expiracao_time.strftime('%H:%M')})"
