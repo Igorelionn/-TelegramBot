@@ -778,21 +778,24 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_expiracao = hora_entrada_ajustada + timedelta(minutes=tempo_expiracao_minutos)
 
     # Calcular horários de reentrada
-    # Reentrada 1: Expiração + 2 minutos
-    hora_reentrada1 = hora_expiracao + timedelta(minutes=2)
-
-    # Reentrada 2: Reentrada 1 + tempo_expiracao_minutos + 2 minutos
-    hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos) + timedelta(minutes=2)
+    # Reentrada 1: Exatamente após a expiração
+    hora_reentrada1 = hora_expiracao
+    hora_reentrada1_str = hora_reentrada1.strftime("%H:%M")
+    
+    # Reentrada 2: Reentrada 1 + tempo_expiracao_minutos
+    hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos)
+    hora_reentrada2_str = hora_reentrada2.strftime("%H:%M")
     
     # Reentrada 3: Expiração + horário da reentrada 2
     hora_reentrada3 = hora_expiracao + (hora_reentrada2 - hora_entrada)
+    hora_reentrada3_str = hora_reentrada3.strftime("%H:%M")
     
     # Formatar os horários para exibição
     hora_entrada_formatada = hora_entrada_ajustada.strftime("%H:%M")
     hora_expiracao_formatada = hora_expiracao.strftime("%H:%M")
-    hora_reentrada1_formatada = hora_reentrada1.strftime("%H:%M")
-    hora_reentrada2_formatada = hora_reentrada2.strftime("%H:%M")
-    hora_reentrada3_formatada = hora_reentrada3.strftime("%H:%M")
+    hora_reentrada1_formatada = hora_reentrada1_str
+    hora_reentrada2_formatada = hora_reentrada2_str
+    hora_reentrada3_formatada = hora_reentrada3_str
 
     # Textos de expiração em diferentes idiomas
     expiracao_texto_pt = f"⏳ Expiração: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_expiracao_formatada})"
