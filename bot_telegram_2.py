@@ -1040,8 +1040,8 @@ def bot2_enviar_gif_pos_sinal():
                 imagem_especial_ja_enviada_hoje = True
                 BOT2_LOGGER.info(f"[{horario_atual}] HORÁRIO ESPECIAL DETECTADO! Enviando imagem especial pela única vez no dia")
         
-        # Verifica se deve enviar imagem especial (a cada 12 sinais ou no horário especial do dia)
-        if contador_pos_sinal % 12 == 0 or horario_especial_agora:
+        # Verifica se deve enviar imagem especial (apenas no horário especial do dia)
+        if horario_especial_agora:
             BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM ESPECIAL (sinal {contador_pos_sinal})")
             deve_enviar_especial = True
             
@@ -1056,129 +1056,129 @@ def bot2_enviar_gif_pos_sinal():
         
         # Loop para enviar aos canais configurados
         for chat_id in BOT2_CHAT_IDS:
-            # Pegar configuração do canal
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal.get("idioma", "pt")  # Usar português como padrão
+            idioma = config_canal["idioma"]
             
-            # Nomes dos arquivos (padronizados sem acentos)
-            nome_padrao = "padrao"
-            nome_especial = "especial"
+            # Diretório base para imagens
+            dir_base = f"videos/pos_sinal/{idioma}"
             
-            # Verificar todos os formatos possíveis para as imagens - priorizando formatos com transparência
-            formatos = [".webp", ".png", ".jpg", ".jpeg"]
+            # Nomes de arquivos padrão
+            nome_padrao = "padrao.webp"
+            nome_especial = "especial.webp"
             
             # Determinar qual imagem enviar com base no idioma
             imagem_selecionada = None
             nome_arquivo = nome_especial if deve_enviar_especial else nome_padrao
             
             # Tentar encontrar o arquivo no formato correto
-            for formato in formatos:
-                caminho = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, f"{nome_arquivo}{formato}")
+            possiveis_formatos = ['.webp', '.jpg', '.png', '.jpeg', '.gif']
+            imagem_path = None
+            
+            # Primeiro, tenta encontrar o arquivo exato
+            for formato in possiveis_formatos:
+                # Remove a extensão atual e adiciona o formato sendo testado
+                nome_base = nome_arquivo.rsplit('.', 1)[0]
+                caminho = f"{dir_base}/{nome_base}{formato}"
+                
                 if os.path.exists(caminho):
-                    imagem_selecionada = caminho
+                    imagem_path = caminho
                     BOT2_LOGGER.info(f"[{horario_atual}] Encontrada imagem: {caminho}")
                     break
-            
-            # Se não encontrou, tentar com acento (para compatibilidade)
-            if not imagem_selecionada and nome_arquivo == "padrao":
-                for formato in formatos:
-                    caminho = os.path.join(VIDEOS_POS_SINAL_DIR, idioma, f"padrão{formato}")
+                    
+                # Tenta com acento para compatibilidade
+                if nome_base == "padrao":
+                    caminho = f"{dir_base}/padrão{formato}"
                     if os.path.exists(caminho):
-                        imagem_selecionada = caminho
+                        imagem_path = caminho
                         BOT2_LOGGER.info(f"[{horario_atual}] Encontrada imagem com acento: {caminho}")
                         break
             
-            # Se ainda não encontrou, tentar usar português como fallback
-            if not imagem_selecionada and idioma != "pt":
-                for formato in formatos:
-                    fallback_path = os.path.join(VIDEOS_POS_SINAL_DIR, "pt", f"{nome_arquivo}{formato}")
+            # Se não encontrou imagem no idioma específico, usa o fallback em português
+            if not imagem_path:
+                fallback_dir = f"videos/pos_sinal/pt"
+                for formato in possiveis_formatos:
+                    nome_base = nome_arquivo.rsplit('.', 1)[0]
+                    fallback_path = f"{fallback_dir}/{nome_base}{formato}"
+                    
                     if os.path.exists(fallback_path):
-                        imagem_selecionada = fallback_path
+                        imagem_path = fallback_path
                         BOT2_LOGGER.info(f"[{horario_atual}] Usando fallback em português: {fallback_path}")
                         break
-                
-                # Tentar com acento também para o fallback
-                if not imagem_selecionada and nome_arquivo == "padrao":
-                    for formato in formatos:
-                        fallback_path = os.path.join(VIDEOS_POS_SINAL_DIR, "pt", f"padrão{formato}")
+                        
+                    # Tenta com acento para compatibilidade
+                    if nome_base == "padrao":
+                        fallback_path = f"{fallback_dir}/padrão{formato}"
                         if os.path.exists(fallback_path):
-                            imagem_selecionada = fallback_path
+                            imagem_path = fallback_path
                             BOT2_LOGGER.info(f"[{horario_atual}] Usando fallback em português com acento: {fallback_path}")
                             break
             
-            # Se não encontrou nenhuma imagem, pular este canal
-            if not imagem_selecionada:
+            # Se ainda não encontrou nenhuma imagem, log de erro e continua para o próximo canal
+            if not imagem_path:
                 BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Não foi possível encontrar nenhuma imagem para o canal {chat_id}")
                 continue
-            
-            imagem_path = imagem_selecionada
+                
             BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem pós-sinal para o canal {chat_id} no idioma {idioma}: {imagem_path}")
             
-            # Verificar o tipo de arquivo
-            is_webp = imagem_path.lower().endswith('.webp')
-            is_png = imagem_path.lower().endswith('.png')
-            is_transparent = is_webp or is_png  # Webp e PNG podem ter transparência
-            
-            # Parâmetros básicos para todos os envios
-            params = {
-                'chat_id': chat_id,
-                'disable_notification': False
-            }
-            
-            envio_sucesso = False
-            
-            # Se for WEBP ou PNG, enviar sempre como sticker para preservar transparência
-            if is_transparent:
+            # Verifica se o arquivo tem extensão .webp ou .png (possivelmente tem transparência)
+            if imagem_path.lower().endswith(('.webp', '.png')):
                 BOT2_LOGGER.info(f"[{horario_atual}] Detectada imagem com transparência (.webp ou .png), enviando como sticker")
                 
-                # Abrir o arquivo para envio como sticker
                 try:
+                    # Tenta enviar como sticker primeiro
                     with open(imagem_path, 'rb') as sticker_file:
                         url_sticker = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendSticker"
                         files = {'sticker': sticker_file}
-                        sticker_response = requests.post(url_sticker, data=params, files=files)
+                        data = {'chat_id': chat_id}
                         
-                        if sticker_response.status_code == 200:
-                            BOT2_LOGGER.info(f"[{horario_atual}] ✅ IMAGEM ENVIADA COMO STICKER com transparência preservada")
-                            envio_sucesso = True
-                        else:
-                            BOT2_LOGGER.warning(f"[{horario_atual}] ❌ Não foi possível enviar como sticker: {sticker_response.text}")
-                except Exception as sticker_error:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ❌ Erro ao tentar enviar como sticker: {str(sticker_error)}")
-            
-            # Se não conseguiu enviar como sticker e é imagem com transparência, tentar como documento
-            if not envio_sucesso and is_transparent:
-                BOT2_LOGGER.info(f"[{horario_atual}] Tentando enviar imagem com transparência como documento")
-                try:
+                        try:
+                            sticker_response = requests.post(url_sticker, files=files, data=data)
+                            if sticker_response.status_code == 200:
+                                BOT2_LOGGER.info(f"[{horario_atual}] ✓ IMAGEM ENVIADA COMO STICKER com transparência preservada")
+                                continue  # Envio bem-sucedido, seguir para o próximo canal
+                            else:
+                                BOT2_LOGGER.warning(f"[{horario_atual}] ✗ Não foi possível enviar como sticker: {sticker_response.text}")
+                        except Exception as sticker_error:
+                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao tentar enviar como sticker: {str(sticker_error)}")
+                    
+                    # Se falhar como sticker, tenta enviar como documento
+                    BOT2_LOGGER.info(f"[{horario_atual}] Tentando enviar imagem com transparência como documento")
                     with open(imagem_path, 'rb') as doc_file:
                         url_doc = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
                         files = {'document': doc_file}
-                        doc_response = requests.post(url_doc, data=params, files=files)
+                        data = {'chat_id': chat_id}
                         
-                        if doc_response.status_code == 200:
-                            BOT2_LOGGER.info(f"[{horario_atual}] ✅ IMAGEM ENVIADA COMO DOCUMENTO com transparência preservada")
-                            envio_sucesso = True
-                        else:
-                            BOT2_LOGGER.warning(f"[{horario_atual}] ❌ Não foi possível enviar como documento: {doc_response.text}")
-                except Exception as doc_error:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ❌ Erro ao tentar enviar como documento: {str(doc_error)}")
+                        try:
+                            doc_response = requests.post(url_doc, files=files, data=data)
+                            if doc_response.status_code == 200:
+                                BOT2_LOGGER.info(f"[{horario_atual}] ✓ IMAGEM ENVIADA COMO DOCUMENTO com transparência preservada")
+                                continue  # Envio bem-sucedido, seguir para o próximo canal
+                            else:
+                                BOT2_LOGGER.warning(f"[{horario_atual}] ✗ Não foi possível enviar como documento: {doc_response.text}")
+                        except Exception as doc_error:
+                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao tentar enviar como documento: {str(doc_error)}")
+                
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar arquivo webp/png: {str(e)}")
             
-            # Último recurso: enviar como foto (só para imagens JPG ou se tudo falhar)
-            if not envio_sucesso:
+            # Se chegou aqui, ainda não conseguiu enviar. Tenta enviar como foto.
+            try:
                 BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem como foto (método padrão)")
-                try:
-                    with open(imagem_path, 'rb') as img_file:
-                        url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
-                        files = {'photo': img_file}
-                        photo_response = requests.post(url_photo, data=params, files=files)
-                        
+                with open(imagem_path, 'rb') as photo_file:
+                    url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
+                    files = {'photo': photo_file}
+                    data = {'chat_id': chat_id}
+                    
+                    try:
+                        photo_response = requests.post(url_photo, files=files, data=data)
                         if photo_response.status_code == 200:
-                            BOT2_LOGGER.info(f"[{horario_atual}] ✅ IMAGEM ENVIADA COMO FOTO com sucesso")
-                            envio_sucesso = True
+                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ IMAGEM ENVIADA COMO FOTO com sucesso")
                         else:
-                            BOT2_LOGGER.error(f"[{horario_atual}] ❌ Erro ao enviar como foto: {photo_response.text}")
-                except Exception as photo_error:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ❌ Erro ao processar envio como foto: {str(photo_error)}")
+                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar como foto: {photo_response.text}")
+                    except Exception as photo_error:
+                        BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao processar envio como foto: {str(photo_error)}")
+            except Exception as file_error:
+                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao abrir o arquivo: {str(file_error)}")
     
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
