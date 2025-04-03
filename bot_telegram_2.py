@@ -1519,7 +1519,26 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
             BOT2_LOGGER.error(f"[{horario_atual}] Não foi possível gerar um sinal válido. Tentando novamente mais tarde.")
             return
             
-        ativo, direcao, tempo_expiracao_minutos, categoria, expiracao_time, hora_entrada, hora_expiracao = sinal
+        # Em vez de desempacotar diretamente, obtenha os valores do dicionário
+        ativo = sinal['ativo']
+        direcao = sinal['direcao']
+        tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
+        categoria = sinal['categoria']
+        
+        # Calcular os horários que faltam
+        hora_entrada = bot2_obter_hora_brasilia()
+        # Ajuste de alguns minutos para a hora de entrada
+        ultimo_digito = hora_entrada.minute % 10
+        if ultimo_digito == 3:
+            minutos_adicionar = 2  # Se termina em 3, adiciona 2 minutos
+        elif ultimo_digito == 7:
+            minutos_adicionar = 3  # Se termina em 7, adiciona 3 minutos
+        else:
+            minutos_adicionar = 2  # Padrão: adiciona 2 minutos
+            
+        hora_entrada = hora_entrada + timedelta(minutes=minutos_adicionar)
+        hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
+        expiracao_time = hora_expiracao
         
         # Calcular os horários de reentrada (se aplicáveis)
         if tempo_expiracao_minutos >= 15:
