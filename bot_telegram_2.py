@@ -753,87 +753,80 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         nome_ativo_exibicao = nome_ativo_exibicao.replace("(OTC)", " (OTC)")
 
     # Configura ações e emojis conforme a direção
-    action_pt = "COMPRA" if direcao == 'buy' else "VENDA"
-    action_en = "BUY" if direcao == 'buy' else "SELL"
-    action_es = "COMPRA" if direcao == 'buy' else "VENTA"
-    emoji = "🟢" if direcao == 'buy' else "🔴"
+    action_pt = "PUT" if direcao == 'sell' else "CALL"
+    action_en = "PUT" if direcao == 'sell' else "CALL"
+    action_es = "PUT" if direcao == 'sell' else "CALL"
+    emoji = "🟥" if direcao == 'sell' else "🟢"
 
     # Hora de entrada convertida para datetime
     hora_entrada = datetime.strptime(hora_formatada, "%H:%M")
     hora_entrada = bot2_obter_hora_brasilia().replace(hour=hora_entrada.hour, minute=hora_entrada.minute, second=0, microsecond=0)
     
-    # Determinar quantos minutos adicionar baseado no último dígito do minuto 
-    ultimo_digito = hora_entrada.minute % 10
-    if ultimo_digito == 3:
-        minutos_adicionar = 2  # Se termina em 3, adiciona 2 minutos
-    elif ultimo_digito == 7:
-        minutos_adicionar = 3  # Se termina em 7, adiciona 3 minutos
-    else:
-        minutos_adicionar = 2  # Padrão: adiciona 2 minutos
-
-    # Calcular horário de entrada
-    hora_entrada_ajustada = hora_entrada + timedelta(minutes=minutos_adicionar)
-
-    # Calcular horário de expiração (a partir do horário de entrada ajustado)
-    hora_expiracao = hora_entrada_ajustada + timedelta(minutes=tempo_expiracao_minutos)
-
+    # Calcular horário de expiração
+    hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
+    
     # Calcular horários de reentrada
-    # Reentrada 1: Exatamente após a expiração
     hora_reentrada1 = hora_expiracao
-    hora_reentrada1_str = hora_reentrada1.strftime("%H:%M")
-    
-    # Reentrada 2: Reentrada 1 + tempo_expiracao_minutos
     hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos)
-    hora_reentrada2_str = hora_reentrada2.strftime("%H:%M")
-    
-    # Reentrada 3: Exatamente após a reentrada 2
-    hora_reentrada3 = hora_reentrada2 + timedelta(minutes=tempo_expiracao_minutos)
-    hora_reentrada3_str = hora_reentrada3.strftime("%H:%M")
     
     # Formatar os horários para exibição
-    hora_entrada_formatada = hora_entrada_ajustada.strftime("%H:%M")
+    hora_entrada_formatada = hora_entrada.strftime("%H:%M")
     hora_expiracao_formatada = hora_expiracao.strftime("%H:%M")
-    hora_reentrada1_formatada = hora_reentrada1_str
-    hora_reentrada2_formatada = hora_reentrada2_str
-    hora_reentrada3_formatada = hora_reentrada3_str
+    hora_reentrada1_formatada = hora_reentrada1.strftime("%H:%M")
+    hora_reentrada2_formatada = hora_reentrada2.strftime("%H:%M")
 
-    # Textos de expiração em diferentes idiomas
-    expiracao_texto_pt = f"⏳ Expiração: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_expiracao_formatada})"
-    expiracao_texto_en = f"⏳ Expiration: {tempo_expiracao_minutos} minute{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_expiracao_formatada})"
-    expiracao_texto_es = f"⏳ Expiración: {tempo_expiracao_minutos} minuto{'s' if tempo_expiracao_minutos > 1 else ''} ({hora_expiracao_formatada})"
+    # Configurar links baseados no idioma
+    if idioma == "pt":
+        link_corretora = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
+        link_video = "https://t.me/trendingbrazil/215"
+        texto_corretora = "Clique para abrir a corretora"
+        texto_video = "Clique aqui"
+        texto_tempo = "TEMPO PARA"
+        texto_gale1 = "1º GALE — TEMPO PARA"
+        texto_gale2 = "2º GALE TEMPO PARA"
+    elif idioma == "en":
+        link_corretora = "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
+        link_video = "https://t.me/trendingenglish/226"
+        texto_corretora = "Click to open broker"
+        texto_video = "Click here"
+        texto_tempo = "TIME UNTIL"
+        texto_gale1 = "1st GALE — TIME UNTIL"
+        texto_gale2 = "2nd GALE TIME UNTIL"
+    else:  # espanhol
+        link_corretora = "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+        link_video = "https://t.me/trendingespanish/212"
+        texto_corretora = "Haga clic para abrir el corredor"
+        texto_video = "Haga clic aquí"
+        texto_tempo = "TIEMPO HASTA"
+        texto_gale1 = "1º GALE — TIEMPO HASTA"
+        texto_gale2 = "2º GALE TIEMPO HASTA"
     
     # Mensagem em PT
-    mensagem_pt = (f"⚠️TRADE RÁPIDO⚠️\n\n"
-            f"💵 Ativo: {nome_ativo_exibicao}\n"
-            f"🏷️ Opções: {categoria}\n"
-            f"{emoji} {action_pt}\n"
-            f"➡ Entrada: {hora_entrada_formatada}\n"
-            f"{expiracao_texto_pt}\n"
-            f"Reentrada 1 - {hora_reentrada1_formatada}\n"
-            f"Reentrada 2 - {hora_reentrada2_formatada}\n"
-            f"Reentrada 3 - {hora_reentrada3_formatada}")
+    mensagem_pt = (f"💰{tempo_expiracao_minutos} minutos de expiração\n"
+            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_pt} {emoji}\n\n"
+            f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
+            f"{texto_gale1} {hora_reentrada1_formatada}\n"
+            f"{texto_gale2} {hora_reentrada2_formatada}\n\n"
+            f"📲 <a href=\"{link_corretora}\">{texto_corretora}</a>\n"
+            f"🙋‍♂️ Não sabe operar ainda? <a href=\"{link_video}\">{texto_video}</a>")
             
     # Mensagem em EN
-    mensagem_en = (f"⚠️QUICK TRADE⚠️\n\n"
-            f"💵 Asset: {nome_ativo_exibicao}\n"
-            f"🏷️ Options: {categoria}\n"
-            f"{emoji} {action_en}\n"
-            f"➡ Entry: {hora_entrada_formatada}\n"
-            f"{expiracao_texto_en}\n"
-            f"Re-entry 1 - {hora_reentrada1_formatada}\n"
-            f"Re-entry 2 - {hora_reentrada2_formatada}\n"
-            f"Re-entry 3 - {hora_reentrada3_formatada}")
+    mensagem_en = (f"💰{tempo_expiracao_minutos} minutes expiration\n"
+            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_en} {emoji}\n\n"
+            f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
+            f"{texto_gale1} {hora_reentrada1_formatada}\n"
+            f"{texto_gale2} {hora_reentrada2_formatada}\n\n"
+            f"📲 <a href=\"{link_corretora}\">{texto_corretora}</a>\n"
+            f"🙋‍♂️ Don't know how to trade yet? <a href=\"{link_video}\">{texto_video}</a>")
             
     # Mensagem em ES
-    mensagem_es = (f"⚠️COMERCIO RÁPIDO⚠️\n\n"
-            f"💵 Activo: {nome_ativo_exibicao}\n"
-            f"🏷️ Opciones: {categoria}\n"
-            f"{emoji} {action_es}\n"
-            f"➡ Entrada: {hora_entrada_formatada}\n"
-            f"{expiracao_texto_es}\n"
-            f"Reentrada 1 - {hora_reentrada1_formatada}\n"
-            f"Reentrada 2 - {hora_reentrada2_formatada}\n"
-            f"Reentrada 3 - {hora_reentrada3_formatada}")
+    mensagem_es = (f"💰{tempo_expiracao_minutos} minutos de expiración\n"
+            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_es} {emoji}\n\n"
+            f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
+            f"{texto_gale1} {hora_reentrada1_formatada}\n"
+            f"{texto_gale2} {hora_reentrada2_formatada}\n\n"
+            f"📲 <a href=\"{link_corretora}\">{texto_corretora}</a>\n"
+            f"🙋‍♂️ ¿No sabe operar todavía? <a href=\"{link_video}\">{texto_video}</a>")
             
     # Verificar se há algum texto não esperado antes de retornar a mensagem
     if idioma == "pt":
@@ -964,11 +957,14 @@ def definir_horario_especial_diario():
     horas_disponiveis = list(range(0, 24))
     hora_aleatoria = random.choice(horas_disponiveis)
     
+    # Definir o mesmo minuto usado para o envio de sinais
+    minuto_envio = 13
+    
     # Define o horário especial para hoje
     horario_atual = bot2_obter_hora_brasilia()
     horario_especial_diario = horario_atual.replace(
         hour=hora_aleatoria, 
-        minute=0,  # Sempre no início da hora
+        minute=minuto_envio,  # Mesmo minuto usado para envio de sinais
         second=0, 
         microsecond=0
     )
@@ -1316,39 +1312,55 @@ def bot2_enviar_promo_especial():
             # Preparar textos baseados no idioma com links diretamente no texto
             if idioma == "pt":
                 texto_mensagem = (
-                    "Seguimos com as operações ✅\n\n"
-                    "Mantenham a corretora aberta!!\n\n\n"
-                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
+                    "⚠️⚠️PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠️⚠️\n\n\n"
+                    "1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
+                    "Você vai poder testar todos nossas\n"
+                    "operações com risco ZERO!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_corretora}\">CRIE SUA CONTA AQUI E GANHE R$10.000</a>\n\n"
+                    "—————————————————————\n\n"
+                    "2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>"
                 )
             elif idioma == "en":
                 texto_mensagem = (
-                    "We continue with operations ✅\n\n"
-                    "Keep the broker open!!\n\n\n"
-                    "For those who haven't started making money with us yet👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_EN_URL}\">CLICK HERE AND WATCH THE VIDEO</a>\n\n"
-                    "🔥Register on XXBROKER right now🔥\n\n"
-                    f"➡️ <a href=\"{link_corretora}\">CLICK HERE</a>"
+                    "⚠️⚠️TO PARTICIPATE IN THIS SESSION, FOLLOW THE STEPS BELOW⚠️⚠️\n\n\n"
+                    "1st ✅ —> Create your broker account in the link below and GET $10,000 FOR FREE to start trading with us without risking your money.\n\n"
+                    "You'll be able to test all our\n"
+                    "operations with ZERO RISK!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_corretora}\">CREATE YOUR ACCOUNT HERE AND GET $10,000</a>\n\n"
+                    "—————————————————————\n\n"
+                    "2nd ✅ —> Watch the video below and learn how to deposit and how to join us in our operations!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{VIDEO_TELEGRAM_EN_URL}\">CLICK HERE AND WATCH THE VIDEO</a>"
                 )
             elif idioma == "es":
                 texto_mensagem = (
-                    "Continuamos con las operaciones ✅\n\n"
-                    "¡Mantengan el corredor abierto!\n\n\n"
-                    "Para quienes aún no han comenzado a ganar dinero con nosotros👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_ES_URL}\">HAZ CLIC AQUÍ Y MIRA EL VIDEO</a>\n\n"
-                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    f"➡️ <a href=\"{link_corretora}\">HAZ CLIC AQUÍ</a>"
+                    "⚠️⚠️PARA PARTICIPAR EN ESTA SESIÓN, SIGA LOS PASOS A CONTINUACIÓN⚠️⚠️\n\n\n"
+                    "1º ✅ —> Crea tu cuenta en el corredor en el enlace de abajo y OBTÉN $10,000 GRATIS para comenzar a operar con nosotros sin arriesgar tu dinero.\n\n"
+                    "Podrás probar todas nuestras\n"
+                    "operaciones con RIESGO CERO!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_corretora}\">CREA TU CUENTA AQUÍ Y OBTÉN $10,000</a>\n\n"
+                    "—————————————————————\n\n"
+                    "2º ✅ —> Mira el video de abajo y aprende cómo depositar y cómo unirte a nosotros en nuestras operaciones!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{VIDEO_TELEGRAM_ES_URL}\">HAZ CLIC AQUÍ Y MIRA EL VIDEO</a>"
                 )
             else:
                 texto_mensagem = (
-                    "Seguimos com as operações ✅\n\n"
-                    "Mantenham a corretora aberta!!\n\n\n"
-                    "Pra quem ainda não começou a ganhar dinheiro com a gente👇🏻\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>\n\n"
-                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
+                    "⚠️⚠️PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠️⚠️\n\n\n"
+                    "1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
+                    "Você vai poder testar todos nossas\n"
+                    "operações com risco ZERO!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_corretora}\">CRIE SUA CONTA AQUI E GANHE R$10.000</a>\n\n"
+                    "—————————————————————\n\n"
+                    "2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VÍDEO</a>"
                 )
 
             # Enviar mensagem com links (agora incorporados diretamente no texto)
@@ -1518,16 +1530,26 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         
         # Calcular os horários que faltam
         hora_entrada = bot2_obter_hora_brasilia()
-        # Ajuste de alguns minutos para a hora de entrada
-        ultimo_digito = hora_entrada.minute % 10
-        if ultimo_digito == 3:
-            minutos_adicionar = 2  # Se termina em 3, adiciona 2 minutos
-        elif ultimo_digito == 7:
-            minutos_adicionar = 3  # Se termina em 7, adiciona 3 minutos
-        else:
-            minutos_adicionar = 2  # Padrão: adiciona 2 minutos
-            
-        hora_entrada = hora_entrada + timedelta(minutes=minutos_adicionar)
+        
+        # Ajustar o horário de entrada para ser exatamente 2 minutos após o envio do sinal
+        # E garantir que termine em 0 ou 5
+        minuto_atual = hora_entrada.minute
+        minuto_entrada = minuto_atual + 2
+        
+        # Se o minuto não terminar em 0 ou 5, ajustar para o próximo que termine
+        ultimo_digito = minuto_entrada % 10
+        if ultimo_digito != 0 and ultimo_digito != 5:
+            # Calcular quanto falta para o próximo minuto que termine em 0 ou 5
+            if ultimo_digito < 5:
+                ajuste = 5 - ultimo_digito
+            else:
+                ajuste = 10 - ultimo_digito
+            minuto_entrada += ajuste
+        
+        # Criar o novo horário de entrada ajustado
+        hora_entrada = hora_entrada.replace(minute=minuto_entrada, second=0, microsecond=0)
+        BOT2_LOGGER.info(f"[{horario_atual}] Horário de entrada ajustado para {hora_entrada.strftime('%H:%M')} (2 minutos após o sinal + ajuste para terminar em 0 ou 5)")
+        
         hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
         expiracao_time = hora_expiracao
         
@@ -1586,15 +1608,15 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         tempo_pos_sinal = 12  # tempo padrão (caso não seja nenhum dos casos específicos)
         
         if categoria == "Blitz":
-            # Para Blitz (com expiração em segundos: 5, 10, 15 ou 30), enviar após 3 minutos
-            tempo_pos_sinal = 3
-            BOT2_LOGGER.info(f"[{horario_atual}] Ativo Blitz com expiração em segundos, agendando gif pós-sinal para daqui a 3 minutos")
+            # Para Blitz (com expiração em segundos: 5, 10, 15 ou 30), enviar após 4 minutos
+            tempo_pos_sinal = 4
+            BOT2_LOGGER.info(f"[{horario_atual}] Ativo Blitz com expiração em segundos, agendando gif pós-sinal para daqui a 4 minutos")
         elif tempo_expiracao_minutos == 1:
             tempo_pos_sinal = 5  # 5 minutos após o sinal se expiração for 1 minuto
             BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é 1 minuto, agendando gif pós-sinal para daqui a 5 minutos")
         elif tempo_expiracao_minutos == 2:
-            tempo_pos_sinal = 8  # 8 minutos após o sinal se expiração for 2 minutos
-            BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é 2 minutos, agendando gif pós-sinal para daqui a 8 minutos")
+            tempo_pos_sinal = 6  # 6 minutos após o sinal se expiração for 2 minutos
+            BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é 2 minutos, agendando gif pós-sinal para daqui a 6 minutos")
         elif tempo_expiracao_minutos == 5:
             tempo_pos_sinal = 10  # 10 minutos após o sinal se expiração for 5 minutos
             BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é 5 minutos, agendando gif pós-sinal para daqui a 10 minutos")
@@ -1685,10 +1707,14 @@ def bot2_schedule_messages():
 
         BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
         
-        # Agendar 1 sinal por hora, exatamente no início de cada hora
+        # Definir o minuto para envio dos sinais (sempre 3 minutos antes de um horário que termina em 0 ou 5)
+        # Para terminar em 15, enviar no minuto 13
+        minuto_envio = 13
+        
+        # Agendar 1 sinal por hora, no minuto definido
         for hora in range(0, 24):
-            schedule.every().day.at(f"{hora:02d}:00:02").do(bot2_send_message)
-            BOT2_LOGGER.info(f"Sinal agendado: {hora:02d}:00:02")
+            schedule.every().day.at(f"{hora:02d}:{minuto_envio:02d}:02").do(bot2_send_message)
+            BOT2_LOGGER.info(f"Sinal agendado: {hora:02d}:{minuto_envio:02d}:02 (horário de entrada: {hora:02d}:15)")
 
         bot2_schedule_messages.scheduled = True
         BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído com sucesso")
