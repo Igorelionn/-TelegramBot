@@ -1738,30 +1738,69 @@ def bot2_schedule_messages():
 
         BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
         
-        # Definir minutos diferentes para cada hora do dia
-        # Usaremos uma distribuição de minutos diferentes ao longo do dia
-        minutos_por_hora = [
-            13, 27, 41, 55,  # 00:13, 01:27, 02:41, 03:55
-            18, 32, 46, 5,   # 04:18, 05:32, 06:46, 07:05
-            21, 39, 53, 8,   # 08:21, 09:39, 10:53, 11:08
-            15, 29, 43, 57,  # 12:15, 13:29, 14:43, 15:57
-            11, 24, 38, 51,  # 16:11, 17:24, 18:38, 19:51
-            19, 33, 47, 4    # 20:19, 21:33, 22:47, 23:04
-        ]
+        # Obter hora atual para calcular o primeiro horário
+        agora = bot2_obter_hora_brasilia()
         
-        BOT2_LOGGER.info("Configurando agendamento de sinais com horários variados:")
+        # Determinar minuto para envio do próximo sinal (entre 5-15 minutos a partir de agora)
+        minuto_proximo_sinal = (agora.minute + random.randint(5, 15)) % 60
         
-        # Agendar 1 sinal por hora, com minutos variados
-        for hora in range(0, 24):
-            minuto = minutos_por_hora[hora]
-            schedule.every().day.at(f"{hora:02d}:{minuto:02d}:02").do(bot2_send_message)
-            BOT2_LOGGER.info(f"Sinal agendado: {hora:02d}:{minuto:02d}:02")
+        # Definir hora do próximo sinal (pode ser a próxima hora se o minuto calculado for menor que o atual)
+        hora_proximo_sinal = agora.hour
+        if minuto_proximo_sinal < agora.minute:
+            hora_proximo_sinal = (hora_proximo_sinal + 1) % 24
+        
+        BOT2_LOGGER.info(f"Primeiro sinal será enviado às {hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}")
+        
+        # Agendar o primeiro sinal
+        schedule.every().day.at(f"{hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}:02").do(bot2_send_message)
+        
+        # Agendar o mecanismo de auto-agendamento dinâmico
+        schedule.every().day.at(f"{hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}:10").do(
+            lambda: bot2_schedule_next_message(f"{hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}")
+        ).tag('auto_agendamento')
+        
+        BOT2_LOGGER.info(f"Sinal agendado: {hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}:02")
+        BOT2_LOGGER.info(f"Mecanismo de auto-agendamento iniciado")
 
         bot2_schedule_messages.scheduled = True
-        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído com sucesso")
+        bot2_schedule_messages.ultimo_horario = f"{hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}"
+        BOT2_LOGGER.info("Agendamento dinâmico de mensagens do Bot 2 concluído com sucesso")
         
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao agendar mensagens: {str(e)}")
+        traceback.print_exc()
+
+def bot2_schedule_next_message(ultimo_horario):
+    """Agenda o próximo sinal exatamente 1 hora após o último sinal enviado."""
+    try:
+        # Extrair hora e minuto do último horário
+        hora_str, minuto_str = ultimo_horario.split(':')
+        hora = int(hora_str)
+        minuto = int(minuto_str)
+        
+        # Calcular próximo horário (exatamente 1 hora depois)
+        proxima_hora = (hora + 1) % 24
+        proximo_minuto = minuto
+        
+        # Removemos qualquer agendamento antigo para o próximo sinal
+        schedule.clear('proximo_sinal')
+        
+        # Agendar o próximo sinal
+        next_job = schedule.every().day.at(f"{proxima_hora:02d}:{proximo_minuto:02d}:02").do(bot2_send_message)
+        next_job.tag('proximo_sinal')
+        
+        # Atualizar o último horário no objeto de função
+        bot2_schedule_messages.ultimo_horario = f"{proxima_hora:02d}:{proximo_minuto:02d}"
+        
+        # Agendar o próximo auto-agendamento
+        schedule.every().day.at(f"{proxima_hora:02d}:{proximo_minuto:02d}:10").do(
+            lambda: bot2_schedule_next_message(f"{proxima_hora:02d}:{proximo_minuto:02d}")
+        ).tag('auto_agendamento')
+        
+        BOT2_LOGGER.info(f"Próximo sinal agendado para exatamente 1 hora depois: {proxima_hora:02d}:{proximo_minuto:02d}:02")
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao agendar próximo sinal: {str(e)}")
         traceback.print_exc()
 
 def iniciar_ambos_bots():
