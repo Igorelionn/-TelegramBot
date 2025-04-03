@@ -1588,10 +1588,24 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         # Registrar envio no arquivo de registro
         bot2_registrar_envio(ativo, direcao, categoria)
         
-        # Ajustando proporcionalmente os tempos de agendamento para atender à nova frequência (1 sinal por hora)
-        # Para imagens especial.webp e padrão.webp: 12 minutos após o sinal
-        schedule.every(12).minutes.do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
-        BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio de imagem pós-sinal para daqui a 12 minutos...")
+        # Ajustar o tempo de agendamento do gif pós-sinal com base no tempo de expiração
+        tempo_pos_sinal = 12  # tempo padrão (caso não seja nenhum dos casos específicos)
+        
+        if tempo_expiracao_minutos == 1:
+            tempo_pos_sinal = 5  # 5 minutos após o sinal se expiração for 1 minuto
+            BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é 1 minuto, agendando gif pós-sinal para daqui a 5 minutos")
+        elif tempo_expiracao_minutos == 2:
+            tempo_pos_sinal = 8  # 8 minutos após o sinal se expiração for 2 minutos
+            BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é 2 minutos, agendando gif pós-sinal para daqui a 8 minutos")
+        elif tempo_expiracao_minutos == 5:
+            tempo_pos_sinal = 10  # 10 minutos após o sinal se expiração for 5 minutos
+            BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é 5 minutos, agendando gif pós-sinal para daqui a 10 minutos")
+        else:
+            BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é {tempo_expiracao_minutos} minutos, usando tempo padrão de 12 minutos para gif pós-sinal")
+        
+        # Agendar o gif pós-sinal com o tempo ajustado
+        schedule.every(tempo_pos_sinal).minutes.do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
+        BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio de imagem pós-sinal para daqui a {tempo_pos_sinal} minutos...")
         
         # Se for a cada 3 sinais (múltiplo de 3), agendar envios especiais
         if bot2_contador_sinais % 3 == 0:
