@@ -780,6 +780,11 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_gale1_formatada = hora_gale1.strftime("%H:%M")
     hora_gale2_formatada = hora_gale2.strftime("%H:%M")
 
+    # Usar singular ou plural para "minutos" com base no valor
+    texto_minutos_pt = "minuto" if tempo_expiracao_minutos == 1 else "minutos"
+    texto_minutos_en = "minute" if tempo_expiracao_minutos == 1 else "minutes"
+    texto_minutos_es = "minuto" if tempo_expiracao_minutos == 1 else "minutos"
+
     # Configurar links baseados no idioma
     if idioma == "pt":
         link_corretora = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
@@ -807,7 +812,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         texto_gale2 = "2º GALE TIEMPO HASTA"
     
     # Mensagem em PT
-    mensagem_pt = (f"💰{tempo_expiracao_minutos} minutos de expiração\n"
+    mensagem_pt = (f"💰{tempo_expiracao_minutos} {texto_minutos_pt} de expiração\n"
             f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_pt} {emoji}\n\n"
             f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
             f"{texto_gale1} {hora_gale1_formatada}\n"
@@ -816,7 +821,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"🙋‍♂️ Não sabe operar ainda? <a href=\"{link_video}\">{texto_video}</a>")
             
     # Mensagem em EN
-    mensagem_en = (f"💰{tempo_expiracao_minutos} minutes expiration\n"
+    mensagem_en = (f"💰{tempo_expiracao_minutos} {texto_minutos_en} expiration\n"
             f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_en} {emoji}\n\n"
             f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
             f"{texto_gale1} {hora_gale1_formatada}\n"
@@ -825,7 +830,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"🙋‍♂️ Don't know how to trade yet? <a href=\"{link_video}\">{texto_video}</a>")
             
     # Mensagem em ES
-    mensagem_es = (f"💰{tempo_expiracao_minutos} minutos de expiración\n"
+    mensagem_es = (f"💰{tempo_expiracao_minutos} {texto_minutos_es} de expiración\n"
             f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_es} {emoji}\n\n"
             f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
             f"{texto_gale1} {hora_gale1_formatada}\n"
@@ -1589,7 +1594,8 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
                 resposta = requests.post(url_base, json={
                     "chat_id": chat_id,
                     "text": mensagem_formatada,
-                    "parse_mode": "HTML"
+                    "parse_mode": "HTML",
+                    "disable_web_page_preview": True
                 }, timeout=10)
                 
                 if resposta.status_code == 200:
