@@ -762,18 +762,23 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_entrada = datetime.strptime(hora_formatada, "%H:%M")
     hora_entrada = bot2_obter_hora_brasilia().replace(hour=hora_entrada.hour, minute=hora_entrada.minute, second=0, microsecond=0)
     
-    # Calcular horário de expiração
+    # Calcular horário de expiração - este é o horário da primeira operação
     hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
     
-    # Calcular horários de reentrada
-    hora_reentrada1 = hora_expiracao
-    hora_reentrada2 = hora_reentrada1 + timedelta(minutes=tempo_expiracao_minutos)
+    # Calcular horários de reentrada corretamente:
+    # 1º Gale: Hora da primeira entrada + tempo_expiracao_minutos + tempo_expiracao_minutos
+    # (ou seja, 1 tempo de expiração após o fim da primeira operação)
+    hora_gale1 = hora_entrada + timedelta(minutes=tempo_expiracao_minutos * 2)
+    
+    # 2º Gale: Hora do 1º Gale + tempo_expiracao_minutos
+    # (ou seja, 1 tempo de expiração após o fim do 1º gale)
+    hora_gale2 = hora_gale1 + timedelta(minutes=tempo_expiracao_minutos)
     
     # Formatar os horários para exibição
     hora_entrada_formatada = hora_entrada.strftime("%H:%M")
     hora_expiracao_formatada = hora_expiracao.strftime("%H:%M")
-    hora_reentrada1_formatada = hora_reentrada1.strftime("%H:%M")
-    hora_reentrada2_formatada = hora_reentrada2.strftime("%H:%M")
+    hora_gale1_formatada = hora_gale1.strftime("%H:%M")
+    hora_gale2_formatada = hora_gale2.strftime("%H:%M")
 
     # Configurar links baseados no idioma
     if idioma == "pt":
@@ -805,8 +810,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     mensagem_pt = (f"💰{tempo_expiracao_minutos} minutos de expiração\n"
             f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_pt} {emoji}\n\n"
             f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
-            f"{texto_gale1} {hora_reentrada1_formatada}\n"
-            f"{texto_gale2} {hora_reentrada2_formatada}\n\n"
+            f"{texto_gale1} {hora_gale1_formatada}\n"
+            f"{texto_gale2} {hora_gale2_formatada}\n\n"
             f"📲 <a href=\"{link_corretora}\">{texto_corretora}</a>\n"
             f"🙋‍♂️ Não sabe operar ainda? <a href=\"{link_video}\">{texto_video}</a>")
             
@@ -814,8 +819,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     mensagem_en = (f"💰{tempo_expiracao_minutos} minutes expiration\n"
             f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_en} {emoji}\n\n"
             f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
-            f"{texto_gale1} {hora_reentrada1_formatada}\n"
-            f"{texto_gale2} {hora_reentrada2_formatada}\n\n"
+            f"{texto_gale1} {hora_gale1_formatada}\n"
+            f"{texto_gale2} {hora_gale2_formatada}\n\n"
             f"📲 <a href=\"{link_corretora}\">{texto_corretora}</a>\n"
             f"🙋‍♂️ Don't know how to trade yet? <a href=\"{link_video}\">{texto_video}</a>")
             
@@ -823,8 +828,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     mensagem_es = (f"💰{tempo_expiracao_minutos} minutos de expiración\n"
             f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_es} {emoji}\n\n"
             f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
-            f"{texto_gale1} {hora_reentrada1_formatada}\n"
-            f"{texto_gale2} {hora_reentrada2_formatada}\n\n"
+            f"{texto_gale1} {hora_gale1_formatada}\n"
+            f"{texto_gale2} {hora_gale2_formatada}\n\n"
             f"📲 <a href=\"{link_corretora}\">{texto_corretora}</a>\n"
             f"🙋‍♂️ ¿No sabe operar todavía? <a href=\"{link_video}\">{texto_video}</a>")
             
