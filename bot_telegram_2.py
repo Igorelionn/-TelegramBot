@@ -1744,12 +1744,22 @@ def bot2_schedule_messages():
         # Determinar minuto para envio do próximo sinal (entre 5-15 minutos a partir de agora)
         minuto_proximo_sinal = (agora.minute + random.randint(5, 15)) % 60
         
-        # Definir hora do próximo sinal (pode ser a próxima hora se o minuto calculado for menor que o atual)
+        # Definir hora do próximo sinal
         hora_proximo_sinal = agora.hour
-        if minuto_proximo_sinal < agora.minute:
+        if minuto_proximo_sinal <= agora.minute:
+            # Se o minuto calculado for menor ou igual ao atual, avançamos 1 hora
             hora_proximo_sinal = (hora_proximo_sinal + 1) % 24
-        
+            
         BOT2_LOGGER.info(f"Primeiro sinal será enviado às {hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}")
+        
+        # Verificar se o horário calculado é anterior ao horário atual
+        proximo_horario = agora.replace(hour=hora_proximo_sinal, minute=minuto_proximo_sinal, second=2, microsecond=0)
+        if proximo_horario < agora:
+            # Se o horário calculado for anterior ao atual, vamos agendar para agora + 5 minutos
+            proximo_horario = agora + timedelta(minutes=5)
+            hora_proximo_sinal = proximo_horario.hour
+            minuto_proximo_sinal = proximo_horario.minute
+            BOT2_LOGGER.info(f"Horário recalculado para os próximos 5 minutos: {hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}")
         
         # Agendar o primeiro sinal
         schedule.every().day.at(f"{hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}:02").do(bot2_send_message)
@@ -1782,6 +1792,18 @@ def bot2_schedule_next_message(ultimo_horario):
         proxima_hora = (hora + 1) % 24
         proximo_minuto = minuto
         
+        # Verificar se o horário calculado é futuro em relação ao horário atual
+        agora = bot2_obter_hora_brasilia()
+        proximo_horario = agora.replace(hour=proxima_hora, minute=proximo_minuto, second=2, microsecond=0)
+        
+        # Se o horário calculado for anterior ao atual, adicionar 24 horas
+        if proximo_horario < agora:
+            BOT2_LOGGER.info(f"Horário calculado {proxima_hora:02d}:{proximo_minuto:02d} é anterior ao atual, ajustando...")
+            proximo_horario = agora + timedelta(hours=1)
+            proxima_hora = proximo_horario.hour
+            proximo_minuto = proximo_horario.minute
+            BOT2_LOGGER.info(f"Novo horário ajustado: {proxima_hora:02d}:{proximo_minuto:02d}")
+        
         # Removemos qualquer agendamento antigo para o próximo sinal
         schedule.clear('proximo_sinal')
         
@@ -1792,12 +1814,15 @@ def bot2_schedule_next_message(ultimo_horario):
         # Atualizar o último horário no objeto de função
         bot2_schedule_messages.ultimo_horario = f"{proxima_hora:02d}:{proximo_minuto:02d}"
         
+        # Limpar agendamentos de auto-agendamento antigos
+        schedule.clear('auto_agendamento')
+        
         # Agendar o próximo auto-agendamento
         schedule.every().day.at(f"{proxima_hora:02d}:{proximo_minuto:02d}:10").do(
             lambda: bot2_schedule_next_message(f"{proxima_hora:02d}:{proximo_minuto:02d}")
         ).tag('auto_agendamento')
         
-        BOT2_LOGGER.info(f"Próximo sinal agendado para exatamente 1 hora depois: {proxima_hora:02d}:{proximo_minuto:02d}:02")
+        BOT2_LOGGER.info(f"Próximo sinal agendado para: {proxima_hora:02d}:{proximo_minuto:02d}:02")
         
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao agendar próximo sinal: {str(e)}")
@@ -1835,6 +1860,12 @@ def iniciar_ambos_bots():
         try:
             BOT2_LOGGER.info("Inicializando Bot 2 em modo normal...")
             bot2_schedule_messages()  # Agendar mensagens nos horários normais
+            
+            # Enviar um sinal inicial para verificar se o sistema está funcionando
+            BOT2_LOGGER.info("Enviando sinal inicial para teste do sistema...")
+            schedule.every(30).seconds.do(bot2_send_message).tag('sinal_inicial')
+            BOT2_LOGGER.info("Sinal inicial agendado para os próximos 30 segundos")
+            
             bot2_keep_bot_running()  # Chamada direta para a função do Bot 2
         except Exception as e:
             BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
