@@ -1010,6 +1010,19 @@ def bot2_enviar_gif_pos_sinal():
         global imagem_especial_ja_enviada_hoje
         global horario_especial_diario
         
+        # Variável de controle para evitar execuções duplicadas para o mesmo sinal
+        if hasattr(bot2_enviar_gif_pos_sinal, 'ja_executado_para_sinal_atual') and bot2_enviar_gif_pos_sinal.ja_executado_para_sinal_atual:
+            agora = bot2_obter_hora_brasilia()
+            horario_atual = agora.strftime("%H:%M:%S")
+            BOT2_LOGGER.warning(f"[{horario_atual}] ⚠️ GIF PÓS-SINAL JÁ FOI ENVIADO PARA ESTE SINAL. Ignorando execução duplicada.")
+            
+            # Limpar qualquer agendamento pendente para garantir
+            schedule.clear('bot2_pos_sinal')
+            return
+        
+        # Marcar como executado para o sinal atual
+        bot2_enviar_gif_pos_sinal.ja_executado_para_sinal_atual = True
+        
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA IMAGEM PÓS-SINAL...")
@@ -1324,6 +1337,11 @@ if not hasattr(bot2_enviar_gif_pos_sinal, 'ultimo_envio'):
     bot2_enviar_gif_pos_sinal.ultimo_envio = bot2_obter_hora_brasilia() - timedelta(hours=1)  # Definir como 1 hora atrás para evitar bloqueio inicial
     BOT2_LOGGER.info(f"Inicializada variável ultimo_envio para bot2_enviar_gif_pos_sinal")
 
+# Inicializar o controle de execução única por sinal
+if not hasattr(bot2_enviar_gif_pos_sinal, 'ja_executado_para_sinal_atual'):
+    bot2_enviar_gif_pos_sinal.ja_executado_para_sinal_atual = False
+    BOT2_LOGGER.info(f"Inicializada variável ja_executado_para_sinal_atual para bot2_enviar_gif_pos_sinal")
+
 # Função para enviar mensagem promocional a cada 3 sinais
 def bot2_enviar_promo_especial():
     """
@@ -1514,6 +1532,11 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
     global bot2_contador_sinais
     
     try:
+        # Resetar a flag de execução do gif pós-sinal ao iniciar um novo sinal
+        if hasattr(bot2_enviar_gif_pos_sinal, 'ja_executado_para_sinal_atual'):
+            bot2_enviar_gif_pos_sinal.ja_executado_para_sinal_atual = False
+            BOT2_LOGGER.info("Redefinindo controle de execução do gif pós-sinal para o novo sinal")
+        
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
