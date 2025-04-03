@@ -1591,7 +1591,11 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         # Ajustar o tempo de agendamento do gif pós-sinal com base no tempo de expiração
         tempo_pos_sinal = 12  # tempo padrão (caso não seja nenhum dos casos específicos)
         
-        if tempo_expiracao_minutos == 1:
+        if categoria == "Blitz":
+            # Para Blitz (com expiração em segundos: 5, 10, 15 ou 30), enviar após 3 minutos
+            tempo_pos_sinal = 3
+            BOT2_LOGGER.info(f"[{horario_atual}] Ativo Blitz com expiração em segundos, agendando gif pós-sinal para daqui a 3 minutos")
+        elif tempo_expiracao_minutos == 1:
             tempo_pos_sinal = 5  # 5 minutos após o sinal se expiração for 1 minuto
             BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é 1 minuto, agendando gif pós-sinal para daqui a 5 minutos")
         elif tempo_expiracao_minutos == 2:
