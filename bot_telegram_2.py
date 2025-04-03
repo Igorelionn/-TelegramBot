@@ -960,28 +960,15 @@ def definir_horario_especial_diario():
     # Reseta o status de envio da imagem especial
     imagem_especial_ja_enviada_hoje = False
     
-    # Definir minutos diferentes para cada hora do dia (mesmos do agendamento)
-    minutos_por_hora = [
-        13, 27, 41, 55,  # 00:13, 01:27, 02:41, 03:55
-        18, 32, 46, 5,   # 04:18, 05:32, 06:46, 07:05
-        21, 39, 53, 8,   # 08:21, 09:39, 10:53, 11:08
-        15, 29, 43, 57,  # 12:15, 13:29, 14:43, 15:57
-        11, 24, 38, 51,  # 16:11, 17:24, 18:38, 19:51
-        19, 33, 47, 4    # 20:19, 21:33, 22:47, 23:04
-    ]
-    
-    # Define um horário aleatório entre os horários de envio de sinais
+    # Define um horário aleatório entre 0 e 23 horas
     horas_disponiveis = list(range(0, 24))
-    
-    # Seleciona aleatoriamente entre os horários disponíveis
     hora_aleatoria = random.choice(horas_disponiveis)
-    minuto_aleatorio = minutos_por_hora[hora_aleatoria]  # Usa o minuto correspondente à hora escolhida
     
     # Define o horário especial para hoje
     horario_atual = bot2_obter_hora_brasilia()
     horario_especial_diario = horario_atual.replace(
         hour=hora_aleatoria, 
-        minute=minuto_aleatorio, 
+        minute=0,  # Sempre no início da hora
         second=0, 
         microsecond=0
     )
@@ -1010,36 +997,13 @@ def bot2_enviar_gif_pos_sinal():
         global imagem_especial_ja_enviada_hoje
         global horario_especial_diario
         
-        # Variável de controle para evitar execuções duplicadas para o mesmo sinal
-        if hasattr(bot2_enviar_gif_pos_sinal, 'ja_executado_para_sinal_atual') and bot2_enviar_gif_pos_sinal.ja_executado_para_sinal_atual:
-            agora = bot2_obter_hora_brasilia()
-            horario_atual = agora.strftime("%H:%M:%S")
-            BOT2_LOGGER.warning(f"[{horario_atual}] ⚠️ GIF PÓS-SINAL JÁ FOI ENVIADO PARA ESTE SINAL. Ignorando execução duplicada.")
-            
-            # Limpar qualquer agendamento pendente para garantir
-            schedule.clear('bot2_pos_sinal')
-            return
-        
-        # Marcar como executado para o sinal atual
-        bot2_enviar_gif_pos_sinal.ja_executado_para_sinal_atual = True
-        
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA IMAGEM PÓS-SINAL...")
         
-        # Verificar se a função já foi executada recentemente para evitar duplicações
-        if hasattr(bot2_enviar_gif_pos_sinal, 'ultimo_envio'):
-            diferenca = (agora - bot2_enviar_gif_pos_sinal.ultimo_envio).total_seconds()
-            if diferenca < 60:  # Se executado há menos de 1 minuto, não enviar novamente
-                BOT2_LOGGER.warning(f"[{horario_atual}] GIF pós-sinal já foi enviado há {diferenca:.1f} segundos. Ignorando este envio para evitar duplicação.")
-                
-                # Garantir que não haja execuções adicionais agendadas
-                schedule.clear('bot2_pos_sinal')
-                BOT2_LOGGER.info(f"[{horario_atual}] Removendo qualquer agendamento pendente de gif pós-sinal")
-                return
-        
-        # Registrar este envio
-        bot2_enviar_gif_pos_sinal.ultimo_envio = agora
+        # Limpar o próprio agendamento para garantir que este seja executado apenas uma vez por sinal
+        schedule.clear('bot2_pos_sinal')
+        BOT2_LOGGER.info(f"[{horario_atual}] Agendamento de gif pós-sinal limpo para evitar duplicações.")
         
         # Tentar importar PIL para verificar se uma imagem tem transparência
         try:
@@ -1332,16 +1296,6 @@ def bot2_enviar_promo_pre_sinal():
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal: {str(e)}")
         traceback.print_exc()
 
-# Inicializações de variáveis importantes
-if not hasattr(bot2_enviar_gif_pos_sinal, 'ultimo_envio'):
-    bot2_enviar_gif_pos_sinal.ultimo_envio = bot2_obter_hora_brasilia() - timedelta(hours=1)  # Definir como 1 hora atrás para evitar bloqueio inicial
-    BOT2_LOGGER.info(f"Inicializada variável ultimo_envio para bot2_enviar_gif_pos_sinal")
-
-# Inicializar o controle de execução única por sinal
-if not hasattr(bot2_enviar_gif_pos_sinal, 'ja_executado_para_sinal_atual'):
-    bot2_enviar_gif_pos_sinal.ja_executado_para_sinal_atual = False
-    BOT2_LOGGER.info(f"Inicializada variável ja_executado_para_sinal_atual para bot2_enviar_gif_pos_sinal")
-
 # Função para enviar mensagem promocional a cada 3 sinais
 def bot2_enviar_promo_especial():
     """
@@ -1532,11 +1486,6 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
     global bot2_contador_sinais
     
     try:
-        # Resetar a flag de execução do gif pós-sinal ao iniciar um novo sinal
-        if hasattr(bot2_enviar_gif_pos_sinal, 'ja_executado_para_sinal_atual'):
-            bot2_enviar_gif_pos_sinal.ja_executado_para_sinal_atual = False
-            BOT2_LOGGER.info("Redefinindo controle de execução do gif pós-sinal para o novo sinal")
-        
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
@@ -1630,6 +1579,9 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         # Registrar envio no arquivo de registro
         bot2_registrar_envio(ativo, direcao, categoria)
         
+        # Cancelar quaisquer agendamentos anteriores para evitar duplicações
+        schedule.clear('bot2_pos_sinal')
+        
         # Ajustar o tempo de agendamento do gif pós-sinal com base no tempo de expiração
         tempo_pos_sinal = 12  # tempo padrão (caso não seja nenhum dos casos específicos)
         
@@ -1649,23 +1601,18 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         else:
             BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é {tempo_expiracao_minutos} minutos, usando tempo padrão de 12 minutos para gif pós-sinal")
         
-        # Limpar agendamentos anteriores para evitar duplicação
-        schedule.clear('bot2_pos_sinal')
-        BOT2_LOGGER.info(f"[{horario_atual}] Removendo agendamentos anteriores de gif pós-sinal para evitar duplicação")
-        
-        # Agendar o gif pós-sinal com o tempo ajustado
+        # Agendar o gif pós-sinal com o tempo ajustado (apenas um por sinal)
+        BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio ÚNICO de imagem pós-sinal para daqui a {tempo_pos_sinal} minutos...")
         schedule.every(tempo_pos_sinal).minutes.do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
-        BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio de imagem pós-sinal para daqui a {tempo_pos_sinal} minutos...")
+        
+        # Cancelar quaisquer agendamentos anteriores para os outros tipos de mensagens
+        schedule.clear('bot2_gif_especial')
+        schedule.clear('bot2_promo_especial')
+        schedule.clear('bot2_video_pre_sinal')
+        schedule.clear('bot2_msg_pre_sinal')
         
         # Se for a cada 3 sinais (múltiplo de 3), agendar envios especiais
         if bot2_contador_sinais % 3 == 0:
-            # Limpar agendamentos anteriores para evitar duplicação
-            schedule.clear('bot2_gif_especial')
-            schedule.clear('bot2_promo_especial')
-            schedule.clear('bot2_video_pre_sinal')
-            schedule.clear('bot2_msg_pre_sinal')
-            BOT2_LOGGER.info(f"[{horario_atual}] Removendo agendamentos especiais anteriores para evitar duplicação")
-            
             # Ajustando proporcionalmente:
             # - GIF especial PT: 15 minutos após o sinal
             schedule.every(15).minutes.do(bot2_enviar_gif_especial_pt).tag('bot2_gif_especial')
@@ -1738,94 +1685,16 @@ def bot2_schedule_messages():
 
         BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
         
-        # Obter hora atual para calcular o primeiro horário
-        agora = bot2_obter_hora_brasilia()
-        
-        # Determinar minuto para envio do próximo sinal (entre 5-15 minutos a partir de agora)
-        minuto_proximo_sinal = (agora.minute + random.randint(5, 15)) % 60
-        
-        # Definir hora do próximo sinal
-        hora_proximo_sinal = agora.hour
-        if minuto_proximo_sinal <= agora.minute:
-            # Se o minuto calculado for menor ou igual ao atual, avançamos 1 hora
-            hora_proximo_sinal = (hora_proximo_sinal + 1) % 24
-            
-        BOT2_LOGGER.info(f"Primeiro sinal será enviado às {hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}")
-        
-        # Verificar se o horário calculado é anterior ao horário atual
-        proximo_horario = agora.replace(hour=hora_proximo_sinal, minute=minuto_proximo_sinal, second=2, microsecond=0)
-        if proximo_horario < agora:
-            # Se o horário calculado for anterior ao atual, vamos agendar para agora + 5 minutos
-            proximo_horario = agora + timedelta(minutes=5)
-            hora_proximo_sinal = proximo_horario.hour
-            minuto_proximo_sinal = proximo_horario.minute
-            BOT2_LOGGER.info(f"Horário recalculado para os próximos 5 minutos: {hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}")
-        
-        # Agendar o primeiro sinal
-        schedule.every().day.at(f"{hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}:02").do(bot2_send_message)
-        
-        # Agendar o mecanismo de auto-agendamento dinâmico
-        schedule.every().day.at(f"{hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}:10").do(
-            lambda: bot2_schedule_next_message(f"{hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}")
-        ).tag('auto_agendamento')
-        
-        BOT2_LOGGER.info(f"Sinal agendado: {hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}:02")
-        BOT2_LOGGER.info(f"Mecanismo de auto-agendamento iniciado")
+        # Agendar 1 sinal por hora, exatamente no início de cada hora
+        for hora in range(0, 24):
+            schedule.every().day.at(f"{hora:02d}:00:02").do(bot2_send_message)
+            BOT2_LOGGER.info(f"Sinal agendado: {hora:02d}:00:02")
 
         bot2_schedule_messages.scheduled = True
-        bot2_schedule_messages.ultimo_horario = f"{hora_proximo_sinal:02d}:{minuto_proximo_sinal:02d}"
-        BOT2_LOGGER.info("Agendamento dinâmico de mensagens do Bot 2 concluído com sucesso")
+        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concluído com sucesso")
         
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao agendar mensagens: {str(e)}")
-        traceback.print_exc()
-
-def bot2_schedule_next_message(ultimo_horario):
-    """Agenda o próximo sinal exatamente 1 hora após o último sinal enviado."""
-    try:
-        # Extrair hora e minuto do último horário
-        hora_str, minuto_str = ultimo_horario.split(':')
-        hora = int(hora_str)
-        minuto = int(minuto_str)
-        
-        # Calcular próximo horário (exatamente 1 hora depois)
-        proxima_hora = (hora + 1) % 24
-        proximo_minuto = minuto
-        
-        # Verificar se o horário calculado é futuro em relação ao horário atual
-        agora = bot2_obter_hora_brasilia()
-        proximo_horario = agora.replace(hour=proxima_hora, minute=proximo_minuto, second=2, microsecond=0)
-        
-        # Se o horário calculado for anterior ao atual, adicionar 24 horas
-        if proximo_horario < agora:
-            BOT2_LOGGER.info(f"Horário calculado {proxima_hora:02d}:{proximo_minuto:02d} é anterior ao atual, ajustando...")
-            proximo_horario = agora + timedelta(hours=1)
-            proxima_hora = proximo_horario.hour
-            proximo_minuto = proximo_horario.minute
-            BOT2_LOGGER.info(f"Novo horário ajustado: {proxima_hora:02d}:{proximo_minuto:02d}")
-        
-        # Removemos qualquer agendamento antigo para o próximo sinal
-        schedule.clear('proximo_sinal')
-        
-        # Agendar o próximo sinal
-        next_job = schedule.every().day.at(f"{proxima_hora:02d}:{proximo_minuto:02d}:02").do(bot2_send_message)
-        next_job.tag('proximo_sinal')
-        
-        # Atualizar o último horário no objeto de função
-        bot2_schedule_messages.ultimo_horario = f"{proxima_hora:02d}:{proximo_minuto:02d}"
-        
-        # Limpar agendamentos de auto-agendamento antigos
-        schedule.clear('auto_agendamento')
-        
-        # Agendar o próximo auto-agendamento
-        schedule.every().day.at(f"{proxima_hora:02d}:{proximo_minuto:02d}:10").do(
-            lambda: bot2_schedule_next_message(f"{proxima_hora:02d}:{proximo_minuto:02d}")
-        ).tag('auto_agendamento')
-        
-        BOT2_LOGGER.info(f"Próximo sinal agendado para: {proxima_hora:02d}:{proximo_minuto:02d}:02")
-        
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao agendar próximo sinal: {str(e)}")
         traceback.print_exc()
 
 def iniciar_ambos_bots():
@@ -1860,12 +1729,6 @@ def iniciar_ambos_bots():
         try:
             BOT2_LOGGER.info("Inicializando Bot 2 em modo normal...")
             bot2_schedule_messages()  # Agendar mensagens nos horários normais
-            
-            # Enviar um sinal inicial para verificar se o sistema está funcionando
-            BOT2_LOGGER.info("Enviando sinal inicial para teste do sistema...")
-            schedule.every(30).seconds.do(bot2_send_message).tag('sinal_inicial')
-            BOT2_LOGGER.info("Sinal inicial agendado para os próximos 30 segundos")
-            
             bot2_keep_bot_running()  # Chamada direta para a função do Bot 2
         except Exception as e:
             BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
