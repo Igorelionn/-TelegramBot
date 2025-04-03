@@ -1014,6 +1014,20 @@ def bot2_enviar_gif_pos_sinal():
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA IMAGEM PÓS-SINAL...")
         
+        # Verificar se a função já foi executada recentemente para evitar duplicações
+        if hasattr(bot2_enviar_gif_pos_sinal, 'ultimo_envio'):
+            diferenca = (agora - bot2_enviar_gif_pos_sinal.ultimo_envio).total_seconds()
+            if diferenca < 60:  # Se executado há menos de 1 minuto, não enviar novamente
+                BOT2_LOGGER.warning(f"[{horario_atual}] GIF pós-sinal já foi enviado há {diferenca:.1f} segundos. Ignorando este envio para evitar duplicação.")
+                
+                # Garantir que não haja execuções adicionais agendadas
+                schedule.clear('bot2_pos_sinal')
+                BOT2_LOGGER.info(f"[{horario_atual}] Removendo qualquer agendamento pendente de gif pós-sinal")
+                return
+        
+        # Registrar este envio
+        bot2_enviar_gif_pos_sinal.ultimo_envio = agora
+        
         # Tentar importar PIL para verificar se uma imagem tem transparência
         try:
             from PIL import Image
@@ -1304,6 +1318,11 @@ def bot2_enviar_promo_pre_sinal():
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pré-sinal: {str(e)}")
         traceback.print_exc()
+
+# Inicializações de variáveis importantes
+if not hasattr(bot2_enviar_gif_pos_sinal, 'ultimo_envio'):
+    bot2_enviar_gif_pos_sinal.ultimo_envio = bot2_obter_hora_brasilia() - timedelta(hours=1)  # Definir como 1 hora atrás para evitar bloqueio inicial
+    BOT2_LOGGER.info(f"Inicializada variável ultimo_envio para bot2_enviar_gif_pos_sinal")
 
 # Função para enviar mensagem promocional a cada 3 sinais
 def bot2_enviar_promo_especial():
@@ -1607,12 +1626,23 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         else:
             BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é {tempo_expiracao_minutos} minutos, usando tempo padrão de 12 minutos para gif pós-sinal")
         
+        # Limpar agendamentos anteriores para evitar duplicação
+        schedule.clear('bot2_pos_sinal')
+        BOT2_LOGGER.info(f"[{horario_atual}] Removendo agendamentos anteriores de gif pós-sinal para evitar duplicação")
+        
         # Agendar o gif pós-sinal com o tempo ajustado
         schedule.every(tempo_pos_sinal).minutes.do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
         BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio de imagem pós-sinal para daqui a {tempo_pos_sinal} minutos...")
         
         # Se for a cada 3 sinais (múltiplo de 3), agendar envios especiais
         if bot2_contador_sinais % 3 == 0:
+            # Limpar agendamentos anteriores para evitar duplicação
+            schedule.clear('bot2_gif_especial')
+            schedule.clear('bot2_promo_especial')
+            schedule.clear('bot2_video_pre_sinal')
+            schedule.clear('bot2_msg_pre_sinal')
+            BOT2_LOGGER.info(f"[{horario_atual}] Removendo agendamentos especiais anteriores para evitar duplicação")
+            
             # Ajustando proporcionalmente:
             # - GIF especial PT: 15 minutos após o sinal
             schedule.every(15).minutes.do(bot2_enviar_gif_especial_pt).tag('bot2_gif_especial')
