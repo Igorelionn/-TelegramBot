@@ -1620,6 +1620,10 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         
         # Cancelar quaisquer agendamentos anteriores para evitar duplicações
         schedule.clear('bot2_pos_sinal')
+        schedule.clear('bot2_gif_especial')
+        schedule.clear('bot2_promo_especial')
+        schedule.clear('bot2_video_pre_sinal')
+        schedule.clear('bot2_msg_pre_sinal')
         
         # Ajustar o tempo de agendamento do gif pós-sinal com base no tempo de expiração
         tempo_pos_sinal = 12  # tempo padrão (caso não seja nenhum dos casos específicos)
@@ -1640,34 +1644,78 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         else:
             BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expiração é {tempo_expiracao_minutos} minutos, usando tempo padrão de 12 minutos para gif pós-sinal")
         
-        # Agendar o gif pós-sinal com o tempo ajustado (apenas um por sinal)
+        # SEQUÊNCIA DE AGENDAMENTOS:
+        # 1. Agendar o gif pós-sinal com o tempo ajustado (enviado para todos os sinais)
         BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio ÚNICO de imagem pós-sinal para daqui a {tempo_pos_sinal} minutos...")
         schedule.every(tempo_pos_sinal).minutes.do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
         
-        # Cancelar quaisquer agendamentos anteriores para os outros tipos de mensagens
-        schedule.clear('bot2_gif_especial')
-        schedule.clear('bot2_promo_especial')
-        schedule.clear('bot2_video_pre_sinal')
-        schedule.clear('bot2_msg_pre_sinal')
-        
-        # Se for a cada 3 sinais (múltiplo de 3), agendar envios especiais
+        # Se for a cada 3 sinais (múltiplo de 3), agendar sequência completa
         if bot2_contador_sinais % 3 == 0:
-            # Ajustando proporcionalmente:
-            # - GIF especial PT: 15 minutos após o sinal
-            schedule.every(15).minutes.do(bot2_enviar_gif_especial_pt).tag('bot2_gif_especial')
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando GIF especial PT para daqui a 15 minutos")
+            BOT2_LOGGER.info(f"[{horario_atual}] Este é um sinal múltiplo de 3 (contador={bot2_contador_sinais}), agendando sequência completa...")
             
-            # - Mensagem promocional especial: 15 minutos e 10 segundos após o sinal
-            schedule.every(15).minutes.every(10).seconds.do(bot2_enviar_promo_especial).tag('bot2_promo_especial')
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem promocional especial para daqui a 15 minutos e 10 segundos")
+            # Calcular o tempo até o próximo sinal (usado para todos os agendamentos)
+            agora = bot2_obter_hora_brasilia()
+            proximo_sinal_hora = agora.hour
+            proximo_sinal_minuto = 13
             
-            # - Vídeo pré-sinal: 30 minutos após o sinal
-            schedule.every(30).minutes.do(bot2_enviar_promo_pre_sinal).tag('bot2_video_pre_sinal')
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando vídeo pré-sinal para daqui a 30 minutos")
+            # Se já passou do minuto 13 da hora atual, o próximo sinal é na próxima hora
+            if agora.minute >= 13:
+                proximo_sinal_hora = (agora.hour + 1) % 24
             
-            # - Mensagem pré-sinal: 35 minutos após o sinal
-            schedule.every(35).minutes.do(bot2_enviar_mensagem_pre_sinal).tag('bot2_msg_pre_sinal')
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem pré-sinal para daqui a 35 minutos")
+            # Calcular o horário do próximo sinal
+            proximo_sinal = agora.replace(hour=proximo_sinal_hora, minute=13, second=0, microsecond=0)
+            if agora.minute >= 13 and agora.hour == proximo_sinal.hour:
+                proximo_sinal = proximo_sinal + timedelta(hours=1)
+            
+            BOT2_LOGGER.info(f"[{horario_atual}] Próximo sinal será às {proximo_sinal.strftime('%H:%M')}")
+            
+            # 2. GIF especial PT (apenas para o canal português) - 20 minutos antes do próximo sinal
+            tempo_gif_especial = proximo_sinal - timedelta(minutes=20)
+            minutos_ate_gif = ((tempo_gif_especial - agora).total_seconds() / 60.0)
+            
+            # Verificar se é necessário esperar menos de 1 minuto (nesse caso agendar para a próxima hora)
+            if minutos_ate_gif < 1:
+                tempo_gif_especial = tempo_gif_especial + timedelta(hours=1)
+                minutos_ate_gif = ((tempo_gif_especial - agora).total_seconds() / 60.0)
+            
+            schedule.every(int(minutos_ate_gif)).minutes.do(bot2_enviar_gif_especial_pt).tag('bot2_gif_especial')
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando GIF especial PT para {tempo_gif_especial.strftime('%H:%M')} (20 minutos antes do próximo sinal)")
+            
+            # 3. Mensagem promocional especial - 19 minutos antes do próximo sinal (1 minuto após o GIF especial)
+            tempo_promo = proximo_sinal - timedelta(minutes=19)
+            minutos_ate_promo = ((tempo_promo - agora).total_seconds() / 60.0)
+            
+            # Verificar se é necessário esperar menos de 1 minuto (nesse caso agendar para a próxima hora)
+            if minutos_ate_promo < 1:
+                tempo_promo = tempo_promo + timedelta(hours=1)
+                minutos_ate_promo = ((tempo_promo - agora).total_seconds() / 60.0)
+            
+            schedule.every(int(minutos_ate_promo)).minutes.do(bot2_enviar_promo_especial).tag('bot2_promo_especial')
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem promocional especial para {tempo_promo.strftime('%H:%M')} (19 minutos antes do próximo sinal)")
+            
+            # 4. Vídeo promocional: exatos 15 minutos antes do próximo sinal
+            tempo_pre_sinal = proximo_sinal - timedelta(minutes=15)
+            minutos_ate_video = ((tempo_pre_sinal - agora).total_seconds() / 60.0)
+            
+            # Verificar se é necessário esperar menos de 1 minuto (nesse caso agendar para a próxima hora)
+            if minutos_ate_video < 1:
+                tempo_pre_sinal = tempo_pre_sinal + timedelta(hours=1)
+                minutos_ate_video = ((tempo_pre_sinal - agora).total_seconds() / 60.0)
+            
+            schedule.every(int(minutos_ate_video)).minutes.do(bot2_enviar_promo_pre_sinal).tag('bot2_video_pre_sinal')
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando vídeo promocional para {tempo_pre_sinal.strftime('%H:%M')} (15 minutos antes do próximo sinal)")
+            
+            # 5. Mensagem pré-sinal: 1 minuto após o vídeo promocional (14 minutos antes do próximo sinal)
+            tempo_pre_mensagem = proximo_sinal - timedelta(minutes=14)
+            minutos_ate_mensagem = ((tempo_pre_mensagem - agora).total_seconds() / 60.0)
+            
+            # Verificar se é necessário esperar menos de 1 minuto (nesse caso agendar para a próxima hora)
+            if minutos_ate_mensagem < 1:
+                tempo_pre_mensagem = tempo_pre_mensagem + timedelta(hours=1)
+                minutos_ate_mensagem = ((tempo_pre_mensagem - agora).total_seconds() / 60.0)
+            
+            schedule.every(int(minutos_ate_mensagem)).minutes.do(bot2_enviar_mensagem_pre_sinal).tag('bot2_msg_pre_sinal')
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem pré-sinal para {tempo_pre_mensagem.strftime('%H:%M')} (14 minutos antes do próximo sinal)")
     
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
