@@ -816,7 +816,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     
     # Mensagem em PT
     mensagem_pt = (f"💰{tempo_expiracao_minutos} {texto_minutos_pt} de expiração\n"
-            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_pt} {emoji}\n\n"
+            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_pt} {emoji} {categoria}\n\n"
             f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
             f"{texto_gale1} {hora_gale1_formatada}\n"
             f"{texto_gale2} {hora_gale2_formatada}\n"
@@ -826,7 +826,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             
     # Mensagem em EN
     mensagem_en = (f"💰{tempo_expiracao_minutos} {texto_minutos_en} expiration\n"
-            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_en} {emoji}\n\n"
+            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_en} {emoji} {categoria}\n\n"
             f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
             f"{texto_gale1} {hora_gale1_formatada}\n"
             f"{texto_gale2} {hora_gale2_formatada}\n"
@@ -836,7 +836,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             
     # Mensagem em ES
     mensagem_es = (f"💰{tempo_expiracao_minutos} {texto_minutos_es} de expiración\n"
-            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_es} {emoji}\n\n"
+            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_es} {emoji} {categoria}\n\n"
             f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
             f"{texto_gale1} {hora_gale1_formatada}\n"
             f"{texto_gale2} {hora_gale2_formatada}\n"
