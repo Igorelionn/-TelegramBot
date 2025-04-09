@@ -1023,94 +1023,29 @@ def bot2_verificar_disponibilidade():
 
 def bot2_gerar_sinal_aleatorio():
     """
-    Gera um sinal aleatório para o bot enviar.
-    
-    Returns:
-        dict: Um dicionário com as informações do sinal gerado.
+    Gera um sinal aleatrio para enviar.
+    Retorna um dicionrio com os dados do sinal ou None se no houver sinal.
     """
-    # Verificar disponibilidade dos ativos
-    BOT2_LOGGER.info("[%s] Verificando disponibilidade de ativos...", bot2_obter_hora_brasilia().strftime("%H:%M:%S"))
-    
     ativos_disponiveis = bot2_verificar_disponibilidade()
-    
     if not ativos_disponiveis:
-        BOT2_LOGGER.warning("[%s] Nenhum ativo disponível no momento!", bot2_obter_hora_brasilia().strftime("%H:%M:%S"))
         return None
-    
-    # Escolher um ativo aleatório
-    ativo_escolhido = random.choice(ativos_disponiveis["lista_ativos_disponiveis"])
-    
-    # Escolher uma direção aleatória
+
+    ativo = random.choice(ativos_disponiveis)
     direcao = random.choice(['buy', 'sell'])
-    
-    # Obter categorias especiais com base no ativo
-    categoria_especial = adicionar_blitz(ativos_disponiveis["lista_ativos_disponiveis"])
-    
-    # Definir tempo de expiração fixo em 1 minuto para todas as categorias
-    tempo_expiracao_minutos = 5
-    expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
-    expiracao_texto = f"Expiração: {tempo_expiracao_minutos} minuto ({'minutos' if tempo_expiracao_minutos > 1 else 'minuto'}) ({expiracao_time.strftime('%H:%M')})"
-    
-    # Registrar o sinal
-    BOT2_LOGGER.info("[%s] Sinal gerado: ATIVO=%s, DIREÇÃO=%s, TEMPO=%s, CATEGORIAS=%s", 
-                     bot2_obter_hora_brasilia().strftime("%H:%M:%S"),
-                     ativo_escolhido, 
-                     direcao, 
-                     tempo_expiracao_minutos,
-                     categoria_especial)
-    
-    # Calcular horário atual e horário de entrada
-    agora = bot2_obter_hora_brasilia()
-    dois_minutos_depois = agora + timedelta(minutes=2)
-    # Arredondar para terminar em 0 ou 5
-    minuto_ajustado = (dois_minutos_depois.minute // 5) * 5
-    if dois_minutos_depois.minute % 5 > 0:
-        minuto_ajustado += 5
-    
-    if minuto_ajustado >= 60:
-        hora_entrada = dois_minutos_depois.hour + 1
-        minuto_ajustado = minuto_ajustado % 60
-    else:
-        hora_entrada = dois_minutos_depois.hour
-    
-    # Ajuste para manter dentro de 24h
-    hora_entrada = hora_entrada % 24
-    
-    # Formatar o horário de entrada
-    horario_entrada = f"{hora_entrada:02d}:{minuto_ajustado:02d}:00"
-    horario_formatado = f"{hora_entrada:02d}:{minuto_ajustado:02d}"
-    
-    BOT2_LOGGER.info("[%s] Horário de entrada ajustado para %s (2 minutos após o sinal + ajuste para terminar em 0 ou 5)", 
-                     bot2_obter_hora_brasilia().strftime("%H:%M:%S"),
-                     horario_formatado)
-    
-    # Calcular horário de expiração
-    hora_entrada_dt = datetime.strptime(horario_entrada, "%H:%M:%S")
-    hora_expiracao_dt = hora_entrada_dt + timedelta(minutes=tempo_expiracao_minutos)
-    
-    horario_expiracao = hora_expiracao_dt.strftime("%H:%M:%S")
-    horario_expiracao_formatado = hora_expiracao_dt.strftime("%H:%M")
-    
-    BOT2_LOGGER.info("[%s] Horários: Entrada=%s, Expiração=%s", 
-                     bot2_obter_hora_brasilia().strftime("%H:%M:%S"),
-                     horario_entrada, 
-                     horario_expiracao)
-    
-    # Criar o dicionário com as informações do sinal
-    sinal = {
-        'ativo': ativo_escolhido,
+    categoria = BOT2_ATIVOS_CATEGORIAS.get(ativo, "No categorizado")
+
+    # Defina o tempo de expirao fixo em 1 minuto para todas as categorias
+        tempo_expiracao_minutos = 1
+        expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
+    expiracao_texto = f"? Expirao: {tempo_expiracao_minutos} minuto ({expiracao_time.strftime('%H:%M')})"
+
+    return {
+        'ativo': ativo,
         'direcao': direcao,
-        'categoria': categoria_especial,
-        'tempo_expiracao_minutos': tempo_expiracao_minutos,
-        'horario_entrada': horario_entrada,
-        'horario_entrada_formatado': horario_formatado,
-        'horario_expiracao': horario_expiracao,
-        'horario_expiracao_formatado': horario_expiracao_formatado,
+        'categoria': categoria,
+        'expiracao_texto': expiracao_texto,
+        'tempo_expiracao_minutos': int(tempo_expiracao_minutos)  # Garante que seja inteiro
     }
-    
-    BOT2_LOGGER.info("[%s] SINAL GERADO. Enviando para todos os canais configurados...", bot2_obter_hora_brasilia().strftime("%H:%M:%S"))
-    
-    return sinal
 
 # Funo para obter hora no fuso horrio especfico (a partir da hora de Braslia)
 def bot2_converter_fuso_horario(hora_brasilia, fuso_destino):
@@ -1502,14 +1437,14 @@ def bot2_enviar_gif_pos_sinal():
             dir_base = f"videos/pos_sinal/{idioma}"
             
             # Nomes de arquivos padrão
-            nome_padrao = "padrao.png"
-            nome_especial = "especial.png"
+            nome_padrao = "padrao.gif"
+            nome_especial = "especial.gif"
             
             # Determinar qual imagem enviar com base no idioma
             nome_arquivo = nome_especial if deve_enviar_especial else nome_padrao
             
             # Tentar encontrar o arquivo no formato correto
-            possiveis_formatos = ['.png', '.jpg', '.jpeg', '.gif']
+            possiveis_formatos = ['.gif']
             imagem_path = None
             
             # Primeiro, tenta encontrar o arquivo exato
@@ -1558,34 +1493,83 @@ def bot2_enviar_gif_pos_sinal():
                 
             BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem pós-sinal para o canal {chat_id} no idioma {idioma}: {imagem_path}")
             
-            # Enviar a imagem como foto (método normal para imagens estáticas)
-            try:
-                with open(imagem_path, 'rb') as photo_file:
-                    url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
-                    files = {'photo': photo_file}
-                    data = {'chat_id': chat_id}
-                    
-                    photo_response = requests.post(url_photo, files=files, data=data)
-                    if photo_response.status_code == 200:
-                        BOT2_LOGGER.info(f"[{horario_atual}] ✓ IMAGEM ENVIADA COM SUCESSO")
-                    else:
-                        BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar imagem: {photo_response.text}")
+            # Verifica se o arquivo é um GIF
+            if imagem_path.lower().endswith('.gif'):
+                BOT2_LOGGER.info(f"[{horario_atual}] Detectado arquivo GIF, enviando como animação")
+                try:
+                    # Método melhorado para enviar GIFs como animações que são mostradas automaticamente
+                    with open(imagem_path, 'rb') as animation_file:
+                        url_animation = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                        # Parâmetros essenciais para garantir que a animação seja reproduzida automaticamente
+                        data = {
+                            'chat_id': chat_id,
+                            'disable_notification': False,  # Garantir notificação
+                            'parse_mode': 'HTML',
+                            'has_spoiler': False,  # Sem spoiler para garantir visualização imediata
+                        }
                         
-                        # Se falhar como foto, tenta enviar como documento
-                        BOT2_LOGGER.info(f"[{horario_atual}] Tentando enviar como documento...")
-                        photo_file.seek(0)  # Voltar ao início do arquivo
-                        url_doc = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
-                        files = {'document': photo_file}
-                        doc_response = requests.post(url_doc, files=files, data=data)
+                        # Criar o objeto MultipartEncoder para upload do arquivo
+                        import requests
+                        files = {'animation': (os.path.basename(imagem_path), animation_file, 'image/gif')}
                         
-                        if doc_response.status_code == 200:
-                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ IMAGEM ENVIADA COMO DOCUMENTO com sucesso")
+                        # Enviar a animação
+                        animation_response = requests.post(url_animation, files=files, data=data)
+                        
+                        if animation_response.status_code == 200:
+                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ENVIADO COM SUCESSO")
+                            continue
                         else:
-                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Falha também no envio como documento: {doc_response.text}")
-            except Exception as e:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar imagem: {str(e)}")
+                            BOT2_LOGGER.warning(f"[{horario_atual}] ✗ Não foi possível enviar como GIF: {animation_response.text}")
+                            # Tente um método alternativo se o primeiro método falhar
+                            BOT2_LOGGER.info(f"[{horario_atual}] Tentando método alternativo de envio de GIF")
+                            
+                            # Reabrir o arquivo para segundo método
+                            animation_file.seek(0)
+                            url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
+                            files = {'document': (os.path.basename(imagem_path), animation_file, 'image/gif')}
+                            data = {'chat_id': chat_id, 'disable_content_type_detection': True}
+                            alt_response = requests.post(url_alt, files=files, data=data)
+                            
+                            if alt_response.status_code == 200:
+                                BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ENVIADO COM SUCESSO (método alternativo)")
+                            else:
+                                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Falha também no método alternativo: {alt_response.text}")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar arquivo GIF: {str(e)}")
+                    
+                    # Tentativa final: enviar como foto se tudo falhar
+                    try:
+                        BOT2_LOGGER.info(f"[{horario_atual}] Última tentativa: enviar como foto")
+                        with open(imagem_path, 'rb') as photo_file:
+                            url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
+                            files = {'photo': photo_file}
+                            data = {'chat_id': chat_id}
+                            
+                            photo_response = requests.post(url_photo, files=files, data=data)
+                            if photo_response.status_code == 200:
+                                BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ENVIADO COMO FOTO (último recurso)")
+                            else:
+                                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Falha em todos os métodos de envio")
+                    except Exception as final_error:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro na tentativa final: {str(final_error)}")
+            else:
+                # Para imagens que não são GIF, enviar como foto
+                try:
+                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem como foto")
+                    with open(imagem_path, 'rb') as photo_file:
+                        url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
+                        files = {'photo': photo_file}
+                        data = {'chat_id': chat_id}
+                        
+                        photo_response = requests.post(url_photo, files=files, data=data)
+                        if photo_response.status_code == 200:
+                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ IMAGEM ENVIADA COMO FOTO com sucesso")
+                        else:
+                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar como foto: {photo_response.text}")
+                except Exception as photo_error:
+                    BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao processar envio como foto: {str(photo_error)}")
     except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao enviar imagem pós-sinal: {str(e)}")
+        BOT2_LOGGER.error(f"Erro ao enviar GIF pós-sinal: {str(e)}")
         import traceback
         BOT2_LOGGER.error(traceback.format_exc())
 
@@ -1941,7 +1925,7 @@ def bot2_enviar_gif_especial_en():
         if not os.path.exists(dir_especial_en):
             BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório fallback {dir_especial_en} não encontrado")
             return
-    
+
     # Listar todos os GIFs disponíveis no diretório
     arquivos_gif = [f for f in os.listdir(dir_especial_en) if f.lower().endswith('.gif')]
     
@@ -2078,7 +2062,7 @@ def bot2_enviar_gif_especial_es():
                     BOT2_LOGGER.error(f"[{horario_atual}] ✗ Falha também no método alternativo: {alt_response.text}")
     except Exception as e:
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial: {str(e)}")
-    
+
     return False
 
 # Modificar a funo bot2_send_message para alterar os tempos de agendamento
