@@ -988,34 +988,43 @@ def bot2_verificar_disponibilidade():
     Verifica quais ativos esto disponveis para o sinal atual.
     Retorna uma lista de ativos disponveis.
     """
+    global BOT2_ATIVOS_CATEGORIAS
+    
     agora = bot2_obter_hora_brasilia()
     current_time = agora.strftime("%H:%M")
     current_day = agora.strftime("%A")
 
-    # Se BOT2_ATIVOS_CATEGORIAS ainda no foi inicializado, retornar lista vazia
-    if not hasattr(sys.modules[__name__], 'BOT2_ATIVOS_CATEGORIAS') or not BOT2_ATIVOS_CATEGORIAS:
-        BOT2_LOGGER.warning(f"BOT2_ATIVOS_CATEGORIAS no inicializado ou vazio. Usando ativos padro.")
-        # Usar alguns ativos padro que funcionam bem como exemplo
+    # Se BOT2_ATIVOS_CATEGORIAS estiver vazio, inicializar com os ativos das categorias
+    if not BOT2_ATIVOS_CATEGORIAS:
+        BOT2_LOGGER.info("Inicializando BOT2_ATIVOS_CATEGORIAS com ativos das categorias")
+        for categoria, ativos in ATIVOS_CATEGORIAS.items():
+            for ativo in ativos:
+                BOT2_ATIVOS_CATEGORIAS[ativo] = categoria
+    
+    # Se BOT2_ATIVOS_CATEGORIAS ainda estiver vazio após tentativa de inicialização
+    if not BOT2_ATIVOS_CATEGORIAS:
+        BOT2_LOGGER.warning(f"BOT2_ATIVOS_CATEGORIAS não inicializado ou vazio. Usando ativos padrão.")
+        # Se não houver ativos disponíveis, usar ativos padrão como fallback
         default_assets = ["Immutable (OTC)", "Ripple (OTC)", "SOL/USD (OTC)"]
         return default_assets
 
-    # Verificar ativos disponveis
+    # Verificar ativos disponíveis
     available_assets = []
     
-    # Primeira verificao: procurar ativos que estejam especificamente em ATIVOS_CATEGORIAS["Digital"]
+    # Primeira verificação: procurar ativos que estejam especificamente em ATIVOS_CATEGORIAS["Digital"]
     for ativo in ATIVOS_CATEGORIAS["Digital"]:
         if is_asset_available(ativo, current_time, current_day):
             available_assets.append(ativo)
     
-    # Se no houver ativos disponveis na categoria Digital, tentar outras categorias
+    # Se não houver ativos disponíveis na categoria Digital, tentar outras categorias
     if not available_assets:
         for ativo in BOT2_ATIVOS_CATEGORIAS.keys():
             if is_asset_available(ativo, current_time, current_day):
                 available_assets.append(ativo)
     
-    # Se ainda no houver ativos disponveis, usar ativos padro como fallback
+    # Se ainda não houver ativos disponíveis, usar ativos padrão como fallback
     if not available_assets:
-        BOT2_LOGGER.warning(f"Nenhum ativo disponvel no momento. Usando ativos padro.")
+        BOT2_LOGGER.warning(f"Nenhum ativo disponível no momento. Usando ativos padrão.")
         fallback_assets = ["Immutable (OTC)", "Ripple (OTC)", "SOL/USD (OTC)"]
         return fallback_assets
 
@@ -1026,6 +1035,8 @@ def bot2_gerar_sinal_aleatorio():
     Gera um sinal aleatrio para enviar.
     Retorna um dicionrio com os dados do sinal ou None se no houver sinal.
     """
+    global BOT2_ATIVOS_CATEGORIAS
+    
     ativos_disponiveis = bot2_verificar_disponibilidade()
     if not ativos_disponiveis:
         return None
@@ -1238,6 +1249,7 @@ def bot2_registrar_envio(ativo, direcao, categoria):
 # Inicializao do Bot 2 quando este arquivo for executado
 bot2_sinais_agendados = False
 bot2_contador_sinais = 0  # Contador para rastrear quantos sinais foram enviados
+BOT2_ATIVOS_CATEGORIAS = {}  # Inicialização de categorias de ativos
 
 # URLs promocionais
 XXBROKER_URL = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
@@ -1416,1390 +1428,65 @@ def bot2_enviar_gif_pos_sinal():
         
         # Verifica se deve enviar imagem especial (apenas no horário especial do dia)
         if horario_especial_agora:
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM ESPECIAL (sinal {contador_pos_sinal})")
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A MENSAGEM ESPECIAL DE PERDA (sinal {contador_pos_sinal})")
             deve_enviar_especial = True
             
             # Se foi por causa do horário especial, registra isso
             if horario_especial_agora:
-                BOT2_LOGGER.info(f"[{horario_atual}] Envio de imagem especial foi acionado pelo horário especial do dia")
+                BOT2_LOGGER.info(f"[{horario_atual}] Envio de mensagem especial foi acionado pelo horário especial do dia")
             
             contador_desde_ultimo_especial = 0
-        else:
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A IMAGEM PADRÃO (sinal {contador_pos_sinal})")
-            deve_enviar_especial = False
-        
-        # Loop para enviar aos canais configurados
-        for chat_id in BOT2_CHAT_IDS:
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
             
-            # Diretório base para imagens
-            dir_base = f"videos/pos_sinal/{idioma}"
-            
-            # Nomes de arquivos padrão
-            nome_padrao = "padrao.gif"
-            nome_especial = "especial.gif"
-            
-            # Determinar qual imagem enviar com base no idioma
-            nome_arquivo = nome_especial if deve_enviar_especial else nome_padrao
-            
-            # Tentar encontrar o arquivo no formato correto
-            possiveis_formatos = ['.gif']
-            imagem_path = None
-            
-            # Primeiro, tenta encontrar o arquivo exato
-            for formato in possiveis_formatos:
-                # Remove a extensão atual e adiciona o formato sendo testado
-                nome_base = nome_arquivo.rsplit('.', 1)[0]
-                caminho = f"{dir_base}/{nome_base}{formato}"
+            # Enviar mensagem de texto para cada canal em vez da imagem especial
+            for chat_id in BOT2_CHAT_IDS:
+                config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                idioma = config_canal["idioma"]
                 
-                if os.path.exists(caminho):
-                    imagem_path = caminho
-                    BOT2_LOGGER.info(f"[{horario_atual}] Encontrada imagem: {caminho}")
-                    break
-                    
-                # Tenta com acento para compatibilidade
-                if nome_base == "padrao":
-                    caminho = f"{dir_base}/padrão{formato}"
-                    if os.path.exists(caminho):
-                        imagem_path = caminho
-                        BOT2_LOGGER.info(f"[{horario_atual}] Encontrada imagem com acento: {caminho}")
-                        break
-            
-            # Se não encontrou imagem no idioma específico, usa o fallback em português
-            if not imagem_path:
-                fallback_dir = f"videos/pos_sinal/pt"
-                for formato in possiveis_formatos:
-                    nome_base = nome_arquivo.rsplit('.', 1)[0]
-                    fallback_path = f"{fallback_dir}/{nome_base}{formato}"
-                    
-                    if os.path.exists(fallback_path):
-                        imagem_path = fallback_path
-                        BOT2_LOGGER.info(f"[{horario_atual}] Usando fallback em português: {fallback_path}")
-                        break
-                        
-                    # Tenta com acento para compatibilidade
-                    if nome_base == "padrao":
-                        fallback_path = f"{fallback_dir}/padrão{formato}"
-                        if os.path.exists(fallback_path):
-                            imagem_path = fallback_path
-                            BOT2_LOGGER.info(f"[{horario_atual}] Usando fallback em português com acento: {fallback_path}")
-                            break
-            
-            # Se ainda não encontrou nenhuma imagem, log de erro e continua para o próximo canal
-            if not imagem_path:
-                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Não foi possível encontrar nenhuma imagem para o canal {chat_id}")
-                continue
-                
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem pós-sinal para o canal {chat_id} no idioma {idioma}: {imagem_path}")
-            
-            # Verifica se o arquivo é um GIF
-            if imagem_path.lower().endswith('.gif'):
-                BOT2_LOGGER.info(f"[{horario_atual}] Detectado arquivo GIF, enviando como animação")
-                try:
-                    # Método melhorado para enviar GIFs como animações que são mostradas automaticamente
-                    with open(imagem_path, 'rb') as animation_file:
-                        url_animation = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                        # Parâmetros essenciais para garantir que a animação seja reproduzida automaticamente
-                        data = {
-                            'chat_id': chat_id,
-                            'disable_notification': False,  # Garantir notificação
-                            'parse_mode': 'HTML',
-                            'has_spoiler': False,  # Sem spoiler para garantir visualização imediata
-                        }
-                        
-                        # Criar o objeto MultipartEncoder para upload do arquivo
-                        import requests
-                        files = {'animation': (os.path.basename(imagem_path), animation_file, 'image/gif')}
-                        
-                        # Enviar a animação
-                        animation_response = requests.post(url_animation, files=files, data=data)
-                        
-                        if animation_response.status_code == 200:
-                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ENVIADO COM SUCESSO")
-                            continue
-                        else:
-                            BOT2_LOGGER.warning(f"[{horario_atual}] ✗ Não foi possível enviar como GIF: {animation_response.text}")
-                            # Tente um método alternativo se o primeiro método falhar
-                            BOT2_LOGGER.info(f"[{horario_atual}] Tentando método alternativo de envio de GIF")
-                            
-                            # Reabrir o arquivo para segundo método
-                            animation_file.seek(0)
-                            url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
-                            files = {'document': (os.path.basename(imagem_path), animation_file, 'image/gif')}
-                            data = {'chat_id': chat_id, 'disable_content_type_detection': True}
-                            alt_response = requests.post(url_alt, files=files, data=data)
-                            
-                            if alt_response.status_code == 200:
-                                BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ENVIADO COM SUCESSO (método alternativo)")
-                            else:
-                                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Falha também no método alternativo: {alt_response.text}")
-                except Exception as e:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar arquivo GIF: {str(e)}")
-                    
-                    # Tentativa final: enviar como foto se tudo falhar
-                    try:
-                        BOT2_LOGGER.info(f"[{horario_atual}] Última tentativa: enviar como foto")
-                        with open(imagem_path, 'rb') as photo_file:
-                            url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
-                            files = {'photo': photo_file}
-                            data = {'chat_id': chat_id}
-                            
-                            photo_response = requests.post(url_photo, files=files, data=data)
-                            if photo_response.status_code == 200:
-                                BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ENVIADO COMO FOTO (último recurso)")
-                            else:
-                                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Falha em todos os métodos de envio")
-                    except Exception as final_error:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro na tentativa final: {str(final_error)}")
-            else:
-                # Para imagens que não são GIF, enviar como foto
-                try:
-                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem como foto")
-                    with open(imagem_path, 'rb') as photo_file:
-                        url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
-                        files = {'photo': photo_file}
-                        data = {'chat_id': chat_id}
-                        
-                        photo_response = requests.post(url_photo, files=files, data=data)
-                        if photo_response.status_code == 200:
-                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ IMAGEM ENVIADA COMO FOTO com sucesso")
-                        else:
-                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar como foto: {photo_response.text}")
-                except Exception as photo_error:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao processar envio como foto: {str(photo_error)}")
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao enviar GIF pós-sinal: {str(e)}")
-        import traceback
-        BOT2_LOGGER.error(traceback.format_exc())
-
-# Funo para enviar mensagem promocional antes do sinal
-def bot2_enviar_promo_pre_sinal():
-    """
-    Envia um vdeo promocional 10 minutos antes do sinal.
-     seguido de uma mensagem com link da corretora.
-    """
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PR-SINAL...")
-        
-        # Loop para enviar aos canais configurados
-        for chat_id in BOT2_CHAT_IDS:
-            # Pegar configurao do canal
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal.get("idioma", "pt")  # Usar portugus como padro
-            link_corretora = config_canal.get("link_corretora", XXBROKER_URL)
-            
-            # Determinar qual vdeo enviar com base no idioma
-            if idioma in VIDEOS_PROMO:
-                video_path = VIDEOS_PROMO[idioma]
-                if not os.path.exists(video_path):
-                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vdeo promo no encontrado para {idioma}: {video_path}")
-                    # Tentar usar portugus como fallback
-                    video_path = VIDEOS_PROMO.get("pt", "")
-                    if not os.path.exists(video_path):
-                        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vdeo promo fallback tambm no encontrado: {video_path}")
-                        continue
-            else:
-                # Usar portugus como padro
-                video_path = VIDEOS_PROMO.get("pt", "")
-                if not os.path.exists(video_path):
-                    BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Arquivo de vdeo promo no encontrado: {video_path}")
-                    continue
-            
-            # Verificar se  a primeira mensagem do dia para este canal
-            hora_atual = agora.replace(minute=0, second=0, microsecond=0)
-            key_contagem = f"{chat_id}_{hora_atual.strftime('%Y%m%d%H')}"
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando vdeo pr-sinal para o canal {chat_id} em {idioma}...")
-            
-            # Enviar o vdeo promocional como GIF
-            try:
-                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                
-                # Parmetros para envio da animao
-                params = {
-                    'chat_id': chat_id,
-                    'disable_notification': False
-                }
-                
-                with open(video_path, 'rb') as animation_file:
-                    files = {'animation': animation_file}
-                    
-                    resposta = requests.post(url_base, data=params, files=files)
-                    
-                    if resposta.status_code != 200:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF promocional para o canal {chat_id}: {resposta.text}")
-                    else:
-                        BOT2_LOGGER.info(f"[{horario_atual}] GIF PROMOCIONAL ENVIADO COM SUCESSO para o canal {chat_id}")
-                
-                # Texto da mensagem promocional
+                # Definir mensagem específica para cada idioma
                 if idioma == "pt":
-                    mensagem = ""
+                    mensagem = (
+                        "⚠️ ATENÇÃO - RESULTADO NEGATIVO ⚠️\n\n"
+                        "O mercado se moveu contra nossa análise.\n\n"
+                        "🔄 Vamos seguir com nossa estratégia e entrar no próximo sinal com GERENCIAMENTO DE BANCA.\n\n"
+                        "🧠 Lembre-se: gerenciamento é a chave para o sucesso no longo prazo.\n\n"
+                        "💪 Mantenha o foco e a disciplina. Estamos juntos nessa jornada!\n\n"
+                        "📊 Nossa taxa de acerto continua superior a 85% no mês."
+                    )
                 elif idioma == "en":
-                    mensagem = ""
+                    mensagem = (
+                        "⚠️ ATTENTION - NEGATIVE RESULT ⚠️\n\n"
+                        "The market moved against our analysis.\n\n"
+                        "🔄 Let's continue with our strategy and enter the next signal with proper BANKROLL MANAGEMENT.\n\n"
+                        "🧠 Remember: management is the key to long-term success.\n\n"
+                        "💪 Stay focused and disciplined. We're in this journey together!\n\n"
+                        "📊 Our monthly success rate remains above 85%."
+                    )
                 elif idioma == "es":
-                    mensagem = ""
+                    mensagem = (
+                        "⚠️ ATENCIÓN - RESULTADO NEGATIVO ⚠️\n\n"
+                        "El mercado se movió contra nuestro análisis.\n\n"
+                        "🔄 Continuemos con nuestra estrategia y entremos en la próxima señal con GESTIÓN DE BANCA.\n\n"
+                        "🧠 Recuerda: la gestión es la clave para el éxito a largo plazo.\n\n"
+                        "💪 Mantén el enfoque y la disciplina. ¡Estamos juntos en este camino!\n\n"
+                        "📊 Nuestra tasa de éxito mensual sigue siendo superior al 85%."
+                    )
                 else:
-                    mensagem = ""
+                    # Fallback para português
+                    mensagem = (
+                        "⚠️ ATENÇÃO - RESULTADO NEGATIVO ⚠️\n\n"
+                        "O mercado se moveu contra nossa análise.\n\n"
+                        "🔄 Vamos seguir com nossa estratégia e entrar no próximo sinal com GERENCIAMENTO DE BANCA.\n\n"
+                        "🧠 Lembre-se: gerenciamento é a chave para o sucesso no longo prazo.\n\n"
+                        "💪 Mantenha o foco e a disciplina. Estamos juntos nessa jornada!\n\n"
+                        "📊 Nossa taxa de acerto continua superior a 85% no mês."
+                    )
                 
-                # Texto do boto de acordo com o idioma
-                if idioma == "pt":
-                    texto_botao = "?? Abrir corretora"
-                elif idioma == "en":
-                    texto_botao = "?? Open broker"
-                elif idioma == "es":
-                    texto_botao = "?? Abrir corredor"
-                else:
-                    texto_botao = "?? Abrir corretora"
-                
-                # Configurar teclado inline com o link da corretora
-                teclado_inline = {
-                    "inline_keyboard": [
-                        [
-                            {
-                                "text": texto_botao,
-                                "url": link_corretora
-                            }
-                        ]
-                    ]
-                }
-                
-                # Enviar a mensagem com o boto para a corretora
-                url_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                
+                # Enviar a mensagem de texto
+                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
                 payload = {
                     'chat_id': chat_id,
                     'text': mensagem,
                     'parse_mode': 'HTML',
-                    'disable_web_page_preview': True,
-                    'reply_markup': json.dumps(teclado_inline)
-                }
-                
-                resposta_msg = requests.post(url_msg, data=payload)
-                
-                if resposta_msg.status_code != 200:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pr-sinal para o canal {chat_id}: {resposta_msg.text}")
-                else:
-                    BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PR-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
-                
-            except Exception as e:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vdeo e mensagem pr-sinal: {str(e)}")
-        
-    except Exception as e:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pr-sinal: {str(e)}")
-        traceback.print_exc()
-
-# Funo para enviar mensagem promocional a cada 3 sinais
-def bot2_enviar_promo_especial():
-    """
-    Envia uma mensagem promocional especial a cada 3 sinais enviados.
-    Para todos os canais: envia o vdeo especfico do idioma e depois a mensagem.
-    """
-    try:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) - Contador: {bot2_contador_sinais}...")
-
-        # Loop para enviar aos canais configurados
-        for chat_id in BOT2_CHAT_IDS:
-            # Pegar configurao do canal
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
-            link_corretora = config_canal["link_corretora"]
-
-            # Preparar textos baseados no idioma com links diretamente no texto
-            if idioma == "pt":
-                texto_mensagem = (
-                    "????PARA PARTICIPAR DESTA SESSO, SIGA O PASSO A PASSO ABAIXO????\n\n\n"
-                    "1 ? >  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAA pra comear a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
-                    "Voc vai poder testar todos nossas\n"
-                    "operaes com risco ZERO!\n\n"
-                    "????????????????\n\n"
-                    f"<a href=\"{link_corretora}\">CRIE SUA CONTA AQUI E GANHE R$10.000</a>\n\n"
-                    "\n\n"
-                    "2 ? >  Assista o vdeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operaes!\n\n"
-                    "????????????????\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VDEO</a>"
-                )
-            elif idioma == "en":
-                texto_mensagem = (
-                    "????TO PARTICIPATE IN THIS SESSION, FOLLOW THE STEPS BELOW????\n\n\n"
-                    "1st ? > Create your broker account in the link below and GET $10,000 FOR FREE to start trading with us without risking your money.\n\n"
-                    "You'll be able to test all our\n"
-                    "operations with ZERO RISK!\n\n"
-                    "????????????????\n\n"
-                    f"<a href=\"{link_corretora}\">CREATE YOUR ACCOUNT HERE AND GET $10,000</a>\n\n"
-                    "\n\n"
-                    "2nd ? > Watch the video below and learn how to deposit and how to join us in our operations!\n\n"
-                    "????????????????\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_EN_URL}\">CLICK HERE AND WATCH THE VIDEO</a>"
-                )
-            elif idioma == "es":
-                texto_mensagem = (
-                    "????PARA PARTICIPAR EN ESTA SESIN, SIGA LOS PASOS A CONTINUACIN????\n\n\n"
-                    "1 ? > Crea tu cuenta en el corredor en el enlace de abajo y OBTN $10,000 GRATIS para comenzar a operar con nosotros sin arriesgar tu dinero.\n\n"
-                    "Podrs probar todas nuestras\n"
-                    "operaciones con RIESGO CERO!\n\n"
-                    "????????????????\n\n"
-                    f"<a href=\"{link_corretora}\">CREA TU CUENTA AQU Y OBTN $10,000</a>\n\n"
-                    "\n\n"
-                    "2 ? > Mira el video de abajo y aprende cmo depositar y cmo unirte a nosotros en nuestras operaciones!\n\n"
-                    "????????????????\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_ES_URL}\">HAZ CLIC AQU Y MIRA EL VIDEO</a>"
-                )
-            else:
-                texto_mensagem = (
-                    "????PARA PARTICIPAR DESTA SESSO, SIGA O PASSO A PASSO ABAIXO????\n\n\n"
-                    "1 ? >  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAA pra comear a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
-                    "Voc vai poder testar todos nossas\n"
-                    "operaes com risco ZERO!\n\n"
-                    "????????????????\n\n"
-                    f"<a href=\"{link_corretora}\">CRIE SUA CONTA AQUI E GANHE R$10.000</a>\n\n"
-                    "\n\n"
-                    "2 ? >  Assista o vdeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operaes!\n\n"
-                    "????????????????\n\n"
-                    f"<a href=\"{VIDEO_TELEGRAM_URL}\">CLIQUE AQUI E ASSISTA O VDEO</a>"
-                )
-
-            # Enviar mensagem com links (agora incorporados diretamente no texto)
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) para o canal {chat_id}...")
-            url_base_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-
-            payload_msg = {
-                'chat_id': chat_id,
-                'text': texto_mensagem,
-                'parse_mode': 'HTML',
-                'disable_web_page_preview': True
-            }
-
-            # Enviar a mensagem
-            resposta_msg = requests.post(url_base_msg, data=payload_msg)
-
-            if resposta_msg.status_code != 200:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional especial para o canal {chat_id}: {resposta_msg.text}")
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PROMOCIONAL ESPECIAL (A CADA 3 SINAIS) ENVIADA COM SUCESSO para o canal {chat_id}")
-
-    except Exception as e:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem promocional especial: {str(e)}")
-        traceback.print_exc()
-
-# Funo auxiliar para enviar o vdeo especial
-def bot2_enviar_video_especial(video_path, chat_id, horario_atual):
-    """
-    Funo auxiliar para enviar o vdeo especial como GIF.
-    """
-    try:
-        url_base_animation = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-        
-        with open(video_path, 'rb') as animation_file:
-            files = {
-                'animation': animation_file
-            }
-            
-            payload_animation = {
-                'chat_id': chat_id,
-                'parse_mode': 'HTML'
-            }
-            
-            resposta_animation = requests.post(url_base_animation, data=payload_animation, files=files)
-            if resposta_animation.status_code != 200:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {resposta_animation.text}")
-                return False
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL ENVIADO COM SUCESSO para o canal {chat_id}")
-                return True
-    except Exception as e:
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao abrir ou enviar arquivo de GIF especial: {str(e)}")
-        return False
-
-# Funo para enviar o GIF especial a cada 3 sinais (apenas para o canal portugus)
-def bot2_enviar_gif_especial_pt():
-    """Envia um GIF especial para o canal em português."""
-    agora = bot2_obter_hora_brasilia()
-    horario_atual = agora.strftime("%H:%M:%S")
-    BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO GIF ESPECIAL para o canal PT")
-    
-    # Obter chat_id para o idioma PT
-    chat_id_pt = None
-    for chat_id, config in BOT2_CANAIS_CONFIG.items():
-        if config["idioma"] == "pt":
-            chat_id_pt = chat_id
-            break
-    
-    if not chat_id_pt:
-        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Não foi encontrado canal para o idioma PT")
-        return
-    
-    # Diretório para os GIFs especiais em português
-    dir_especial_pt = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
-    
-    # Verificar se o diretório existe
-    if not os.path.exists(dir_especial_pt):
-        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório {dir_especial_pt} não encontrado")
-        return
-    
-    # Listar todos os GIFs disponíveis no diretório
-    arquivos_gif = [f for f in os.listdir(dir_especial_pt) if f.lower().endswith('.gif')]
-    
-    if not arquivos_gif:
-        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Nenhum GIF encontrado no diretório {dir_especial_pt}")
-        return
-    
-    # Escolher um GIF aleatório
-    gif_escolhido = random.choice(arquivos_gif)
-    caminho_gif = os.path.join(dir_especial_pt, gif_escolhido)
-    
-    BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF especial: {caminho_gif}")
-    
-    # Enviar o GIF como animação para visualização automática
-    try:
-        with open(caminho_gif, 'rb') as animation_file:
-            url_animation = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-            
-            # Parâmetros para garantir que a animação seja reproduzida automaticamente
-            data = {
-                'chat_id': chat_id_pt,
-                'disable_notification': False,  # Garantir notificação
-                'parse_mode': 'HTML',
-                'has_spoiler': False,  # Sem spoiler para visualização imediata
-            }
-            
-            # Preparar o arquivo para upload
-            files = {'animation': (os.path.basename(caminho_gif), animation_file, 'image/gif')}
-            
-            # Enviar a animação
-            animation_response = requests.post(url_animation, files=files, data=data)
-            
-            if animation_response.status_code == 200:
-                BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ESPECIAL ENVIADO COM SUCESSO!")
-                return True
-            else:
-                BOT2_LOGGER.warning(f"[{horario_atual}] ✗ Não foi possível enviar o GIF especial: {animation_response.text}")
-                
-                # Método alternativo se o primeiro falhar
-                animation_file.seek(0)
-                url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
-                files = {'document': (os.path.basename(caminho_gif), animation_file, 'image/gif')}
-                data = {'chat_id': chat_id_pt, 'disable_content_type_detection': True}
-                alt_response = requests.post(url_alt, files=files, data=data)
-                
-                if alt_response.status_code == 200:
-                    BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ESPECIAL ENVIADO COM SUCESSO (método alternativo)!")
-                    return True
-                else:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ✗ Falha também no método alternativo: {alt_response.text}")
-    except Exception as e:
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial: {str(e)}")
-    
-    return False
-
-def bot2_enviar_gif_especial_en():
-    """Envia um GIF especial para o canal em inglês."""
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO GIF ESPECIAL para o canal EN")
-        
-        # Obter chat_id para o idioma EN
-        chat_id_en = None
-        for chat_id, config in BOT2_CANAIS_CONFIG.items():
-            if config["idioma"] == "en":
-                chat_id_en = chat_id
-                break
-        
-        if not chat_id_en:
-            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Não foi encontrado canal para o idioma EN")
-            return False
-        
-        # Diretório para os GIFs especiais em inglês
-        dir_especial_en = os.path.join(VIDEOS_ESPECIAL_DIR, "en")
-        
-        # Verificar se o diretório existe
-        if not os.path.exists(dir_especial_en):
-            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório {dir_especial_en} não encontrado")
-            # Tentar usar o diretório PT como fallback
-            dir_especial_en = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
-            if not os.path.exists(dir_especial_en):
-                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório fallback {dir_especial_en} não encontrado")
-                return False
-        
-        # Listar todos os GIFs disponíveis no diretório
-        arquivos_gif = [f for f in os.listdir(dir_especial_en) if f.lower().endswith('.gif')]
-        
-        if not arquivos_gif:
-            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Nenhum GIF encontrado no diretório {dir_especial_en}")
-            return False
-        
-        # Escolher um GIF aleatório
-        gif_escolhido = random.choice(arquivos_gif)
-        caminho_gif = os.path.join(dir_especial_en, gif_escolhido)
-        
-        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF especial: {caminho_gif}")
-        
-        # Enviar o GIF como animação para visualização automática
-        with open(caminho_gif, 'rb') as animation_file:
-            url_animation = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-            
-            # Parâmetros para garantir que a animação seja reproduzida automaticamente
-            data = {
-                'chat_id': chat_id_en,
-                'disable_notification': False,  # Garantir notificação
-                'parse_mode': 'HTML',
-                'has_spoiler': False,  # Sem spoiler para visualização imediata
-            }
-            
-            # Preparar o arquivo para upload
-            files = {'animation': (os.path.basename(caminho_gif), animation_file, 'image/gif')}
-            
-            # Enviar a animação
-            animation_response = requests.post(url_animation, files=files, data=data)
-            
-            if animation_response.status_code == 200:
-                BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ESPECIAL ENVIADO COM SUCESSO!")
-                return True
-            else:
-                BOT2_LOGGER.warning(f"[{horario_atual}] ✗ Não foi possível enviar o GIF especial: {animation_response.text}")
-                
-                # Método alternativo se o primeiro falhar
-                animation_file.seek(0)
-                url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
-                files = {'document': (os.path.basename(caminho_gif), animation_file, 'image/gif')}
-                data = {'chat_id': chat_id_en, 'disable_content_type_detection': True}
-                alt_response = requests.post(url_alt, files=files, data=data)
-                
-                if alt_response.status_code == 200:
-                    BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ESPECIAL ENVIADO COM SUCESSO (método alternativo)!")
-                    return True
-                else:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ✗ Falha também no método alternativo: {alt_response.text}")
-                    return False
-    except Exception as e:
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial: {str(e)}")
-        return False
-
-def bot2_enviar_gif_especial_es():
-    """Envia um GIF especial para o canal em espanhol."""
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO GIF ESPECIAL para o canal ES")
-        
-        # Obter chat_id para o idioma ES
-        chat_id_es = None
-        for chat_id, config in BOT2_CANAIS_CONFIG.items():
-            if config["idioma"] == "es":
-                chat_id_es = chat_id
-                break
-        
-        if not chat_id_es:
-            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Não foi encontrado canal para o idioma ES")
-            return False
-        
-        # Diretório para os GIFs especiais em espanhol
-        dir_especial_es = os.path.join(VIDEOS_ESPECIAL_DIR, "es")
-        
-        # Verificar se o diretório existe
-        if not os.path.exists(dir_especial_es):
-            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório {dir_especial_es} não encontrado")
-            # Tentar usar o diretório PT como fallback
-            dir_especial_es = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
-            if not os.path.exists(dir_especial_es):
-                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório fallback {dir_especial_es} não encontrado")
-                return False
-        
-        # Listar todos os GIFs disponíveis no diretório
-        arquivos_gif = [f for f in os.listdir(dir_especial_es) if f.lower().endswith('.gif')]
-        
-        if not arquivos_gif:
-            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Nenhum GIF encontrado no diretório {dir_especial_es}")
-            return False
-        
-        # Escolher um GIF aleatório
-        gif_escolhido = random.choice(arquivos_gif)
-        caminho_gif = os.path.join(dir_especial_es, gif_escolhido)
-        
-        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF especial: {caminho_gif}")
-        
-        # Enviar o GIF como animação para visualização automática
-        with open(caminho_gif, 'rb') as animation_file:
-            url_animation = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-            
-            # Parâmetros para garantir que a animação seja reproduzida automaticamente
-            data = {
-                'chat_id': chat_id_es,
-                'disable_notification': False,  # Garantir notificação
-                'parse_mode': 'HTML',
-                'has_spoiler': False,  # Sem spoiler para visualização imediata
-            }
-            
-            # Preparar o arquivo para upload
-            files = {'animation': (os.path.basename(caminho_gif), animation_file, 'image/gif')}
-            
-            # Enviar a animação
-            animation_response = requests.post(url_animation, files=files, data=data)
-            
-            if animation_response.status_code == 200:
-                BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ESPECIAL ENVIADO COM SUCESSO!")
-                return True
-            else:
-                BOT2_LOGGER.warning(f"[{horario_atual}] ✗ Não foi possível enviar o GIF especial: {animation_response.text}")
-                
-                # Método alternativo se o primeiro falhar
-                animation_file.seek(0)
-                url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
-                files = {'document': (os.path.basename(caminho_gif), animation_file, 'image/gif')}
-                data = {'chat_id': chat_id_es, 'disable_content_type_detection': True}
-                alt_response = requests.post(url_alt, files=files, data=data)
-                
-                if alt_response.status_code == 200:
-                    BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ESPECIAL ENVIADO COM SUCESSO (método alternativo)!")
-                    return True
-                else:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ✗ Falha também no método alternativo: {alt_response.text}")
-    except Exception as e:
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial: {str(e)}")
-
-    return False
-
-# Modificar a funo bot2_send_message para alterar os tempos de agendamento
-def bot2_send_message(ignorar_anti_duplicacao=False):
-    """Envia uma mensagem com sinal para todos os canais configurados."""
-    global bot2_contador_sinais
-    
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
-        
-        # Verificar se j houve envio recente para evitar flood (mnimo 45 segundos entre mensagens)
-        if hasattr(bot2_send_message, 'ultimo_envio_timestamp'):
-            diferenca = (agora - bot2_send_message.ultimo_envio_timestamp).total_seconds()
-            if diferenca < 45 and not ignorar_anti_duplicacao:
-                BOT2_LOGGER.warning(f"[{horario_atual}] Anti-duplicao: ltimo envio foi h {diferenca:.1f} segundos.")
-                if diferenca < 10:  # Muito recente, ignorar
-                    BOT2_LOGGER.warning(f"[{horario_atual}] Limite anti-duplicao atingido. Ignorando este sinal.")
-                    return
-        
-        bot2_send_message.ultimo_envio_timestamp = agora
-        
-        # Verificar limite de sinais por hora
-        hora_atual = agora.replace(minute=0, second=0, microsecond=0)
-        
-        # Gerar o sinal aleatrio
-        sinal = bot2_gerar_sinal_aleatorio()
-        if not sinal:
-            BOT2_LOGGER.error(f"[{horario_atual}] No foi possvel gerar um sinal vlido. Tentando novamente mais tarde.")
-            return
-            
-        # Em vez de desempacotar diretamente, obtenha os valores do dicionrio
-        ativo = sinal['ativo']
-        direcao = sinal['direcao']
-        tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
-        categoria = sinal['categoria']
-        
-        # Define a categoria correta para o sinal (Binary, Digital ou Blitz)
-        for categoria_nome, lista_ativos in ATIVOS_CATEGORIAS.items():
-            if ativo in lista_ativos:
-                sinal['categoria'] = categoria_nome
-                categoria = categoria_nome
-                break
-        
-        # Calcular os horrios que faltam
-        hora_entrada = bot2_obter_hora_brasilia()
-        
-        # Ajustar o horrio de entrada para ser exatamente 2 minutos aps o envio do sinal
-        # E garantir que termine em 0 ou 5
-        minuto_atual = hora_entrada.minute
-        minuto_entrada = minuto_atual + 2
-        
-        # Se o minuto no terminar em 0 ou 5, ajustar para o prximo que termine
-        ultimo_digito = minuto_entrada % 10
-        if ultimo_digito != 0 and ultimo_digito != 5:
-            # Calcular quanto falta para o prximo minuto que termine em 0 ou 5
-            if ultimo_digito < 5:
-                ajuste = 5 - ultimo_digito
-            else:
-                ajuste = 10 - ultimo_digito
-            minuto_entrada += ajuste
-        
-        # Criar o novo horrio de entrada ajustado
-        hora_entrada = hora_entrada.replace(minute=minuto_entrada, second=0, microsecond=0)
-        BOT2_LOGGER.info(f"[{horario_atual}] Horrio de entrada ajustado para {hora_entrada.strftime('%H:%M')} (2 minutos aps o sinal + ajuste para terminar em 0 ou 5)")
-        
-        hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
-        expiracao_time = hora_expiracao
-        
-        # Calcular os horrios de reentrada (se aplicveis)
-        if tempo_expiracao_minutos >= 15:
-            # Reentradas s so relevantes para operaes de no mnimo 15 minutos
-            hora_reentrada1 = hora_entrada + timedelta(minutes=3)
-            hora_reentrada2 = hora_entrada + timedelta(minutes=7)
-            hora_reentrada3 = hora_entrada + timedelta(minutes=12)
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] Horrios: Entrada={hora_entrada.strftime('%H:%M:%S')}, Reentrada1={hora_reentrada1.strftime('%H:%M:%S')}, Reentrada2={hora_reentrada2.strftime('%H:%M:%S')}, Reentrada3={hora_reentrada3.strftime('%H:%M:%S')}")
-        else:
-            BOT2_LOGGER.info(f"[{horario_atual}] Horrios: Entrada={hora_entrada.strftime('%H:%M:%S')}, Expirao={hora_expiracao.strftime('%H:%M:%S')}")
-        
-        BOT2_LOGGER.info(f"[{horario_atual}] SINAL GERADO. Enviando para todos os canais configurados...")
-        
-        # Formatao da hora para exibio
-        hora_formatada = hora_entrada.strftime("%H:%M")
-        
-        # Enviar para cada canal
-        for chat_id in BOT2_CHAT_IDS:
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
-            
-            mensagem_formatada = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
-            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-            
-            # Registrar envio nos logs
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando sinal: Ativo={ativo}, Direo={direcao}, Categoria={categoria}, Tempo={tempo_expiracao_minutos}, Idioma={idioma}")
-            
-            try:
-                resposta = requests.post(url_base, json={
-                    "chat_id": chat_id,
-                    "text": mensagem_formatada,
-                    "parse_mode": "HTML",
-                    "disable_web_page_preview": True
-                }, timeout=10)
-                
-                if resposta.status_code == 200:
-                    BOT2_LOGGER.info(f"[{horario_atual}] ? SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
-                else:
-                    BOT2_LOGGER.error(f"[{horario_atual}] ? Erro ao enviar mensagem para o canal {chat_id}: {resposta.text}")
-            except Exception as msg_error:
-                BOT2_LOGGER.error(f"[{horario_atual}] ? Exceo ao enviar mensagem para o canal {chat_id}: {str(msg_error)}")
-        
-        # Incrementa o contador global de sinais
-        bot2_contador_sinais += 1
-        BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado: {bot2_contador_sinais}")
-        
-        # Registrar envio no arquivo de registro
-        bot2_registrar_envio(ativo, direcao, categoria)
-        
-        # Cancelar quaisquer agendamentos anteriores para evitar duplicaes
-        schedule.clear('bot2_pos_sinal')
-        schedule.clear('bot2_gif_especial')
-        schedule.clear('bot2_promo_especial')
-        schedule.clear('bot2_video_pre_sinal')
-        schedule.clear('bot2_msg_pre_sinal')
-        
-        # Ajustar o tempo de agendamento do gif ps-sinal com base no tempo de expirao
-        tempo_pos_sinal = 12  # tempo padro (caso no seja nenhum dos casos especficos)
-        
-        if categoria == "Blitz":
-            # Para Blitz (com expirao em segundos: 5, 10, 15 ou 30), enviar aps 4 minutos
-            tempo_pos_sinal = 4
-            BOT2_LOGGER.info(f"[{horario_atual}] Ativo Blitz com expirao em segundos, agendando gif ps-sinal para daqui a 4 minutos")
-        elif tempo_expiracao_minutos == 1:
-            tempo_pos_sinal = 5  # 5 minutos aps o sinal se expirao for 1 minuto
-            BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expirao  1 minuto, agendando gif ps-sinal para daqui a 5 minutos")
-        elif tempo_expiracao_minutos == 2:
-            tempo_pos_sinal = 6  # 6 minutos aps o sinal se expirao for 2 minutos
-            BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expirao  2 minutos, agendando gif ps-sinal para daqui a 6 minutos")
-        elif tempo_expiracao_minutos == 5:
-            tempo_pos_sinal = 10  # 10 minutos aps o sinal se expirao for 5 minutos
-            BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expirao  5 minutos, agendando gif ps-sinal para daqui a 10 minutos")
-        else:
-            BOT2_LOGGER.info(f"[{horario_atual}] Tempo de expirao  {tempo_expiracao_minutos} minutos, usando tempo padro de 12 minutos para gif ps-sinal")
-        
-        # SEQUNCIA DE AGENDAMENTOS:
-        # 1. Agendar o gif ps-sinal com o tempo ajustado (enviado para todos os sinais)
-        BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio NICO de imagem ps-sinal para daqui a {tempo_pos_sinal} minutos...")
-        schedule.every(tempo_pos_sinal).minutes.do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
-        
-        # Se for a cada 3 sinais (mltiplo de 3), agendar sequncia completa
-        if bot2_contador_sinais % 3 == 0:
-            BOT2_LOGGER.info(f"[{horario_atual}] Este  um sinal mltiplo de 3 (contador={bot2_contador_sinais}), agendando sequncia completa...")
-            
-            # Calcular o tempo at o prximo sinal (usado para todos os agendamentos)
-            agora = bot2_obter_hora_brasilia()
-            proximo_sinal_hora = agora.hour
-            proximo_sinal_minuto = 13
-            
-            # Se j passou do minuto 13 da hora atual, o prximo sinal  na prxima hora
-            if agora.minute >= 13:
-                proximo_sinal_hora = (agora.hour + 1) % 24
-            
-            # Calcular o horrio do prximo sinal
-            proximo_sinal = agora.replace(hour=proximo_sinal_hora, minute=13, second=0, microsecond=0)
-            if agora.minute >= 13 and agora.hour == proximo_sinal.hour:
-                proximo_sinal = proximo_sinal + timedelta(hours=1)
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] Prximo sinal ser s {proximo_sinal.strftime('%H:%M')}")
-            
-            # 2. GIF especial PT (apenas para o canal portugus) - 20 minutos antes do prximo sinal
-            tempo_gif_especial = proximo_sinal - timedelta(minutes=20)
-            minutos_ate_gif = ((tempo_gif_especial - agora).total_seconds() / 60.0)
-            
-            # Verificar se  necessrio esperar menos de 1 minuto (nesse caso agendar para a prxima hora)
-            if minutos_ate_gif < 1:
-                tempo_gif_especial = tempo_gif_especial + timedelta(hours=1)
-                minutos_ate_gif = ((tempo_gif_especial - agora).total_seconds() / 60.0)
-            
-            schedule.every(int(minutos_ate_gif)).minutes.do(bot2_enviar_gif_especial_pt).tag('bot2_gif_especial')
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando GIF especial PT para {tempo_gif_especial.strftime('%H:%M')} (20 minutos antes do prximo sinal)")
-            
-            # 3. Mensagem promocional especial - 19 minutos antes do prximo sinal (1 minuto aps o GIF especial)
-            tempo_promo = proximo_sinal - timedelta(minutes=19)
-            minutos_ate_promo = ((tempo_promo - agora).total_seconds() / 60.0)
-            
-            # Verificar se  necessrio esperar menos de 1 minuto (nesse caso agendar para a prxima hora)
-            if minutos_ate_promo < 1:
-                tempo_promo = tempo_promo + timedelta(hours=1)
-                minutos_ate_promo = ((tempo_promo - agora).total_seconds() / 60.0)
-            
-            schedule.every(int(minutos_ate_promo)).minutes.do(bot2_enviar_promo_especial).tag('bot2_promo_especial')
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem promocional especial para {tempo_promo.strftime('%H:%M')} (19 minutos antes do prximo sinal)")
-            
-            # 4. Vdeo promocional: exatos 15 minutos antes do prximo sinal
-            tempo_pre_sinal = proximo_sinal - timedelta(minutes=15)
-            minutos_ate_video = ((tempo_pre_sinal - agora).total_seconds() / 60.0)
-            
-            # Verificar se  necessrio esperar menos de 1 minuto (nesse caso agendar para a prxima hora)
-            if minutos_ate_video < 1:
-                tempo_pre_sinal = tempo_pre_sinal + timedelta(hours=1)
-                minutos_ate_video = ((tempo_pre_sinal - agora).total_seconds() / 60.0)
-            
-            schedule.every(int(minutos_ate_video)).minutes.do(bot2_enviar_promo_pre_sinal).tag('bot2_video_pre_sinal')
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando vdeo promocional para {tempo_pre_sinal.strftime('%H:%M')} (15 minutos antes do prximo sinal)")
-            
-            # 5. Mensagem pr-sinal: 1 minuto aps o vdeo promocional (14 minutos antes do prximo sinal)
-            tempo_pre_mensagem = proximo_sinal - timedelta(minutes=14)
-            minutos_ate_mensagem = ((tempo_pre_mensagem - agora).total_seconds() / 60.0)
-            
-            # Verificar se  necessrio esperar menos de 1 minuto (nesse caso agendar para a prxima hora)
-            if minutos_ate_mensagem < 1:
-                tempo_pre_mensagem = tempo_pre_mensagem + timedelta(hours=1)
-                minutos_ate_mensagem = ((tempo_pre_mensagem - agora).total_seconds() / 60.0)
-            
-            schedule.every(int(minutos_ate_mensagem)).minutes.do(bot2_enviar_mensagem_pre_sinal).tag('bot2_msg_pre_sinal')
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando mensagem pr-sinal para {tempo_pre_mensagem.strftime('%H:%M')} (14 minutos antes do prximo sinal)")
-    
-    except Exception as e:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem: {str(e)}")
-        traceback.print_exc()
-
-# Inicializaes para a funo bot2_send_message
-bot2_send_message.ultimo_envio_timestamp = bot2_obter_hora_brasilia()
-bot2_send_message.contagem_por_hora = {bot2_obter_hora_brasilia().replace(minute=0, second=0, microsecond=0): 0}
-
-# Funo para verificar se o bot j est em execuo
-def is_bot_already_running():
-    """
-    Verifica se j existe uma instncia do bot em execuo usando um socket.
-    """
-    try:
-        # Tenta criar um socket em uma porta especfica
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(('localhost', 9876))  # Porta arbitrria para verificao
-        return False
-    except socket.error:
-        # Se a porta estiver em uso, assume que o bot est rodando
-        return True
-
-# Funo original do Bot 1 (implementao mnima para compatibilidade)
-def schedule_messages():
-    """
-    Funo de compatibilidade com o Bot 1 original.
-    Esta implementao  um placeholder e no realiza agendamentos reais.
-    """
-    logging.info("Funo schedule_messages() do Bot 1 chamada (sem efeito)")
-    pass
-
-def inicializar_horarios_ativos():
-    """
-    Adiciona horários padrão para todos os ativos listados em ATIVOS_CATEGORIAS
-    que não têm uma configuração específica em assets.
-    """
-    global assets
-    global BOT2_ATIVOS_CATEGORIAS
-    
-    # Inicializar assets se estiver vazio
-    if not assets:
-        assets = {}
-    
-    # Inicializa o dicionário BOT2_ATIVOS_CATEGORIAS para ser usado pelo bot
-    BOT2_ATIVOS_CATEGORIAS = {}
-    
-    # Atualizar ATIVOS_CATEGORIAS para cada ativo na lista Digital
-    for ativo in ATIVOS_CATEGORIAS["Digital"]:
-        # Adicionar ao dicionário BOT2_ATIVOS_CATEGORIAS usado pelo bot
-        BOT2_ATIVOS_CATEGORIAS[ativo] = "Digital"
-        
-        # Também atualizar ATIVOS_CATEGORIAS para consistência
-        ATIVOS_CATEGORIAS[ativo] = "Digital"
-        
-        # Configurar horários específicos para cada ativo
-        if ativo == "Gold/Silver (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "Worldcoin (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "USD/THB (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
-            }
-        elif ativo == "ETH/USD (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-19:45", "20:15-23:59"],
-                "Tuesday": ["00:00-19:45", "20:15-23:59"],
-                "Wednesday": ["00:00-19:45", "20:15-23:59"],
-                "Thursday": ["00:00-19:45", "20:15-23:59"],
-                "Friday": ["00:00-19:45", "20:15-23:59"],
-                "Saturday": ["00:00-19:45", "20:15-23:59"],
-                "Sunday": ["00:00-19:45", "20:15-23:59"]
-            }
-        elif ativo == "CHF/JPY (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "Pepe (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "GBP/AUD (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "GBP/CHF":
-            assets[ativo] = {
-                "Monday": ["00:00-16:00"],
-                "Tuesday": ["00:00-16:00"],
-                "Wednesday": ["00:00-16:00"],
-                "Thursday": ["00:00-16:00"],
-                "Friday": ["00:00-14:00"],
-                "Saturday": [],
-                "Sunday": []
-            }
-        elif ativo == "GBP/CAD (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "EUR/JPY (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-23:59"],
-                "Tuesday": ["00:00-23:59"],
-                "Wednesday": ["00:00-01:00", "01:15-23:59"],
-                "Thursday": ["00:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": ["00:00-23:59"],
-                "Sunday": ["00:00-23:59"]
-            }
-        elif ativo == "AUD/CHF":
-            assets[ativo] = {
-                "Monday": ["00:00-16:00"],
-                "Tuesday": ["00:00-16:00"],
-                "Wednesday": ["00:00-16:00"],
-                "Thursday": ["00:00-16:00"],
-                "Friday": ["00:00-14:00"],
-                "Saturday": [],
-                "Sunday": []
-            }
-        elif ativo == "GER 30 (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "AUD/CHF (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
-            }
-        elif ativo == "EUR/AUD":
-            assets[ativo] = {
-                "Monday": ["00:00-16:00"],
-                "Tuesday": ["00:00-16:00"],
-                "Wednesday": ["00:00-16:00"],
-                "Thursday": ["00:00-16:00"],
-                "Friday": ["00:00-14:00"],
-                "Saturday": [],
-                "Sunday": []
-            }
-        elif ativo == "USD/CAD (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "BTC/USD":
-            assets[ativo] = {
-                "Monday": ["03:00-15:00"],
-                "Tuesday": ["03:00-15:00"],
-                "Wednesday": ["03:00-15:00"],
-                "Thursday": ["03:00-15:00"],
-                "Friday": ["03:00-15:00"],
-                "Saturday": [],
-                "Sunday": []
-            }
-        elif ativo == "Amazon/Ebay (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "Coca-Cola_Company_OTC":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "AIG_OTC":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "Amazon/Alibaba_OTC":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "Bitcoin_Cash_OTC":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "USD Currency Index_OTC":
-            assets[ativo] = {
-                "Monday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
-                "Tuesday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
-                "Wednesday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
-                "Thursday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
-                "Friday": ["00:00-10:00", "10:30-18:00"],
-                "Saturday": [],
-                "Sunday": ["19:00-23:59"]
-            }
-        elif ativo == "AUS_200_OTC":  # Já existe, mas atualizando para os novos horários
-            assets[ativo] = {
-                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
-            }
-        elif ativo == "USD/CAD":
-            assets[ativo] = {
-                "Monday": ["03:00-15:00"],
-                "Tuesday": ["03:00-15:00", "21:00-23:59"],
-                "Wednesday": ["00:00-15:00"],
-                "Thursday": ["03:00-15:00"],
-                "Friday": ["03:00-15:00"],
-                "Saturday": [],
-                "Sunday": []
-            }
-        elif ativo == "USD/JPY":
-            assets[ativo] = {
-                "Monday": ["00:00-14:00", "23:00-23:59"],
-                "Tuesday": ["00:00-14:00", "23:00-23:59"],
-                "Wednesday": ["00:00-14:00", "23:00-23:59"],
-                "Thursday": ["00:00-14:00", "23:00-23:59"],
-                "Friday": ["00:00-14:00"],
-                "Saturday": [],
-                "Sunday": ["23:00-23:59"]
-            }
-        elif ativo == "MELANIA_Coin_OTC":  # Já existe, mantendo a mesma configuração
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "JP_225_OTC":
-            assets[ativo] = {
-                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
-            }
-        elif ativo == "AUD/CAD (OTC)":  # Já existe, atualizando a configuração
-            assets[ativo] = {
-                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
-            }
-        elif ativo == "AUD/JPY (OTC)":
-            assets[ativo] = {
-                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
-            }
-        elif ativo == "US 500_OTC":  # Já existe, atualizando a configuração
-            assets[ativo] = {
-                "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
-                "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
-                "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
-                "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": ["00:00-23:59"],
-                "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"]
-            }
-        else:
-            # Para outros ativos sem configuração específica
-            assets[ativo] = {
-                "Monday": ["00:00-23:59"],
-                "Tuesday": ["00:00-23:59"],
-                "Wednesday": ["00:00-23:59"],
-                "Thursday": ["00:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": ["00:00-23:59"],
-                "Sunday": ["00:00-23:59"]
-            }
-    
-    # Adicionar ativos das categorias Binary e Blitz
-    for categoria in ["Binary", "Blitz"]:
-        for ativo in ATIVOS_CATEGORIAS.get(categoria, []):
-            BOT2_ATIVOS_CATEGORIAS[ativo] = categoria
-            
-    # Adicionar ativos com horários padrão 
-    todas_categorias = []
-    for categoria, ativos_da_categoria in ATIVOS_CATEGORIAS.items():
-        todas_categorias.extend(ativos_da_categoria)
-    
-    # Para cada ativo, adicionar os horários padrão se não existirem
-    for ativo in todas_categorias:
-        if ativo not in assets:
-            # Usar horário padrão: disponível 24/7
-            assets[ativo] = {
-                "Monday": ["00:00-23:59"],
-                "Tuesday": ["00:00-23:59"],
-                "Wednesday": ["00:00-23:59"],
-                "Thursday": ["00:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": ["00:00-23:59"],
-                "Sunday": ["00:00-23:59"]
-            }
-    
-    BOT2_LOGGER.info(f"Horários de ativos inicializados. Total de ativos configurados: {len(assets)}")
-    return assets
-
-# Funo para manter o Bot 2 em execuo
-def bot2_keep_bot_running():
-    """
-    Mantm o Bot 2 em execuo, verificando os agendamentos.
-    """
-    BOT2_LOGGER.info("Iniciando funo keep_bot_running do Bot 2")
-    try:
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro na funo keep_bot_running do Bot 2: {str(e)}")
-        traceback.print_exc()
-
-def bot2_schedule_messages():
-    """Agenda as mensagens do Bot 2 para envio nos intervalos especficos."""
-    try:
-        if hasattr(bot2_schedule_messages, 'scheduled'):
-            BOT2_LOGGER.info("Agendamentos j existentes. Pulando...")
-            return
-
-        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
-        
-        # Definir o minuto para envio dos sinais (sempre 3 minutos antes de um horrio que termina em 0 ou 5)
-        # Para terminar em 15, enviar no minuto 13
-        minuto_envio = 13
-        
-        # Agendar 1 sinal por hora, no minuto definido
-        for hora in range(0, 24):
-            schedule.every().day.at(f"{hora:02d}:{minuto_envio:02d}:02").do(bot2_send_message)
-            BOT2_LOGGER.info(f"Sinal agendado: {hora:02d}:{minuto_envio:02d}:02 (horrio de entrada: {hora:02d}:15)")
-
-        bot2_schedule_messages.scheduled = True
-        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concludo com sucesso")
-        
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao agendar mensagens: {str(e)}")
-        traceback.print_exc()
-
-def iniciar_ambos_bots():
-    """Inicializa ambos os bots."""
-    try:
-        # Configurar logs e inicializar variveis
-        BOT2_LOGGER.info("Iniciando o Bot 2...")
-        
-        # Definir o horrio especial dirio para a imagem especial
-        definir_horario_especial_diario()
-        agendar_redefinicao_horario_especial()
-        
-        # Remover chamada duplicada que j foi feita no escopo global
-        # definir_horario_especial_diario()
-        # agendar_redefinicao_horario_especial()
-        
-        # Inicializar horrios ativos
-        inicializar_horarios_ativos()
-
-        # Inicializar o Bot 1 (original)
-        try:
-            logging.info("Inicializando Bot 1...")
-            # Verifica se j existe uma instncia do bot rodando
-            if is_bot_already_running():
-                logging.error("O bot j est rodando em outra instncia. Encerrando...")
-                sys.exit(1)
-            schedule_messages()      # Funo original do bot 1
-        except Exception as e:
-            logging.error(f"Erro ao inicializar Bot 1: {str(e)}")
-        
-        # Inicializar o Bot 2
-        try:
-            BOT2_LOGGER.info("Inicializando Bot 2 em modo normal...")
-            bot2_schedule_messages()  # Agendar mensagens nos horrios normais
-            bot2_keep_bot_running()  # Chamada direta para a funo do Bot 2
-        except Exception as e:
-            BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
-        
-        logging.info("Ambos os bots esto em execuo!")
-        BOT2_LOGGER.info("Ambos os bots esto em execuo em modo normal!")
-        
-        # Loop principal para verificar os agendamentos
-        while True:
-            try:
-                schedule.run_pending()
-                time.sleep(1)
-            except Exception as e:
-                logging.error(f"Erro no loop principal: {str(e)}")
-                BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
-                time.sleep(5)  # Pausa maior em caso de erro
-
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao inicializar ambos os bots: {str(e)}")
-        traceback.print_exc()
-
-def bot2_enviar_mensagem_pre_sinal():
-    """
-    Envia uma mensagem promocional antes do sinal.
-    Esta funo  chamada aps o envio do vdeo pr-sinal.
-    """
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PR-SINAL...")
-
-        # Loop para enviar a mensagem para cada canal configurado
-        for chat_id in BOT2_CHAT_IDS:
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
-            link_corretora = config_canal["link_corretora"]
-
-            # Mensagem especfica para o idioma com o link embutido no texto
-            if idioma == "pt":
-                mensagem = f"????Abram a corretora Pessoal\n\n??FIQUEM ATENTOS??\n\n??Cadastre-se na XXBROKER agora mesmo??\n\n?? <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
-            elif idioma == "en":
-                mensagem = f"????Open the broker now\n\n??STAY ALERT??\n\n??Register on XXBROKER right now??\n\n?? <a href=\"{link_corretora}\">CLICK HERE</a>"
-            elif idioma == "es":
-                mensagem = f"????Abran el corredor ahora\n\n??MANTNGANSE ATENTOS??\n\n??Regstrese en XXBROKER ahora mismo??\n\n?? <a href=\"{link_corretora}\">CLIC AQU</a>"
-            else:
-                mensagem = f"????Abram a corretora Pessoal\n\n??FIQUEM ATENTOS??\n\n??Cadastre-se na XXBROKER agora mesmo??\n\n?? <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
-
-            # Enviar a mensagem para o canal especfico
-            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-            payload = {
-                'chat_id': chat_id,
-                'text': mensagem,
-                'parse_mode': 'HTML',
                 'disable_web_page_preview': True
             }
 
@@ -2814,6 +1501,127 @@ def bot2_enviar_mensagem_pre_sinal():
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pr-sinal: {str(e)}")
         traceback.print_exc()
+
+def bot2_send_message(ignorar_anti_duplicacao=False):
+    """Envia uma mensagem com sinal para todos os canais configurados."""
+    global bot2_contador_sinais
+    
+    try:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
+        
+        # Gerar o sinal aleatório
+        sinal = bot2_gerar_sinal_aleatorio()
+        if not sinal:
+            BOT2_LOGGER.error(f"[{horario_atual}] Não foi possível gerar um sinal válido. Tentando novamente mais tarde.")
+            return
+            
+        # Em vez de desempacotar diretamente, obtenha os valores do dicionário
+        ativo = sinal['ativo']
+        direcao = sinal['direcao']
+        tempo_expiracao_minutos = sinal['tempo_expiracao_minutos']
+        categoria = sinal['categoria']
+        
+        # Calcular o horário de entrada (2 minutos após o envio do sinal)
+        hora_entrada = agora + timedelta(minutes=2)
+        hora_formatada = hora_entrada.strftime("%H:%M")
+        
+        # Enviar para cada canal
+        for chat_id in BOT2_CHAT_IDS:
+            config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            idioma = config_canal["idioma"]
+            
+            mensagem_formatada = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
+            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+            
+            # Registrar envio nos logs
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando sinal: Ativo={ativo}, Direção={direcao}, Categoria={categoria}, Tempo={tempo_expiracao_minutos}, Idioma={idioma}")
+            
+            try:
+                resposta = requests.post(url_base, json={
+                    "chat_id": chat_id,
+                    "text": mensagem_formatada,
+                    "parse_mode": "HTML",
+                    "disable_web_page_preview": True
+                }, timeout=10)
+                
+                if resposta.status_code == 200:
+                    BOT2_LOGGER.info(f"[{horario_atual}] ✓ SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
+                else:
+                    BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar mensagem para o canal {chat_id}: {resposta.text}")
+            except Exception as msg_error:
+                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Exceção ao enviar mensagem para o canal {chat_id}: {str(msg_error)}")
+        
+        # Incrementa o contador global de sinais
+        bot2_contador_sinais += 1
+        
+        # Agendar o gif pós-sinal para 5 minutos depois
+        schedule.every(5).minutes.do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
+        
+        return True
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao enviar sinal: {str(e)}")
+        traceback.print_exc()
+        return False
+
+def bot2_iniciar_ciclo_sinais():
+    """
+    Agenda o envio de sinais do Bot 2 a cada hora no minuto 13.
+    """
+    global bot2_sinais_agendados
+    
+    try:
+        # Limpar agendamentos anteriores se houver
+        schedule.clear()
+        
+        # Configurar para enviar apenas no minuto 13 de cada hora
+        minuto_envio = 13
+        
+        # Agendar a cada hora no minuto 13
+        schedule.every().hour.at(f":{minuto_envio:02d}").do(bot2_send_message).tag('bot2_sinais')
+        BOT2_LOGGER.info(f"Sinal do Bot 2 agendado para minuto {minuto_envio} de cada hora")
+        
+        bot2_sinais_agendados = True
+        BOT2_LOGGER.info("Ciclo de sinais do Bot 2 iniciado com sucesso")
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao iniciar ciclo de sinais do Bot 2: {str(e)}")
+        bot2_sinais_agendados = False
+        raise
+
+# Funo para manter o Bot 2 em execuo
+def iniciar_ambos_bots():
+    """
+    Inicializa ambos os bots (Bot 1 e Bot 2) e mantém o programa em execução,
+    tratando as tarefas agendadas periodicamente.
+    """
+    global bot2_sinais_agendados
+    
+    try:
+        # Iniciar o Bot 2
+        if not bot2_sinais_agendados:
+            bot2_iniciar_ciclo_sinais()  # Agendar sinais para o Bot 2
+            
+        BOT2_LOGGER.info("=== BOT 2 INICIADO COM SUCESSO! ===")
+        BOT2_LOGGER.info("Aguardando envio de sinais nos horários programados...")
+        
+        # Loop principal para manter o programa em execução
+        while True:
+            # Executar tarefas agendadas
+            schedule.run_pending()
+            
+            # Pequena pausa para evitar uso excessivo de CPU
+            time.sleep(1)
+            
+    except KeyboardInterrupt:
+        BOT2_LOGGER.info("Bots encerrados pelo usuário (Ctrl+C)")
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro na execução dos bots: {str(e)}")
+        import traceback
+        BOT2_LOGGER.error(traceback.format_exc())
+        raise
 
 # Executar se este arquivo for o script principal
 if __name__ == "__main__":
