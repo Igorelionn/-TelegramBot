@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Bot Telegram 2 para envio de sinais em canais separados por idioma.
-Verso independente que no depende mais do Bot 1.
-Os sinais sero enviados da seguinte forma:
-- Canal Portugus: -1002424874613
-- Canal Ingls: -1002453956387
+Versão independente que não depende mais do Bot 1.
+Os sinais serão enviados da seguinte forma:
+- Canal Português: -1002424874613
+- Canal Inglês: -1002453956387
 - Canal Espanhol: -1002446547846
-O bot enviar 1 sinal por hora no minuto 13.
+O bot enviará 1 sinal por hora no minuto 13.
 """
 
 # Importaes necessrias
@@ -24,15 +24,15 @@ import sys
 import os
 from functools import lru_cache
 
-# Definio da varivel global assets
+# Definição da variável global assets
 assets = {}
 
-# Configurao do logger especfico para o Bot 2
+# Configuração do logger específico para o Bot 2
 BOT2_LOGGER = logging.getLogger('bot2')
 BOT2_LOGGER.setLevel(logging.INFO)
 bot2_formatter = logging.Formatter('%(asctime)s - BOT2 - %(levelname)s - %(message)s')
 
-# Evitar duplicao de handlers
+# Evitar duplicação de handlers
 if not BOT2_LOGGER.handlers:
     bot2_file_handler = logging.FileHandler("bot_telegram_bot2_logs.log")
     bot2_file_handler.setFormatter(bot2_formatter)
@@ -45,22 +45,22 @@ if not BOT2_LOGGER.handlers:
 # Credenciais Telegram
 BOT2_TOKEN = '7997585882:AAFDyG-BYskj1gyAbh17X5jd6DDClXdluww'
 
-# Configurao dos canais para cada idioma
+# Configuração dos canais para cada idioma
 BOT2_CANAIS_CONFIG = {
-    "-1002424874613": {  # Canal para mensagens em portugus
+    "-1002424874613": {  # Canal para mensagens em português
         "idioma": "pt",
         "link_corretora": "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack=",
         "fuso_horario": "America/Sao_Paulo"  # Brasil (UTC-3)
     },
-    "-1002453956387": {  # Canal para mensagens em ingls
+    "-1002453956387": {  # Canal para mensagens em inglês
         "idioma": "en",
         "link_corretora": "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack=",
-        "fuso_horario": "America/New_York"  # EUA (UTC-5 ou UTC-4 no horrio de vero)
+        "fuso_horario": "America/New_York"  # EUA (UTC-5 ou UTC-4 no horário de verão)
     },
     "-1002446547846": {  # Canal para mensagens em espanhol
         "idioma": "es",
         "link_corretora": "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack=",
-        "fuso_horario": "Europe/Madrid"  # Espanha (UTC+1 ou UTC+2 no horrio de vero)
+        "fuso_horario": "Europe/Madrid"  # Espanha (UTC+1 ou UTC+2 no horário de verão)
     }
 }
 
@@ -124,7 +124,7 @@ ATIVOS_CATEGORIAS = {
     ]
 }
 
-# Configuraes de horrios especficos para cada ativo
+# Configurações de horários específicos para cada ativo
 HORARIOS_PADRAO = {
     "USD/BRL_OTC": {
         "Monday": ["00:00-23:59"],
@@ -955,7 +955,7 @@ def parse_time_range(time_str):
 # Funo para verificar disponibilidade de ativos
 def is_asset_available(asset, current_time=None, current_day=None):
     """
-    Verifica se um ativo est disponvel no horrio atual.
+    Verifica se um ativo está disponível no horário atual.
     """
     if asset not in assets:
         return False
@@ -975,10 +975,10 @@ def is_asset_available(asset, current_time=None, current_day=None):
 
     return False
 
-# Funo para obter hora no fuso horrio de Braslia (especfica para Bot 2)
+# Funo para obter hora no fuso horário de Brasília (específica para Bot 2)
 def bot2_obter_hora_brasilia():
     """
-    Retorna a hora atual no fuso horrio de Braslia.
+    Retorna a hora atual no fuso horário de Brasília.
     """
     fuso_horario_brasilia = pytz.timezone('America/Sao_Paulo')
     return datetime.now(fuso_horario_brasilia)
@@ -1056,26 +1056,26 @@ def bot2_gerar_sinal_aleatorio():
         'tempo_expiracao_minutos': int(tempo_expiracao_minutos)  # Garante que seja inteiro
     }
 
-# Funo para obter hora no fuso horrio especfico (a partir da hora de Braslia)
+# Funo para obter hora no fuso horário específico (a partir da hora de Brasília)
 def bot2_converter_fuso_horario(hora_brasilia, fuso_destino):
     """
-    Converte uma hora do fuso horrio de Braslia para o fuso horrio de destino.
+    Converte uma hora do fuso horário de Brasília para o fuso horário de destino.
     
     Args:
-        hora_brasilia (datetime): Hora no fuso horrio de Braslia
-        fuso_destino (str): Nome do fuso horrio de destino (ex: 'America/New_York')
+        hora_brasilia (datetime): Hora no fuso horário de Brasília
+        fuso_destino (str): Nome do fuso horário de destino (ex: 'America/New_York')
         
     Returns:
-        datetime: Hora convertida para o fuso horrio de destino
+        datetime: Hora convertida para o fuso horário de destino
     """
-    # Garantir que hora_brasilia tenha informaes de fuso horrio
+    # Garantir que hora_brasilia tenha informações de fuso horário
     fuso_horario_brasilia = pytz.timezone('America/Sao_Paulo')
     
-    # Se a hora no tiver informao de fuso, adicionar
+    # Se a hora não tiver informação de fuso, adicionar
     if hora_brasilia.tzinfo is None:
         hora_brasilia = fuso_horario_brasilia.localize(hora_brasilia)
     
-    # Converter para o fuso horrio de destino
+    # Converter para o fuso horário de destino
     fuso_destino_tz = pytz.timezone(fuso_destino)
     hora_destino = hora_brasilia.astimezone(fuso_destino_tz)
     
@@ -1366,17 +1366,17 @@ def definir_horario_especial_diario():
         microsecond=0
     )
     
-    BOT2_LOGGER.info(f"Horrio especial dirio definido para: {horario_especial_diario.strftime('%H:%M')}")
+    BOT2_LOGGER.info(f"Horário especial diário definido para: {horario_especial_diario.strftime('%H:%M')}")
     
     # Se o horrio j passou hoje, reagenda para amanh
     if horario_especial_diario < horario_atual:
         horario_especial_diario = horario_especial_diario + timedelta(days=1)
-        BOT2_LOGGER.info(f"Horrio j passou hoje, reagendado para amanh: {horario_especial_diario.strftime('%H:%M')}")
+        BOT2_LOGGER.info(f"Horário já passou hoje, reagendado para amanhã: {horario_especial_diario.strftime('%H:%M')}")
 
 # Agendar a redefinio do horrio especial dirio  meia-noite
 def agendar_redefinicao_horario_especial():
     schedule.every().day.at("00:01").do(definir_horario_especial_diario)
-    BOT2_LOGGER.info("Agendada redefinio do horrio especial dirio para meia-noite e um minuto")
+    BOT2_LOGGER.info("Agendada redefinição do horário especial diário para meia-noite e um minuto")
 
 # Chamar a funo no incio para definir o horrio especial para hoje
 definir_horario_especial_diario()
