@@ -72,120 +72,90 @@ BOT2_LIMITE_SINAIS_POR_HORA = 1
 
 # Categorias de ativos
 ATIVOS_CATEGORIAS = {
-    "Binary": [
+    "Binary": [],
+    "Blitz": [],
+    "Digital": [
+        "Gold/Silver (OTC)",
+        "Worldcoin (OTC)",
+        "USD/THB (OTC)",
+        "ETH/USD (OTC)",
+        "CHF/JPY (OTC)",
+        "Pepe (OTC)",
+        "GBP/AUD (OTC)",
+        "GBP/CHF",
+        "GBP/CAD (OTC)",
+        "EUR/JPY (OTC)",
+        "AUD/CHF",
+        "GER 30 (OTC)",
+        "AUD/CHF (OTC)",
+        "EUR/AUD",
+        "USD/CAD (OTC)",
+        "BTC/USD",
+        "Amazon/Ebay (OTC)",
+        "Coca-Cola Company (OTC)",
+        "AIG (OTC)",
+        "Amazon/Alibaba (OTC)",
+        "Bitcoin Cash (OTC)",
+        "AUD/USD",
+        "DASH (OTC)",
+        "BTC/USD (OTC)",
+        "SP 35 (OTC)",
         "TRUMP Coin (OTC)",
         "US 100 (OTC)",
-        "AIG (OTC)",
-        "US 500 (OTC)",
-        "Injective (OTC)",
-        "ICP (OTC)",
-        "Cosmos (OTC)",
-        "Polkadot (OTC)",
-        "TON (OTC)",
-        "Celestia (OTC)",
-        "Bonk (OTC)",
-        "Beam (OTC)",
-        "Hamster Kombat (OTC)",
-        "NOT (OTC)",
-        "US 30 (OTC)",
-        "JP 225 (OTC)",
-        "HK 33 (OTC)",
-        "GER 30 (OTC)",
-        "SP 35 (OTC)",
-        "UK 100 (OTC)",
-        "FR 40 (OTC)",
-        "EU 50 (OTC)",
-        "US2000 (OTC)",
-        "Gold",
-        "EUR/THB (OTC)",
-        "JPY Currency Index",
-        "USD Currency Index",
-        "AUS 200 (OTC)",
-        "XAUUSD (OTC)",
-        "USD/BRL (OTC)",
-        "BTC/USD (OTC)",
-        "Google (OTC)",
-        "US 500 (OTC)",
-        "1000Sats (OTC)",
-        "Pepe (OTC)",
-        "Worldcoin (OTC)"
-    ],
-    "Blitz": [
-        "USD/BRL (OTC)",
-        "USOUSD (OTC)",
-        "BTC/USD (OTC)",
-        "Google (OTC)",
-        "EUR/JPY (OTC)",
-        "ETH/USD (OTC)",
-        "EUR/GBP (OTC)",
-        "Apple (OTC)",
-        "Amazon (OTC)",
-        "Nike, Inc. (OTC)",
-        "DOGECOIN (OTC)",
-        "Tesla (OTC)",
-        "1000Sats (OTC)",
-        "McDonald´s Corporation (OTC)",
-        "Meta (OTC)",
-        "Coca-Cola Company (OTC)",
-        "CARDANO (OTC)",
-        "EUR/USD (OTC)",
-        "PEN/USD (OTC)",
-        "AUD/CAD (OTC)",
-        "Tesla/Ford (OTC)",
-        "TRON/USD (OTC)",
-        "AUD/USD (OTC)",
-        "Alibaba Group Holding (OTC)",
-        "Snap Inc. (OTC)",
-        "AUD/CHF (OTC)",
-        "Amazon/Alibaba (OTC)",
-        "Pepe (OTC)",
-        "USD/ZAR (OTC)",
-        "Intel/IBM (OTC)",
-        "Alphabet/Microsoft (OTC)",
-        "Dogwifhat (OTC)",
-        "NEAR (OTC)",
-        "Ripple (OTC)",
-        "Ronin (OTC)",
-        "Stacks (OTC)",
-        "Immutable (OTC)",
-        "EOS (OTC)",
-        "Jupiter (OTC)",
-        "Polygon (OTC)",
-        "Arbitrum (OTC)",
-        "Sandbox (OTC)",
-        "Decentraland (OTC)",
-        "Sei (OTC)",
-        "IOTA (OTC)",
-        "Pyth (OTC)",
-        "Graph (OTC)",
-        "Floki (OTC)",
-        "Gala (OTC)",
-        "MELANIA Coin (OTC)",
-        "Cardano (OTC)",
-        "Worldcoin (OTC)",
-        "Nvidia/AMD (OTC)",
-        "Bitcoin Cash (OTC)",
-        "SOL/USD (OTC)",
-        "Chainlink (OTC)",
-        "Litecoin (OTC)",
-        "ORDI (OTC)",
-        "AUD/NZD (OTC)",
-        "GBP/CHF (OTC)",
-        "USD/SGD (OTC)",
-        "USD/CAD (OTC)",
         "EUR/CAD (OTC)",
-        "EUR/AUD (OTC)",
-        "GBP/CAD (OTC)",
-        "EUR/NZD (OTC)",
-        "GBP/AUD (OTC)",
-        "GBP/NZD (OTC)",
-        "GER30/UK100 (OTC)",
-        "USD/PLN (OTC)"
-    ],
-    "Digital": [
+        "HK 33 (OTC)",
+        "Alphabet/Microsoft (OTC)",
+        "1000Sats (OTC)",
+        "USD/ZAR (OTC)",
+        "Litecoin (OTC)",
+        "Hamster Kombat (OTC)",
+        "USD Currency Index (OTC)",
+        "AUS 200 (OTC)",
+        "USD/CAD",
+        "USD/JPY",
+        "MELANIA Coin (OTC)",
+        "JP 225 (OTC)",
+        "AUD/CAD (OTC)",
+        "AUD/JPY (OTC)",
         "US 500 (OTC)"
     ]
 }
+
+# Criando uma cópia para uso interno do bot 2
+BOT2_ATIVOS_CATEGORIAS = {}
+# Inicializando a variável assets (será preenchida com os horários dos ativos)
+assets = {}
+
+# Inicializar o mapeamento de ativos por categoria
+def inicializar_mapeamento_ativos():
+    # Limpar mapeamentos existentes
+    BOT2_ATIVOS_CATEGORIAS.clear()
+    assets.clear()
+    
+    # Mapear ativos para suas categorias
+    for categoria, lista_ativos in ATIVOS_CATEGORIAS.items():
+        for ativo in lista_ativos:
+            BOT2_ATIVOS_CATEGORIAS[ativo] = categoria
+            
+            # Configura os horários para cada ativo, convertendo para o formato correto se necessário
+            ativo_key = ativo.replace(" ", "_").replace("/", "_")
+            if ativo_key in HORARIOS_PADRAO:
+                assets[ativo] = HORARIOS_PADRAO[ativo_key]
+            elif ativo in HORARIOS_PADRAO:
+                assets[ativo] = HORARIOS_PADRAO[ativo]
+            else:
+                # Horário padrão para ativos sem configuração específica
+                assets[ativo] = {
+                    "Monday": ["00:00-23:59"],
+                    "Tuesday": ["00:00-23:59"],
+                    "Wednesday": ["00:00-23:59"],
+                    "Thursday": ["00:00-23:59"],
+                    "Friday": ["00:00-23:59"],
+                    "Saturday": ["00:00-23:59"],
+                    "Sunday": ["00:00-23:59"]
+                }
+    
+    BOT2_LOGGER.info(f"Mapeamento de ativos inicializado: {len(BOT2_ATIVOS_CATEGORIAS)} ativos configurados")
 
 # Configurações de horários específicos para cada ativo
 HORARIOS_PADRAO = {
@@ -235,13 +205,13 @@ HORARIOS_PADRAO = {
         "Sunday": ["00:00-23:59"]
     },
     "ETH/USD_OTC": {
-        "Monday": ["00:00-18:45", "19:15-23:59"],
-        "Tuesday": ["00:00-18:45", "19:15-23:59"],
-        "Wednesday": ["00:00-18:45", "19:15-23:59"],
-        "Thursday": ["00:00-18:45", "19:15-23:59"],
-        "Friday": ["00:00-18:45", "19:15-23:59"],
-        "Saturday": ["00:00-18:45", "19:15-23:59"],
-        "Sunday": ["00:00-18:45", "19:15-23:59"]
+        "Monday": ["00:00-19:45", "20:15-23:59"],
+        "Tuesday": ["00:00-19:45", "20:15-23:59"],
+        "Wednesday": ["00:00-19:45", "20:15-23:59"],
+        "Thursday": ["00:00-19:45", "20:15-23:59"],
+        "Friday": ["00:00-19:45", "20:15-23:59"],
+        "Saturday": ["00:00-19:45", "20:15-23:59"],
+        "Sunday": ["00:00-19:45", "20:15-23:59"]
     },
     "MELANIA_COIN_OTC": {
         "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
@@ -710,255 +680,278 @@ HORARIOS_PADRAO = {
         "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
         "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
         "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
-    }
+    },
+    "Gold/Silver_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Worldcoin_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "USD/THB_OTC": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+    },
+    "ETH/USD_OTC": {
+        "Monday": ["00:00-19:45", "20:15-23:59"],
+        "Tuesday": ["00:00-19:45", "20:15-23:59"],
+        "Wednesday": ["00:00-19:45", "20:15-23:59"],
+        "Thursday": ["00:00-19:45", "20:15-23:59"],
+        "Friday": ["00:00-19:45", "20:15-23:59"],
+        "Saturday": ["00:00-19:45", "20:15-23:59"],
+        "Sunday": ["00:00-19:45", "20:15-23:59"]
+    },
+    "CHF/JPY_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Pepe_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "GBP/AUD_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "GBP/CHF": {
+        "Monday": ["00:00-16:00"],
+        "Tuesday": ["00:00-16:00"],
+        "Wednesday": ["00:00-16:00"],
+        "Thursday": ["00:00-16:00"],
+        "Friday": ["00:00-14:00"],
+                "Saturday": [],
+                "Sunday": []
+    },
+    "GBP/CAD_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "EUR/JPY_OTC": {
+                "Monday": ["00:00-23:59"],
+                "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-01:00", "01:15-23:59"],
+                "Thursday": ["00:00-23:59"],
+                "Friday": ["00:00-23:59"],
+                "Saturday": ["00:00-23:59"],
+                "Sunday": ["00:00-23:59"]
+    },
+    "AUD/CHF": {
+        "Monday": ["00:00-16:00"],
+        "Tuesday": ["00:00-16:00"],
+        "Wednesday": ["00:00-16:00"],
+        "Thursday": ["00:00-16:00"],
+        "Friday": ["00:00-14:00"],
+                "Saturday": [],
+                "Sunday": []
+    },
+    "GER_30_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "AUD/CHF_OTC": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+    },
+    "EUR/AUD": {
+        "Monday": ["00:00-16:00"],
+        "Tuesday": ["00:00-16:00"],
+        "Wednesday": ["00:00-16:00"],
+        "Thursday": ["00:00-16:00"],
+        "Friday": ["00:00-14:00"],
+                "Saturday": [],
+                "Sunday": []
+    },
+    "USD/CAD_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "BTC/USD": {
+        "Monday": ["03:00-15:00"],
+        "Tuesday": ["03:00-15:00"],
+        "Wednesday": ["03:00-15:00"],
+        "Thursday": ["03:00-15:00"],
+        "Friday": ["03:00-15:00"],
+                "Saturday": [],
+                "Sunday": []
+    },
+    "Amazon/Ebay_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Coca-Cola_Company_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "AIG_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Amazon/Alibaba_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Bitcoin_Cash_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "USD Currency Index_OTC": {
+        "Monday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-10:00", "10:30-18:00"],
+        "Saturday": [],
+        "Sunday": ["19:00-23:59"]
+    },
+    "AUS_200_OTC": {  # Já existe, mas atualizando para os novos horários
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+    },
+    "USD/CAD": {
+        "Monday": ["03:00-15:00"],
+        "Tuesday": ["03:00-15:00", "21:00-23:59"],
+        "Wednesday": ["00:00-15:00"],
+        "Thursday": ["03:00-15:00"],
+        "Friday": ["03:00-15:00"],
+        "Saturday": [],
+        "Sunday": []
+    },
+    "USD/JPY": {
+        "Monday": ["00:00-14:00", "23:00-23:59"],
+        "Tuesday": ["00:00-14:00", "23:00-23:59"],
+        "Wednesday": ["00:00-14:00", "23:00-23:59"],
+        "Thursday": ["00:00-14:00", "23:00-23:59"],
+        "Friday": ["00:00-14:00"],
+        "Saturday": [],
+        "Sunday": ["23:00-23:59"]
+    },
+    "MELANIA_Coin_OTC": {  # Já existe, mantendo a mesma configuração
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "JP_225_OTC": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+    },
+    "AUD/CAD_OTC": {  # Já existe, atualizando a configuração
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+    },
+    "AUD/JPY_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "US_500_OTC": {  # Já existe, atualizando a configuração
+        "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+                "Friday": ["00:00-23:59"],
+                "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"]
+    },
 }
-
-# Mapeamento de ativos para padrões de horários
-assets = {
-    "USD/BRL (OTC)": HORARIOS_PADRAO["USD/BRL_OTC"],
-    "USOUSD (OTC)": HORARIOS_PADRAO["USOUSD_OTC"],
-    "BTC/USD (OTC)": HORARIOS_PADRAO["BTC/USD_OTC"],
-    "Google (OTC)": HORARIOS_PADRAO["Google_OTC"],
-    "EUR/JPY (OTC)": HORARIOS_PADRAO["EUR/JPY_OTC"],
-    "ETH/USD (OTC)": HORARIOS_PADRAO["ETH/USD_OTC"],
-    "MELANIA Coin (OTC)": HORARIOS_PADRAO["MELANIA_COIN_OTC"],
-    "EUR/GBP (OTC)": HORARIOS_PADRAO["EUR/GBP_OTC"],
-    "Apple (OTC)": HORARIOS_PADRAO["Apple_OTC"],
-    "Amazon (OTC)": HORARIOS_PADRAO["Amazon_OTC"],
-    "TRUMP Coin (OTC)": HORARIOS_PADRAO["TRUM_Coin_OTC"],
-    "Nike, Inc. (OTC)": HORARIOS_PADRAO["Nike_Inc_OTC"],
-    "DOGECOIN (OTC)": HORARIOS_PADRAO["DOGECOIN_OTC"],
-    "Tesla (OTC)": HORARIOS_PADRAO["Tesla_OTC"],
-    "SOL/USD (OTC)": HORARIOS_PADRAO["SOL/USD_OTC"],
-    "1000Sats (OTC)": HORARIOS_PADRAO["1000Sats_OTC"],
-    "XAUUSD (OTC)": HORARIOS_PADRAO["XAUUSD_OTC"],
-    "McDonald´s Corporation (OTC)": HORARIOS_PADRAO["McDonalds_Corporation_OTC"],
-    "Meta (OTC)": HORARIOS_PADRAO["Meta_OTC"],
-    "Coca-Cola Company (OTC)": HORARIOS_PADRAO["Coca_Cola_Company_OTC"],
-    "CARDANO (OTC)": HORARIOS_PADRAO["CARDANO_OTC"],
-    "EUR/USD (OTC)": HORARIOS_PADRAO["EUR/USD_OTC"],
-    "PEN/USD (OTC)": HORARIOS_PADRAO["PEN/USD_OTC"],
-    "Bitcoin Cash (OTC)": HORARIOS_PADRAO["Bitcoin_Cash_OTC"],
-    "AUD/CAD (OTC)": HORARIOS_PADRAO["AUD/CAD_OTC"],
-    "Tesla/Ford (OTC)": HORARIOS_PADRAO["Tesla/Ford_OTC"],
-    "US 100 (OTC)": HORARIOS_PADRAO["US_100_OTC"],
-    "FR 40 (OTC)": HORARIOS_PADRAO["FR_40_OTC"],
-    "AUS 200 (OTC)": HORARIOS_PADRAO["AUS_200_OTC"],
-    "US 500 (OTC)": HORARIOS_PADRAO["US_500_OTC"],
-    "EU 50 (OTC)": HORARIOS_PADRAO["EU_50_OTC"],
-    "Gold": HORARIOS_PADRAO["Gold"],
-    "XAUUSD (OTC)": HORARIOS_PADRAO["XAUUSD_OTC"],
-    "US2000 (OTC)": HORARIOS_PADRAO["US2000_OTC"],
-    "Gala (OTC)": HORARIOS_PADRAO["Gala_OTC"],
-    "Floki (OTC)": HORARIOS_PADRAO["Floki_OTC"],
-    "Graph (OTC)": HORARIOS_PADRAO["Graph_OTC"],
-    "Intel/IBM (OTC)": HORARIOS_PADRAO["Intel_IBM_OTC"],
-    "1000Sats (OTC)": HORARIOS_PADRAO["1000Sats_OTC"],
-    "Pyth (OTC)": HORARIOS_PADRAO["Pyth_OTC"],
-    "IOTA (OTC)": HORARIOS_PADRAO["IOTA_OTC"],
-    "DOGECOIN (OTC)": HORARIOS_PADRAO["DOGECOIN_OTC"],
-    "Sei (OTC)": HORARIOS_PADRAO["Sei_OTC"],
-    "Decentraland (OTC)": HORARIOS_PADRAO["Decentraland_OTC"],
-    "PEN/USD (OTC)": HORARIOS_PADRAO["PEN_USD_OTC"],
-    "Sandbox (OTC)": HORARIOS_PADRAO["Sandbox_OTC"],
-    "TRON/USD (OTC)": HORARIOS_PADRAO["TRON_USD_OTC"],
-    "Ripple (OTC)": HORARIOS_PADRAO["Ripple_OTC"],
-    "NEAR (OTC)": HORARIOS_PADRAO["NEAR_OTC"],
-    "Arbitrum (OTC)": HORARIOS_PADRAO["Arbitrum_OTC"],
-    "Polygon (OTC)": HORARIOS_PADRAO["Polygon_OTC"],
-    "EOS (OTC)": HORARIOS_PADRAO["EOS_OTC"],
-    "Alphabet/Microsoft (OTC)": HORARIOS_PADRAO["Alphabet_Microsoft_OTC"],
-    "Jupiter (OTC)": HORARIOS_PADRAO["Jupiter_OTC"],
-    "Dogwifhat (OTC)": HORARIOS_PADRAO["Dogwifhat_OTC"],
-    "Immutable (OTC)": HORARIOS_PADRAO["Immutable_OTC"],
-    "Stacks (OTC)": HORARIOS_PADRAO["Stacks_OTC"],
-    "Pepe (OTC)": HORARIOS_PADRAO["Pepe_OTC"],
-    "Ronin (OTC)": HORARIOS_PADRAO["Ronin_OTC"]
-}
-
-# Função para inicializar os horários dos ativos que não estão explicitamente mapeados
-def inicializar_horarios_ativos():
-    """
-    Adiciona horários padrão para todos os ativos listados em ATIVOS_CATEGORIAS
-    que não têm uma configuração específica em assets.
-    """
-    for ativo in ATIVOS_CATEGORIAS:
-        if ativo not in assets:
-            # Define horário padrão baseado na categoria do ativo
-            categoria = ATIVOS_CATEGORIAS[ativo]
-            if categoria == "Blitz":
-                assets[ativo] = {
-                    "Monday": ["00:00-23:59"],
-                    "Tuesday": ["00:00-23:59"],
-                    "Wednesday": ["00:00-23:59"],
-                    "Thursday": ["00:00-23:59"],
-                    "Friday": ["00:00-23:59"],
-                    "Saturday": ["00:00-23:59"],
-                    "Sunday": ["00:00-23:59"]
-                }
-            elif categoria == "Digital":
-                assets[ativo] = {
-                    "Monday": ["00:00-23:59"],
-                    "Tuesday": ["00:00-23:59"],
-                    "Wednesday": ["00:00-23:59"],
-                    "Thursday": ["00:00-23:59"],
-                    "Friday": ["00:00-23:59"],
-                    "Saturday": ["00:00-23:59"],
-                    "Sunday": ["00:00-23:59"]
-                }
-            else:  # Binary e outros
-                assets[ativo] = {
-                    "Monday": ["00:00-23:59"],
-                    "Tuesday": ["00:00-23:59"],
-                    "Wednesday": ["00:00-23:59"],
-                    "Thursday": ["00:00-23:59"],
-                    "Friday": ["00:00-23:59"],
-                    "Saturday": ["00:00-23:59"],
-                    "Sunday": ["00:00-23:59"]
-                }
-
-# Inicializa os horários dos ativos
-inicializar_horarios_ativos()
-
-# Lista de ativos disponíveis para negociação
-ATIVOS_FORNECIDOS = list(ATIVOS_CATEGORIAS.keys())
-
-# Categorias dos ativos do Bot 2 (usando as mesmas do Bot 1)
-BOT2_ATIVOS_CATEGORIAS = ATIVOS_CATEGORIAS
-
-# Mapeamento de ativos para padrões de horários do Bot 2 (usando os mesmos do Bot 1)
-BOT2_ASSETS = assets
-
-# Função para adicionar ativos
-def adicionar_forex(lista_ativos):
-    for ativo in lista_ativos:
-        # Usar horário específico do ativo se disponível, senão usar horário genérico
-        if ativo in HORARIOS_PADRAO:
-            assets[ativo] = HORARIOS_PADRAO[ativo]
-        else:
-            # Criar um horário padrão para ativos sem configuração específica
-            assets[ativo] = {
-                "Monday": ["00:00-23:59"],
-                "Tuesday": ["00:00-23:59"],
-                "Wednesday": ["00:00-23:59"],
-                "Thursday": ["00:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": [],
-                "Sunday": []
-            }
-        ATIVOS_CATEGORIAS[ativo] = "Binary"
-
-def adicionar_otc(lista_ativos):
-    for ativo in lista_ativos:
-        if ativo in HORARIOS_PADRAO:
-            assets[ativo] = HORARIOS_PADRAO[ativo]
-        else:
-            assets[ativo] = {
-                "Monday": ["00:00-23:59"],
-                "Tuesday": ["00:00-23:59"],
-                "Wednesday": ["00:00-23:59"],
-                "Thursday": ["00:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": ["00:00-23:59"],
-                "Sunday": ["00:00-23:59"]
-            }
-        ATIVOS_CATEGORIAS[ativo] = "Binary"
-
-def adicionar_digital(lista_ativos):
-    for ativo in lista_ativos:
-        if ativo in HORARIOS_PADRAO:
-            assets[ativo] = HORARIOS_PADRAO[ativo]
-        else:
-            assets[ativo] = {
-                "Monday": ["00:00-23:59"],
-                "Tuesday": ["00:00-23:59"],
-                "Wednesday": ["00:00-23:59"],
-                "Thursday": ["00:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": [],
-                "Sunday": []
-            }
-        ATIVOS_CATEGORIAS[ativo] = "Digital"
-
-def adicionar_digital_otc(lista_ativos):
-    for ativo in lista_ativos:
-        if ativo in HORARIOS_PADRAO:
-            assets[ativo] = HORARIOS_PADRAO[ativo]
-        else:
-            assets[ativo] = {
-                "Monday": ["00:00-23:59"],
-                "Tuesday": ["00:00-23:59"],
-                "Wednesday": ["00:00-23:59"],
-                "Thursday": ["00:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": ["00:00-23:59"],
-                "Sunday": ["00:00-23:59"]
-            }
-        ATIVOS_CATEGORIAS[ativo] = "Digital"
-
-def adicionar_crypto(lista_ativos):
-    for ativo in lista_ativos:
-        if ativo in HORARIOS_PADRAO:
-            assets[ativo] = HORARIOS_PADRAO[ativo]
-        else:
-            assets[ativo] = {
-                "Monday": ["00:00-23:59"],
-                "Tuesday": ["00:00-23:59"],
-                "Wednesday": ["00:00-23:59"],
-                "Thursday": ["00:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": ["00:00-23:59"],
-                "Sunday": ["00:00-23:59"]
-            }
-        ATIVOS_CATEGORIAS[ativo] = "Binary"
-
-def adicionar_stocks(lista_ativos):
-    for ativo in lista_ativos:
-        if ativo in HORARIOS_PADRAO:
-            assets[ativo] = HORARIOS_PADRAO[ativo]
-        else:
-            assets[ativo] = {
-                "Monday": ["09:30-16:00"],
-                "Tuesday": ["09:30-16:00"],
-                "Wednesday": ["09:30-16:00"],
-                "Thursday": ["09:30-16:00"],
-                "Friday": ["09:30-16:00"],
-                "Saturday": [],
-                "Sunday": []
-            }
-        ATIVOS_CATEGORIAS[ativo] = "Binary"
-
-def adicionar_indices(lista_ativos):
-    for ativo in lista_ativos:
-        if ativo in HORARIOS_PADRAO:
-            assets[ativo] = HORARIOS_PADRAO[ativo]
-        else:
-            assets[ativo] = {
-                "Monday": ["00:00-23:59"],
-                "Tuesday": ["00:00-23:59"],
-                "Wednesday": ["00:00-23:59"],
-                "Thursday": ["00:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": ["00:00-23:59"],
-                "Sunday": ["00:00-23:59"]
-            }
-        ATIVOS_CATEGORIAS[ativo] = "Binary"
-
-def adicionar_commodities(lista_ativos):
-    for ativo in lista_ativos:
-        if ativo in HORARIOS_PADRAO:
-            assets[ativo] = HORARIOS_PADRAO[ativo]
-        else:
-            assets[ativo] = {
-                "Monday": ["00:00-23:59"],
-                "Tuesday": ["00:00-23:59"],
-                "Wednesday": ["00:00-23:59"],
-                "Thursday": ["00:00-23:59"],
-                "Friday": ["00:00-23:59"],
-                "Saturday": [],
-                "Sunday": []
-            }
-        ATIVOS_CATEGORIAS[ativo] = "Binary"
 
 def adicionar_blitz(lista_ativos):
     for ativo in lista_ativos:
@@ -1032,7 +1025,13 @@ def bot2_verificar_disponibilidade():
     current_time = agora.strftime("%H:%M")
     current_day = agora.strftime("%A")
 
-    available_assets = [asset for asset in BOT2_ATIVOS_CATEGORIAS.keys()
+    # Obter todos os ativos de todas as categorias
+    todos_ativos = []
+    for categoria, ativos in ATIVOS_CATEGORIAS.items():
+        todos_ativos.extend(ativos)
+
+    # Verificar quais estão disponíveis no horário atual
+    available_assets = [asset for asset in todos_ativos
                        if is_asset_available(asset, current_time, current_day)]
 
     return available_assets
@@ -1048,28 +1047,22 @@ def bot2_gerar_sinal_aleatorio():
 
     ativo = random.choice(ativos_disponiveis)
     direcao = random.choice(['buy', 'sell'])
-    categoria = BOT2_ATIVOS_CATEGORIAS.get(ativo, "Não categorizado")
-
-    # Definir o tempo de expiração baseado na categoria
-    if categoria == "Blitz":
-        expiracao_segundos = random.choice([5, 10, 15, 30])
-        tempo_expiracao_minutos = 1  # Fixo em 1 minuto para Blitz
-        expiracao_texto = f"⏳ Expiração: {expiracao_segundos} segundos"
-
-    elif categoria == "Digital":
-        tempo_expiracao_minutos = random.choice([1, 5])
-        expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
-        if tempo_expiracao_minutos == 1:
-            expiracao_texto = f"⏳ Expiração: 1 minuto ({expiracao_time.strftime('%H:%M')})"
+    
+    # Determinar a categoria baseada no ativo selecionado
+    for categoria_nome, lista_ativos in ATIVOS_CATEGORIAS.items():
+        if ativo in lista_ativos:
+            categoria = categoria_nome
+            break
         else:
-            expiracao_texto = f"⏳ Expiração: {tempo_expiracao_minutos} minutos ({expiracao_time.strftime('%H:%M')})"
-    elif categoria == "Binary":
+            categoria = "Não categorizado"
+
+    # Defina o tempo de expiração fixo em 5 minutos para todas as categorias
+    tempo_expiracao_minutos = 5
+    if categoria == "Binary":
         tempo_expiracao_minutos = 1
+    
         expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
-        expiracao_texto = f"⏳ Expiração: 1 minuto ({expiracao_time.strftime('%H:%M')})"
-    else:
-        tempo_expiracao_minutos = 5
-        expiracao_texto = "⏳ Expiração: até 5 minutos"
+    expiracao_texto = f"⏳ Expiração: {tempo_expiracao_minutos} minutos ({expiracao_time.strftime('%H:%M')})"
 
     return {
         'ativo': ativo,
@@ -1152,11 +1145,11 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     
     # Calcular horários de gale (reentrada) no fuso horário de Brasília
     # 1º GALE é o horário de expiração + tempo de expiração
-    hora_gale1_br = hora_expiracao_br + timedelta(minutes=tempo_expiracao_minutos)
+    hora_gale1_br = hora_expiracao_br + timedelta(minutes=1)
     # 2º GALE é o 1º GALE + tempo de expiração
-    hora_gale2_br = hora_gale1_br + timedelta(minutes=tempo_expiracao_minutos)
+    hora_gale2_br = hora_gale1_br + timedelta(minutes=1)
     # 3º GALE é o 2º GALE + tempo de expiração
-    hora_gale3_br = hora_gale2_br + timedelta(minutes=tempo_expiracao_minutos)
+    hora_gale3_br = hora_gale2_br + timedelta(minutes=1)
     
     # Converter gales para o fuso horário do canal
     hora_gale1_local = bot2_converter_fuso_horario(hora_gale1_br, fuso_horario)
@@ -2204,6 +2197,9 @@ def iniciar_ambos_bots():
         # Configurar logs e inicializar variáveis
         BOT2_LOGGER.info("Iniciando o Bot 2...")
         
+        # Inicializar mapeamento de ativos e categorias
+        inicializar_mapeamento_ativos()
+        
         # Definir o horário especial diário para a imagem especial
         definir_horario_especial_diario()
         agendar_redefinicao_horario_especial()
@@ -2337,3 +2333,455 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Erro ao iniciar bots: {str(e)}")
         traceback.print_exc()
+
+def inicializar_horarios_ativos():
+    """
+    Adiciona horários padrão para todos os ativos listados em ATIVOS_CATEGORIAS
+    que não têm uma configuração específica em assets.
+    """
+    # Atualizar ATIVOS_CATEGORIAS para cada ativo na lista Digital
+    for ativo in ATIVOS_CATEGORIAS["Digital"]:
+        ATIVOS_CATEGORIAS[ativo] = "Digital"
+        
+        # Configurar horários específicos para cada ativo
+        if ativo == "Gold/Silver (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "Worldcoin (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "USD/THB (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+            }
+        elif ativo == "ETH/USD (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-19:45", "20:15-23:59"],
+                "Tuesday": ["00:00-19:45", "20:15-23:59"],
+                "Wednesday": ["00:00-19:45", "20:15-23:59"],
+                "Thursday": ["00:00-19:45", "20:15-23:59"],
+                "Friday": ["00:00-19:45", "20:15-23:59"],
+                "Saturday": ["00:00-19:45", "20:15-23:59"],
+                "Sunday": ["00:00-19:45", "20:15-23:59"]
+            }
+        elif ativo == "CHF/JPY (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "Pepe (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "GBP/AUD (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "GBP/CHF":
+            assets[ativo] = {
+                "Monday": ["00:00-16:00"],
+                "Tuesday": ["00:00-16:00"],
+                "Wednesday": ["00:00-16:00"],
+                "Thursday": ["00:00-16:00"],
+                "Friday": ["00:00-14:00"],
+                "Saturday": [],
+                "Sunday": []
+            }
+        elif ativo == "GBP/CAD (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "EUR/JPY (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-23:59"],
+                "Tuesday": ["00:00-23:59"],
+                "Wednesday": ["00:00-01:00", "01:15-23:59"],
+                "Thursday": ["00:00-23:59"],
+                "Friday": ["00:00-23:59"],
+                "Saturday": ["00:00-23:59"],
+                "Sunday": ["00:00-23:59"]
+            }
+        elif ativo == "AUD/CHF":
+            assets[ativo] = {
+                "Monday": ["00:00-16:00"],
+                "Tuesday": ["00:00-16:00"],
+                "Wednesday": ["00:00-16:00"],
+                "Thursday": ["00:00-16:00"],
+                "Friday": ["00:00-14:00"],
+                "Saturday": [],
+                "Sunday": []
+            }
+        elif ativo == "GER 30 (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "AUD/CHF (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+            }
+        elif ativo == "EUR/AUD":
+            assets[ativo] = {
+                "Monday": ["00:00-16:00"],
+                "Tuesday": ["00:00-16:00"],
+                "Wednesday": ["00:00-16:00"],
+                "Thursday": ["00:00-16:00"],
+                "Friday": ["00:00-14:00"],
+                "Saturday": [],
+                "Sunday": []
+            }
+        elif ativo == "USD/CAD (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "BTC/USD":
+            assets[ativo] = {
+                "Monday": ["03:00-15:00"],
+                "Tuesday": ["03:00-15:00"],
+                "Wednesday": ["03:00-15:00"],
+                "Thursday": ["03:00-15:00"],
+                "Friday": ["03:00-15:00"],
+                "Saturday": [],
+                "Sunday": []
+            }
+        elif ativo == "Amazon/Ebay (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "Coca-Cola Company (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "AIG (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "Amazon/Alibaba (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "Bitcoin Cash (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "AUD/USD":
+            assets[ativo] = {
+                "Monday": ["02:00-06:00", "09:30-15:00"],
+                "Tuesday": ["02:00-06:00", "09:30-15:00"],
+                "Wednesday": ["02:00-06:00", "09:30-15:00"],
+                "Thursday": ["02:00-06:00", "09:30-15:00"],
+                "Friday": ["02:00-06:00", "09:30-15:00"],
+                "Saturday": [],
+                "Sunday": []
+            }
+        elif ativo == "DASH (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "BTC/USD (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "SP 35 (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "TRUMP Coin (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "US 100 (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+                "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+                "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+                "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+                "Friday": ["00:00-23:59"],
+                "Saturday": ["00:00-23:59"],
+                "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"]
+            }
+        elif ativo == "EUR/CAD (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "HK 33 (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+            }
+        elif ativo == "Alphabet/Microsoft (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "1000Sats (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "USD/ZAR (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "Litecoin (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+            }
+        elif ativo == "Hamster Kombat (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+            }
+        elif ativo == "USD Currency Index (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+                "Tuesday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+                "Wednesday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+                "Thursday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+                "Friday": ["00:00-10:00", "10:30-18:00"],
+                "Saturday": [],
+                "Sunday": ["19:00-23:59"]
+            }
+        elif ativo == "AUS 200 (OTC)":  # Já existe, mas atualizando para os novos horários
+            assets[ativo] = {
+                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+            }
+        elif ativo == "USD/CAD":
+            assets[ativo] = {
+                "Monday": ["03:00-15:00"],
+                "Tuesday": ["03:00-15:00", "21:00-23:59"],
+                "Wednesday": ["00:00-15:00"],
+                "Thursday": ["03:00-15:00"],
+                "Friday": ["03:00-15:00"],
+                "Saturday": [],
+                "Sunday": []
+            }
+        elif ativo == "USD/JPY":
+            assets[ativo] = {
+                "Monday": ["00:00-14:00", "23:00-23:59"],
+                "Tuesday": ["00:00-14:00", "23:00-23:59"],
+                "Wednesday": ["00:00-14:00", "23:00-23:59"],
+                "Thursday": ["00:00-14:00", "23:00-23:59"],
+                "Friday": ["00:00-14:00"],
+                "Saturday": [],
+                "Sunday": ["23:00-23:59"]
+            }
+        elif ativo == "MELANIA Coin (OTC)":  # Já existe, mantendo a mesma configuração
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "JP 225 (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+            }
+        elif ativo == "AUD/CAD (OTC)":  # Já existe, atualizando a configuração
+            assets[ativo] = {
+                "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+                "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+            }
+        elif ativo == "AUD/JPY (OTC)":
+            assets[ativo] = {
+                "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+                "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+            }
+        elif ativo == "US 500 (OTC)":  # Já existe, atualizando a configuração
+            assets[ativo] = {
+                "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+                "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+                "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+                "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+                "Friday": ["00:00-23:59"],
+                "Saturday": ["00:00-23:59"],
+                "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"]
+            }
+        else:
+            # Para outros ativos sem configuração específica
+            assets[ativo] = {
+                "Monday": ["00:00-23:59"],
+                "Tuesday": ["00:00-23:59"],
+                "Wednesday": ["00:00-23:59"],
+                "Thursday": ["00:00-23:59"],
+                "Friday": ["00:00-23:59"],
+                "Saturday": ["00:00-23:59"],
+                "Sunday": ["00:00-23:59"]
+            }
