@@ -1034,10 +1034,10 @@ def bot2_gerar_sinal_aleatorio():
     direcao = random.choice(['buy', 'sell'])
     categoria = BOT2_ATIVOS_CATEGORIAS.get(ativo, "No categorizado")
 
-    # Defina o tempo de expirao fixo em 1 minuto para todas as categorias
-        tempo_expiracao_minutos = 1
-        expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
-    expiracao_texto = f"? Expirao: {tempo_expiracao_minutos} minuto ({expiracao_time.strftime('%H:%M')})"
+    # Defina o tempo de expiração fixo em 1 minuto para todas as categorias
+    tempo_expiracao_minutos = 1
+    expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
+    expiracao_texto = f"🕒 Expiração: {tempo_expiracao_minutos} minuto ({expiracao_time.strftime('%H:%M')})"
 
     return {
         'ativo': ativo,
@@ -1899,48 +1899,48 @@ def bot2_enviar_gif_especial_pt():
 
 def bot2_enviar_gif_especial_en():
     """Envia um GIF especial para o canal em inglês."""
-    agora = bot2_obter_hora_brasilia()
-    horario_atual = agora.strftime("%H:%M:%S")
-    BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO GIF ESPECIAL para o canal EN")
-    
-    # Obter chat_id para o idioma EN
-    chat_id_en = None
-    for chat_id, config in BOT2_CANAIS_CONFIG.items():
-        if config["idioma"] == "en":
-            chat_id_en = chat_id
-            break
-    
-    if not chat_id_en:
-        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Não foi encontrado canal para o idioma EN")
-        return
-    
-    # Diretório para os GIFs especiais em inglês
-    dir_especial_en = os.path.join(VIDEOS_ESPECIAL_DIR, "en")
-    
-    # Verificar se o diretório existe
-    if not os.path.exists(dir_especial_en):
-        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório {dir_especial_en} não encontrado")
-        # Tentar usar o diretório PT como fallback
-        dir_especial_en = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
-        if not os.path.exists(dir_especial_en):
-            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório fallback {dir_especial_en} não encontrado")
-            return
-
-    # Listar todos os GIFs disponíveis no diretório
-    arquivos_gif = [f for f in os.listdir(dir_especial_en) if f.lower().endswith('.gif')]
-    
-    if not arquivos_gif:
-        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Nenhum GIF encontrado no diretório {dir_especial_en}")
-        return
-    
-    # Escolher um GIF aleatório
-    gif_escolhido = random.choice(arquivos_gif)
-    caminho_gif = os.path.join(dir_especial_en, gif_escolhido)
-    
-    BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF especial: {caminho_gif}")
-    
-    # Enviar o GIF como animação para visualização automática
     try:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO GIF ESPECIAL para o canal EN")
+        
+        # Obter chat_id para o idioma EN
+        chat_id_en = None
+        for chat_id, config in BOT2_CANAIS_CONFIG.items():
+            if config["idioma"] == "en":
+                chat_id_en = chat_id
+                break
+        
+        if not chat_id_en:
+            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Não foi encontrado canal para o idioma EN")
+            return False
+        
+        # Diretório para os GIFs especiais em inglês
+        dir_especial_en = os.path.join(VIDEOS_ESPECIAL_DIR, "en")
+        
+        # Verificar se o diretório existe
+        if not os.path.exists(dir_especial_en):
+            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório {dir_especial_en} não encontrado")
+            # Tentar usar o diretório PT como fallback
+            dir_especial_en = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
+            if not os.path.exists(dir_especial_en):
+                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório fallback {dir_especial_en} não encontrado")
+                return False
+        
+        # Listar todos os GIFs disponíveis no diretório
+        arquivos_gif = [f for f in os.listdir(dir_especial_en) if f.lower().endswith('.gif')]
+        
+        if not arquivos_gif:
+            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Nenhum GIF encontrado no diretório {dir_especial_en}")
+            return False
+        
+        # Escolher um GIF aleatório
+        gif_escolhido = random.choice(arquivos_gif)
+        caminho_gif = os.path.join(dir_especial_en, gif_escolhido)
+        
+        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF especial: {caminho_gif}")
+        
+        # Enviar o GIF como animação para visualização automática
         with open(caminho_gif, 'rb') as animation_file:
             url_animation = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
             
@@ -1976,55 +1976,55 @@ def bot2_enviar_gif_especial_en():
                     return True
                 else:
                     BOT2_LOGGER.error(f"[{horario_atual}] ✗ Falha também no método alternativo: {alt_response.text}")
+                    return False
     except Exception as e:
         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial: {str(e)}")
-    
-    return False
+        return False
 
 def bot2_enviar_gif_especial_es():
     """Envia um GIF especial para o canal em espanhol."""
-    agora = bot2_obter_hora_brasilia()
-    horario_atual = agora.strftime("%H:%M:%S")
-    BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO GIF ESPECIAL para o canal ES")
-    
-    # Obter chat_id para o idioma ES
-    chat_id_es = None
-    for chat_id, config in BOT2_CANAIS_CONFIG.items():
-        if config["idioma"] == "es":
-            chat_id_es = chat_id
-            break
-    
-    if not chat_id_es:
-        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Não foi encontrado canal para o idioma ES")
-        return
-    
-    # Diretório para os GIFs especiais em espanhol
-    dir_especial_es = os.path.join(VIDEOS_ESPECIAL_DIR, "es")
-    
-    # Verificar se o diretório existe
-    if not os.path.exists(dir_especial_es):
-        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório {dir_especial_es} não encontrado")
-        # Tentar usar o diretório PT como fallback
-        dir_especial_es = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
-        if not os.path.exists(dir_especial_es):
-            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório fallback {dir_especial_es} não encontrado")
-            return
-    
-    # Listar todos os GIFs disponíveis no diretório
-    arquivos_gif = [f for f in os.listdir(dir_especial_es) if f.lower().endswith('.gif')]
-    
-    if not arquivos_gif:
-        BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Nenhum GIF encontrado no diretório {dir_especial_es}")
-        return
-    
-    # Escolher um GIF aleatório
-    gif_escolhido = random.choice(arquivos_gif)
-    caminho_gif = os.path.join(dir_especial_es, gif_escolhido)
-    
-    BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF especial: {caminho_gif}")
-    
-    # Enviar o GIF como animação para visualização automática
     try:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO GIF ESPECIAL para o canal ES")
+        
+        # Obter chat_id para o idioma ES
+        chat_id_es = None
+        for chat_id, config in BOT2_CANAIS_CONFIG.items():
+            if config["idioma"] == "es":
+                chat_id_es = chat_id
+                break
+        
+        if not chat_id_es:
+            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Não foi encontrado canal para o idioma ES")
+            return False
+        
+        # Diretório para os GIFs especiais em espanhol
+        dir_especial_es = os.path.join(VIDEOS_ESPECIAL_DIR, "es")
+        
+        # Verificar se o diretório existe
+        if not os.path.exists(dir_especial_es):
+            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório {dir_especial_es} não encontrado")
+            # Tentar usar o diretório PT como fallback
+            dir_especial_es = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
+            if not os.path.exists(dir_especial_es):
+                BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Diretório fallback {dir_especial_es} não encontrado")
+                return False
+        
+        # Listar todos os GIFs disponíveis no diretório
+        arquivos_gif = [f for f in os.listdir(dir_especial_es) if f.lower().endswith('.gif')]
+        
+        if not arquivos_gif:
+            BOT2_LOGGER.error(f"[{horario_atual}] ERRO: Nenhum GIF encontrado no diretório {dir_especial_es}")
+            return False
+        
+        # Escolher um GIF aleatório
+        gif_escolhido = random.choice(arquivos_gif)
+        caminho_gif = os.path.join(dir_especial_es, gif_escolhido)
+        
+        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF especial: {caminho_gif}")
+        
+        # Enviar o GIF como animação para visualização automática
         with open(caminho_gif, 'rb') as animation_file:
             url_animation = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
             
