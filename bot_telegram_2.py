@@ -6,7 +6,7 @@ Os sinais sero enviados da seguinte forma:
 - Canal Portugus: -1002424874613
 - Canal Ingls: -1002453956387
 - Canal Espanhol: -1002446547846
-O bot enviar 3 sinais por hora nos minutos 10, 30 e 50.
+O bot enviar 1 sinal por hora no minuto 13.
 """
 
 # Importaes necessrias
@@ -985,8 +985,8 @@ def bot2_obter_hora_brasilia():
 
 def bot2_verificar_disponibilidade():
     """
-    Verifica quais ativos esto disponveis para o sinal atual.
-    Retorna uma lista de ativos disponveis.
+    Verifica quais ativos da categoria Digital estão disponíveis para o sinal atual.
+    Retorna uma lista de ativos disponíveis.
     """
     global BOT2_ATIVOS_CATEGORIAS
     
@@ -1000,34 +1000,18 @@ def bot2_verificar_disponibilidade():
         for categoria, ativos in ATIVOS_CATEGORIAS.items():
             for ativo in ativos:
                 BOT2_ATIVOS_CATEGORIAS[ativo] = categoria
-    
-    # Se BOT2_ATIVOS_CATEGORIAS ainda estiver vazio após tentativa de inicialização
-    if not BOT2_ATIVOS_CATEGORIAS:
-        BOT2_LOGGER.warning(f"BOT2_ATIVOS_CATEGORIAS não inicializado ou vazio. Usando ativos padrão.")
-        # Se não houver ativos disponíveis, usar ativos padrão como fallback
-        default_assets = ["Immutable (OTC)", "Ripple (OTC)", "SOL/USD (OTC)"]
-        return default_assets
 
-    # Verificar ativos disponíveis
+    # Verificar ativos disponíveis apenas da categoria Digital
     available_assets = []
     
-    # Primeira verificação: procurar ativos que estejam especificamente em ATIVOS_CATEGORIAS["Digital"]
     for ativo in ATIVOS_CATEGORIAS["Digital"]:
         if is_asset_available(ativo, current_time, current_day):
             available_assets.append(ativo)
     
-    # Se não houver ativos disponíveis na categoria Digital, tentar outras categorias
+    # Se não houver ativos disponíveis, logar aviso
     if not available_assets:
-        for ativo in BOT2_ATIVOS_CATEGORIAS.keys():
-            if is_asset_available(ativo, current_time, current_day):
-                available_assets.append(ativo)
+        BOT2_LOGGER.warning(f"Nenhum ativo da categoria Digital disponível no momento.")
     
-    # Se ainda não houver ativos disponíveis, usar ativos padrão como fallback
-    if not available_assets:
-        BOT2_LOGGER.warning(f"Nenhum ativo disponível no momento. Usando ativos padrão.")
-        fallback_assets = ["Immutable (OTC)", "Ripple (OTC)", "SOL/USD (OTC)"]
-        return fallback_assets
-
     return available_assets
 
 def bot2_gerar_sinal_aleatorio():
@@ -1037,18 +1021,32 @@ def bot2_gerar_sinal_aleatorio():
     """
     global BOT2_ATIVOS_CATEGORIAS
     
-    ativos_disponiveis = bot2_verificar_disponibilidade()
+    # Verificar apenas ativos da categoria Digital
+    ativos_disponiveis = []
+    
+    # Obter a hora atual e o dia da semana
+    agora = bot2_obter_hora_brasilia()
+    current_time = agora.strftime("%H:%M")
+    current_day = agora.strftime("%A")
+    
+    # Buscar apenas ativos da categoria Digital que estão disponíveis no momento
+    for ativo in ATIVOS_CATEGORIAS["Digital"]:
+        if is_asset_available(ativo, current_time, current_day):
+            ativos_disponiveis.append(ativo)
+    
+    # Se não houver ativos disponíveis, retornar None
     if not ativos_disponiveis:
+        BOT2_LOGGER.warning(f"Nenhum ativo da categoria Digital disponível no momento.")
         return None
 
     ativo = random.choice(ativos_disponiveis)
     direcao = random.choice(['buy', 'sell'])
-    categoria = BOT2_ATIVOS_CATEGORIAS.get(ativo, "No categorizado")
+    categoria = "Digital"  # Sempre usar a categoria Digital
 
-    # Defina o tempo de expiração fixo em 1 minuto para todas as categorias
-    tempo_expiracao_minutos = 1
+    # Definir o tempo de expiração fixo em 5 minutos para todos os sinais
+    tempo_expiracao_minutos = 5
     expiracao_time = bot2_obter_hora_brasilia() + timedelta(minutes=tempo_expiracao_minutos)
-    expiracao_texto = f"🕒 Expiração: {tempo_expiracao_minutos} minuto ({expiracao_time.strftime('%H:%M')})"
+    expiracao_texto = f"🕒 Expiração: {tempo_expiracao_minutos} minutos ({expiracao_time.strftime('%H:%M')})"
 
     return {
         'ativo': ativo,
@@ -1556,8 +1554,11 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         # Incrementa o contador global de sinais
         bot2_contador_sinais += 1
         
-        # Agendar o gif pós-sinal para 5 minutos depois
-        schedule.every(5).minutes.do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
+        # Agendar o gif pós-sinal para depois da expiração (5 minutos + 2 minutos adicionais)
+        # Expiração = 5 minutos, acrescenta 2 minutos de margem para resultados
+        tempo_pos_sinal = tempo_expiracao_minutos + 2
+        BOT2_LOGGER.info(f"[{horario_atual}] Agendando GIF pós-sinal para daqui a {tempo_pos_sinal} minutos")
+        schedule.every(tempo_pos_sinal).minutes.do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
         
         return True
         
@@ -1582,6 +1583,11 @@ def bot2_iniciar_ciclo_sinais():
         # Agendar a cada hora no minuto 13
         schedule.every().hour.at(f":{minuto_envio:02d}").do(bot2_send_message).tag('bot2_sinais')
         BOT2_LOGGER.info(f"Sinal do Bot 2 agendado para minuto {minuto_envio} de cada hora")
+        BOT2_LOGGER.info("Configuração atual: 1 sinal por hora, apenas ativos Digital, expiração de 5 minutos")
+        
+        # Contar quantos ativos da categoria Digital estão disponíveis
+        ativos_digital = len(ATIVOS_CATEGORIAS["Digital"])
+        BOT2_LOGGER.info(f"Total de ativos da categoria Digital disponíveis: {ativos_digital}")
         
         bot2_sinais_agendados = True
         BOT2_LOGGER.info("Ciclo de sinais do Bot 2 iniciado com sucesso")
@@ -1631,6 +1637,14 @@ if __name__ == "__main__":
         print(f"Diretrio de vdeos: {VIDEOS_DIR}")
         print(f"Diretrio de GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
         print(f"Arquivo GIF especial PT: {VIDEO_GIF_ESPECIAL_PT}")
+        
+        # Informações sobre a configuração atual
+        print("=== CONFIGURAÇÃO ATUAL DO BOT ===")
+        print("- Enviando apenas 1 sinal por hora (no minuto 13)")
+        print("- Usando apenas ativos da categoria Digital")
+        print("- Tempo de expiração fixo em 5 minutos")
+        print("- GIF pós-sinal agendado para 7 minutos após o sinal (expiração + 2 min)")
+        print("================================")
         
         # Exibir caminhos das imagens ps-sinal
         print(f"Caminho da imagem ps-sinal padro (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}")
