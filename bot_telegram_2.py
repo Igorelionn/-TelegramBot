@@ -70,90 +70,121 @@ BOT2_CHAT_ID_CORRETO = BOT2_CHAT_IDS[0]  # Usar o primeiro canal como padrão
 # Limite de sinais por hora
 BOT2_LIMITE_SINAIS_POR_HORA = 1
 
-# Categorias dos ativos
+# Categorias de ativos
 ATIVOS_CATEGORIAS = {
-    # Ativos Blitz
-    "USD/BRL (OTC)": "Blitz",
-    "USOUSD (OTC)": "Blitz",
-    "BTC/USD (OTC)": "Blitz",
-    "Google (OTC)": "Blitz",
-    "EUR/JPY (OTC)": "Blitz",
-    "ETH/USD (OTC)": "Blitz",
-    "MELANIA Coin (OTC)": "Binary",
-    "EUR/GBP (OTC)": "Blitz",
-    "Apple (OTC)": "Blitz",
-    "Amazon (OTC)": "Blitz",
-    "TRUMP Coin (OTC)": "Binary",
-    "Nike, Inc. (OTC)": "Blitz",
-    "DOGECOIN (OTC)": "Blitz",
-    "Tesla (OTC)": "Blitz",
-    "SOL/USD (OTC)": "Blitz",
-    "1000Sats (OTC)": "Binary",
-    "XAUUSD (OTC)": "Digital",
-    "McDonald´s Corporation (OTC)": "Blitz",
-    "Meta (OTC)": "Blitz",
-    "Coca-Cola Company (OTC)": "Blitz",
-    "CARDANO (OTC)": "Blitz",
-    "EUR/USD (OTC)": "Blitz",
-    "PEN/USD (OTC)": "Blitz",
-    "Bitcoin Cash (OTC)": "Binary",
-    "AUD/CAD (OTC)": "Blitz",
-    "Tesla/Ford (OTC)": "Blitz",
-    "US 100 (OTC)": "Binary",
-    "TRON/USD (OTC)": "Blitz",
-    "USD/CAD (OTC)": "Blitz",
-    "AUD/USD (OTC)": "Blitz",
-    "AIG (OTC)": "Binary",
-    "Alibaba Group Holding (OTC)": "Blitz",
-    "Snap Inc. (OTC)": "Blitz",
-    "US 500 (OTC)": "Digital",
-    "AUD/CHF (OTC)": "Blitz",
-    "Amazon/Alibaba (OTC)": "Blitz",
-    "Pepe (OTC)": "Binary",
-    "Chainlink (OTC)": "Binary",
-    "USD/ZAR (OTC)": "Blitz",
-    "Worldcoin (OTC)": "Binary",
-    # Ativos Binary serão adicionados a seguir
-    "Litecoin (OTC)": "Binary",
-    "Injective (OTC)": "Binary",
-    "ORDI (OTC)": "Binary",
-    "ICP (OTC)": "Binary",
-    "Cosmos (OTC)": "Binary",
-    "Polkadot (OTC)": "Binary",
-    "TON (OTC)": "Binary",
-    "Celestia (OTC)": "Binary",
-    "NEAR (OTC)": "Binary",
-    "Ripple (OTC)": "Binary",
-    "Ronin (OTC)": "Binary",
-    "Stacks (OTC)": "Binary",
-    "Immutable (OTC)": "Binary",
-    "EOS (OTC)": "Binary",
-    "Jupiter (OTC)": "Binary",
-    "Polygon (OTC)": "Binary",
-    "Arbitrum (OTC)": "Binary",
-    "Sandbox (OTC)": "Binary",
-    "Decentraland (OTC)": "Binary",
-    "Sei (OTC)": "Binary",
-    "IOTA (OTC)": "Binary",
-    "Pyth (OTC)": "Binary",
-    "Graph (OTC)": "Binary",
-    "Floki (OTC)": "Binary",
-    "Gala (OTC)": "Binary",
-    "Bonk (OTC)": "Binary",
-    "Beam (OTC)": "Binary",
-    "Hamster Kombat (OTC)": "Binary",
-    "NOT (OTC)": "Binary",
-    "US 30 (OTC)": "Binary",
-    "JP 225 (OTC)": "Binary",
-    "HK 33 (OTC)": "Binary",
-    "GER 30 (OTC)": "Binary",
-    "SP 35 (OTC)": "Binary",
-    "UK 100 (OTC)": "Binary",
-    # Ativos Digital
-    "EUR/THB (OTC)": "Digital",
-    "JPY Currency Index": "Digital",
-    "USD Currency Index": "Digital",
-    "AUS 200 (OTC)": "Digital"
+    "Binary": [
+        "TRUMP Coin (OTC)",
+        "US 100 (OTC)",
+        "AIG (OTC)",
+        "US 500 (OTC)",
+        "Injective (OTC)",
+        "ICP (OTC)",
+        "Cosmos (OTC)",
+        "Polkadot (OTC)",
+        "TON (OTC)",
+        "Celestia (OTC)",
+        "Bonk (OTC)",
+        "Beam (OTC)",
+        "Hamster Kombat (OTC)",
+        "NOT (OTC)",
+        "US 30 (OTC)",
+        "JP 225 (OTC)",
+        "HK 33 (OTC)",
+        "GER 30 (OTC)",
+        "SP 35 (OTC)",
+        "UK 100 (OTC)",
+        "FR 40 (OTC)",
+        "EU 50 (OTC)",
+        "US2000 (OTC)",
+        "Gold",
+        "EUR/THB (OTC)",
+        "JPY Currency Index",
+        "USD Currency Index",
+        "AUS 200 (OTC)",
+        "XAUUSD (OTC)",
+        "USD/BRL (OTC)",
+        "BTC/USD (OTC)",
+        "Google (OTC)",
+        "US 500 (OTC)",
+        "1000Sats (OTC)",
+        "Pepe (OTC)",
+        "Worldcoin (OTC)"
+    ],
+    "Blitz": [
+        "USD/BRL (OTC)",
+        "USOUSD (OTC)",
+        "BTC/USD (OTC)",
+        "Google (OTC)",
+        "EUR/JPY (OTC)",
+        "ETH/USD (OTC)",
+        "EUR/GBP (OTC)",
+        "Apple (OTC)",
+        "Amazon (OTC)",
+        "Nike, Inc. (OTC)",
+        "DOGECOIN (OTC)",
+        "Tesla (OTC)",
+        "1000Sats (OTC)",
+        "McDonald´s Corporation (OTC)",
+        "Meta (OTC)",
+        "Coca-Cola Company (OTC)",
+        "CARDANO (OTC)",
+        "EUR/USD (OTC)",
+        "PEN/USD (OTC)",
+        "AUD/CAD (OTC)",
+        "Tesla/Ford (OTC)",
+        "TRON/USD (OTC)",
+        "AUD/USD (OTC)",
+        "Alibaba Group Holding (OTC)",
+        "Snap Inc. (OTC)",
+        "AUD/CHF (OTC)",
+        "Amazon/Alibaba (OTC)",
+        "Pepe (OTC)",
+        "USD/ZAR (OTC)",
+        "Intel/IBM (OTC)",
+        "Alphabet/Microsoft (OTC)",
+        "Dogwifhat (OTC)",
+        "NEAR (OTC)",
+        "Ripple (OTC)",
+        "Ronin (OTC)",
+        "Stacks (OTC)",
+        "Immutable (OTC)",
+        "EOS (OTC)",
+        "Jupiter (OTC)",
+        "Polygon (OTC)",
+        "Arbitrum (OTC)",
+        "Sandbox (OTC)",
+        "Decentraland (OTC)",
+        "Sei (OTC)",
+        "IOTA (OTC)",
+        "Pyth (OTC)",
+        "Graph (OTC)",
+        "Floki (OTC)",
+        "Gala (OTC)",
+        "MELANIA Coin (OTC)",
+        "Cardano (OTC)",
+        "Worldcoin (OTC)",
+        "Nvidia/AMD (OTC)",
+        "Bitcoin Cash (OTC)",
+        "SOL/USD (OTC)",
+        "Chainlink (OTC)",
+        "Litecoin (OTC)",
+        "ORDI (OTC)",
+        "AUD/NZD (OTC)",
+        "GBP/CHF (OTC)",
+        "USD/SGD (OTC)",
+        "USD/CAD (OTC)",
+        "EUR/CAD (OTC)",
+        "EUR/AUD (OTC)",
+        "GBP/CAD (OTC)",
+        "EUR/NZD (OTC)",
+        "GBP/AUD (OTC)",
+        "GBP/NZD (OTC)",
+        "GER30/UK100 (OTC)",
+        "USD/PLN (OTC)"
+    ],
+    "Digital": [
+        "US 500 (OTC)"
+    ]
 }
 
 # Configurações de horários específicos para cada ativo
@@ -400,6 +431,285 @@ HORARIOS_PADRAO = {
         "Friday": ["00:00-23:59"],
         "Saturday": ["00:00-23:59"],
         "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"]
+    },
+    "FR_40_OTC": {  # Novo horário para FR 40 (OTC)
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "AUS_200_OTC": {  # Atualizado com horários específicos
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+    },
+    "US_500_OTC": {  # Atualizado com horários específicos
+        "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"]
+    },
+    "EU_50_OTC": {  # Novo ativo com horários específicos
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Gold": {  # Novo ativo com horários específicos
+        "Monday": ["04:00-16:00"],
+        "Tuesday": ["04:00-16:00"],
+        "Wednesday": ["04:00-16:00"],
+        "Thursday": ["04:00-16:00"],
+        "Friday": ["04:00-16:00"],
+        "Saturday": [],
+        "Sunday": []
+    },
+    "XAUUSD_OTC": {  # Atualizado com horários específicos
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-23:59"],
+        "Thursday": ["00:00-06:00", "06:10-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "US2000_OTC": {  # Novo ativo com horários específicos
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Gala_OTC": {  # Novo horário específico para Gala (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Floki_OTC": {  # Novo horário específico para Floki (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Graph_OTC": {  # Novo horário específico para Graph (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Intel_IBM_OTC": {  # Novo horário para Intel/IBM (OTC)
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Pyth_OTC": {  # Atualizado para Pyth (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "IOTA_OTC": {  # Atualizado para IOTA (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "DOGECOIN_OTC": {  # Atualizado para DOGECOIN (OTC)
+        "Monday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Tuesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Wednesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Thursday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Friday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Saturday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Sunday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"]
+    },
+    "Sei_OTC": {  # Atualizado para Sei (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Decentraland_OTC": {  # Atualizado para Decentraland (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "PEN_USD_OTC": {  # Atualizado para PEN/USD (OTC)
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-00:45", "01:15-23:59"],
+        "Wednesday": ["00:00-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"]
+    },
+    "Sandbox_OTC": {  # Atualizado para Sandbox (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "TRON_USD_OTC": {  # Atualizado para TRON/USD (OTC)
+        "Monday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Tuesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Wednesday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Thursday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Friday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Saturday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"],
+        "Sunday": ["00:00-05:45", "06:15-17:45", "18:15-23:59"]
+    },
+    "Ripple_OTC": {  # Atualizado para Ripple (OTC)
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+    },
+    "NEAR_OTC": {  # Atualizado para NEAR (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Arbitrum_OTC": {  # Atualizado para Arbitrum (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Polygon_OTC": {  # Atualizado para Polygon (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "EOS_OTC": {  # Atualizado para EOS (OTC)
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
+    },
+    "Alphabet_Microsoft_OTC": {  # Novo horário para Alphabet/Microsoft (OTC)
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
+    },
+    "Jupiter_OTC": {  # Atualizado para Jupiter (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Dogwifhat_OTC": {  # Novo horário para Dogwifhat (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Immutable_OTC": {  # Atualizado para Immutable (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Stacks_OTC": {  # Atualizado para Stacks (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Pepe_OTC": {  # Atualizado para Pepe (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
+    },
+    "Ronin_OTC": {  # Atualizado para Ronin (OTC)
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"]
     }
 }
 
@@ -431,7 +741,39 @@ assets = {
     "Bitcoin Cash (OTC)": HORARIOS_PADRAO["Bitcoin_Cash_OTC"],
     "AUD/CAD (OTC)": HORARIOS_PADRAO["AUD/CAD_OTC"],
     "Tesla/Ford (OTC)": HORARIOS_PADRAO["Tesla/Ford_OTC"],
-    "US 100 (OTC)": HORARIOS_PADRAO["US_100_OTC"]
+    "US 100 (OTC)": HORARIOS_PADRAO["US_100_OTC"],
+    "FR 40 (OTC)": HORARIOS_PADRAO["FR_40_OTC"],
+    "AUS 200 (OTC)": HORARIOS_PADRAO["AUS_200_OTC"],
+    "US 500 (OTC)": HORARIOS_PADRAO["US_500_OTC"],
+    "EU 50 (OTC)": HORARIOS_PADRAO["EU_50_OTC"],
+    "Gold": HORARIOS_PADRAO["Gold"],
+    "XAUUSD (OTC)": HORARIOS_PADRAO["XAUUSD_OTC"],
+    "US2000 (OTC)": HORARIOS_PADRAO["US2000_OTC"],
+    "Gala (OTC)": HORARIOS_PADRAO["Gala_OTC"],
+    "Floki (OTC)": HORARIOS_PADRAO["Floki_OTC"],
+    "Graph (OTC)": HORARIOS_PADRAO["Graph_OTC"],
+    "Intel/IBM (OTC)": HORARIOS_PADRAO["Intel_IBM_OTC"],
+    "1000Sats (OTC)": HORARIOS_PADRAO["1000Sats_OTC"],
+    "Pyth (OTC)": HORARIOS_PADRAO["Pyth_OTC"],
+    "IOTA (OTC)": HORARIOS_PADRAO["IOTA_OTC"],
+    "DOGECOIN (OTC)": HORARIOS_PADRAO["DOGECOIN_OTC"],
+    "Sei (OTC)": HORARIOS_PADRAO["Sei_OTC"],
+    "Decentraland (OTC)": HORARIOS_PADRAO["Decentraland_OTC"],
+    "PEN/USD (OTC)": HORARIOS_PADRAO["PEN_USD_OTC"],
+    "Sandbox (OTC)": HORARIOS_PADRAO["Sandbox_OTC"],
+    "TRON/USD (OTC)": HORARIOS_PADRAO["TRON_USD_OTC"],
+    "Ripple (OTC)": HORARIOS_PADRAO["Ripple_OTC"],
+    "NEAR (OTC)": HORARIOS_PADRAO["NEAR_OTC"],
+    "Arbitrum (OTC)": HORARIOS_PADRAO["Arbitrum_OTC"],
+    "Polygon (OTC)": HORARIOS_PADRAO["Polygon_OTC"],
+    "EOS (OTC)": HORARIOS_PADRAO["EOS_OTC"],
+    "Alphabet/Microsoft (OTC)": HORARIOS_PADRAO["Alphabet_Microsoft_OTC"],
+    "Jupiter (OTC)": HORARIOS_PADRAO["Jupiter_OTC"],
+    "Dogwifhat (OTC)": HORARIOS_PADRAO["Dogwifhat_OTC"],
+    "Immutable (OTC)": HORARIOS_PADRAO["Immutable_OTC"],
+    "Stacks (OTC)": HORARIOS_PADRAO["Stacks_OTC"],
+    "Pepe (OTC)": HORARIOS_PADRAO["Pepe_OTC"],
+    "Ronin (OTC)": HORARIOS_PADRAO["Ronin_OTC"]
 }
 
 # Função para inicializar os horários dos ativos que não estão explicitamente mapeados
@@ -965,31 +1307,31 @@ os.makedirs(VIDEOS_ESPECIAL_ES_DIR, exist_ok=True)
 # Configurar vídeos pós-sinal específicos para cada idioma 
 VIDEOS_POS_SINAL = {
     "pt": [
-        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "padrão.mp4"),  # Vídeo padrão em português (9/10)
-        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "especial.mp4")  # Vídeo especial em português (1/10)
+        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "padrão.gif"),  # Vídeo padrão em português (9/10)
+        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "especial.gif")  # Vídeo especial em português (1/10)
     ],
     "en": [
-        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "padrao.mp4"),  # Vídeo padrão em inglês (9/10)
-        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "especial.mp4")  # Vídeo especial em inglês (1/10)
+        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "padrao.gif"),  # Vídeo padrão em inglês (9/10)
+        os.path.join(VIDEOS_POS_SINAL_EN_DIR, "especial.gif")  # Vídeo especial em inglês (1/10)
     ],
     "es": [
-        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "padrao.mp4"),  # Vídeo padrão em espanhol (9/10)
-        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "especial.mp4")  # Vídeo especial em espanhol (1/10)
+        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "padrao.gif"),  # Vídeo padrão em espanhol (9/10)
+        os.path.join(VIDEOS_POS_SINAL_ES_DIR, "especial.gif")  # Vídeo especial em espanhol (1/10)
     ]
 }
 
 # Vídeo especial a cada 3 sinais (por idioma)
 VIDEOS_ESPECIAIS = {
-    "pt": os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.mp4"),
-    "en": os.path.join(VIDEOS_ESPECIAL_EN_DIR, "especial.mp4"),
-    "es": os.path.join(VIDEOS_ESPECIAL_ES_DIR, "especial.mp4")
+    "pt": os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.gif"),
+    "en": os.path.join(VIDEOS_ESPECIAL_EN_DIR, "especial.gif"),
+    "es": os.path.join(VIDEOS_ESPECIAL_ES_DIR, "especial.gif")
 }
 
 # Vídeos promocionais por idioma
 VIDEOS_PROMO = {
-    "pt": os.path.join(VIDEOS_PROMO_DIR, "pt.mp4"),
-    "en": os.path.join(VIDEOS_PROMO_DIR, "en.mp4"),
-    "es": os.path.join(VIDEOS_PROMO_DIR, "es.mp4")
+    "pt": os.path.join(VIDEOS_PROMO_DIR, "pt", "promo.gif"),
+    "en": os.path.join(VIDEOS_PROMO_DIR, "en", "promo.gif"),
+    "es": os.path.join(VIDEOS_PROMO_DIR, "es", "promo.gif")
 }
 
 # Diretórios para vídeos especiais em cada idioma
@@ -1003,7 +1345,7 @@ print(f"VIDEOS_ESPECIAL_DIR: {VIDEOS_ESPECIAL_DIR}")
 print(f"VIDEOS_ESPECIAL_PT_DIR: {VIDEOS_ESPECIAL_PT_DIR}")
 
 # Caminho para o vídeo do GIF especial PT
-VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.mp4")
+VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.gif")
 print(f"VIDEO_GIF_ESPECIAL_PT: {VIDEO_GIF_ESPECIAL_PT}")
 
 # Contador para controle dos GIFs pós-sinal
@@ -1119,15 +1461,15 @@ def bot2_enviar_gif_pos_sinal():
             dir_base = f"videos/pos_sinal/{idioma}"
             
             # Nomes de arquivos padrão
-            nome_padrao = "padrao.webp"
-            nome_especial = "especial.webp"
+            nome_padrao = "padrao.gif"
+            nome_especial = "especial.gif"
             
             # Determinar qual imagem enviar com base no idioma
             imagem_selecionada = None
             nome_arquivo = nome_especial if deve_enviar_especial else nome_padrao
             
             # Tentar encontrar o arquivo no formato correto
-            possiveis_formatos = ['.webp', '.jpg', '.png', '.jpeg', '.gif']
+            possiveis_formatos = ['.gif']
             imagem_path = None
             
             # Primeiro, tenta encontrar o arquivo exato
@@ -1175,6 +1517,23 @@ def bot2_enviar_gif_pos_sinal():
                 continue
                 
             BOT2_LOGGER.info(f"[{horario_atual}] Enviando imagem pós-sinal para o canal {chat_id} no idioma {idioma}: {imagem_path}")
+            
+            # Verifica se o arquivo é um GIF
+            if imagem_path.lower().endswith('.gif'):
+                BOT2_LOGGER.info(f"[{horario_atual}] Detectado arquivo GIF, enviando como animação")
+                try:
+                    with open(imagem_path, 'rb') as animation_file:
+                        url_animation = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                        files = {'animation': animation_file}
+                        data = {'chat_id': chat_id}
+                        animation_response = requests.post(url_animation, files=files, data=data)
+                        if animation_response.status_code == 200:
+                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF ENVIADO COM SUCESSO")
+                            continue
+                        else:
+                            BOT2_LOGGER.warning(f"[{horario_atual}] ✗ Não foi possível enviar como GIF: {animation_response.text}")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar arquivo GIF: {str(e)}")
             
             # Verifica se o arquivo tem extensão .webp ou .png (possivelmente tem transparência)
             if imagem_path.lower().endswith(('.webp', '.png')):
@@ -1282,26 +1641,25 @@ def bot2_enviar_promo_pre_sinal():
             
             BOT2_LOGGER.info(f"[{horario_atual}] Enviando vídeo pré-sinal para o canal {chat_id} em {idioma}...")
             
-            # Enviar o vídeo promocional
+            # Enviar o vídeo promocional como GIF
             try:
-                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
                 
-                # Parâmetros para envio do vídeo (sem definição de tamanho)
+                # Parâmetros para envio da animação
                 params = {
                     'chat_id': chat_id,
-                    'supports_streaming': True,
                     'disable_notification': False
                 }
                 
-                with open(video_path, 'rb') as video_file:
-                    files = {'video': video_file}
+                with open(video_path, 'rb') as animation_file:
+                    files = {'animation': animation_file}
                     
                     resposta = requests.post(url_base, data=params, files=files)
                     
                     if resposta.status_code != 200:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo pré-sinal para o canal {chat_id}: {resposta.text}")
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF promocional para o canal {chat_id}: {resposta.text}")
                     else:
-                        BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO PRÉ-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
+                        BOT2_LOGGER.info(f"[{horario_atual}] GIF PROMOCIONAL ENVIADO COM SUCESSO para o canal {chat_id}")
                 
                 # Texto da mensagem promocional
                 if idioma == "pt":
@@ -1459,30 +1817,30 @@ def bot2_enviar_promo_especial():
 # Função auxiliar para enviar o vídeo especial
 def bot2_enviar_video_especial(video_path, chat_id, horario_atual):
     """
-    Função auxiliar para enviar o vídeo especial.
+    Função auxiliar para enviar o vídeo especial como GIF.
     """
     try:
-        url_base_video = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+        url_base_animation = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
         
-        with open(video_path, 'rb') as video_file:
+        with open(video_path, 'rb') as animation_file:
             files = {
-                'video': video_file
+                'animation': animation_file
             }
             
-            payload_video = {
+            payload_animation = {
                 'chat_id': chat_id,
                 'parse_mode': 'HTML'
             }
             
-            resposta_video = requests.post(url_base_video, data=payload_video, files=files)
-            if resposta_video.status_code != 200:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar vídeo especial para o canal {chat_id}: {resposta_video.text}")
+            resposta_animation = requests.post(url_base_animation, data=payload_animation, files=files)
+            if resposta_animation.status_code != 200:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {resposta_animation.text}")
                 return False
             else:
-                BOT2_LOGGER.info(f"[{horario_atual}] VÍDEO ESPECIAL (A CADA 3 SINAIS) ENVIADO COM SUCESSO para o canal {chat_id}")
+                BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL ENVIADO COM SUCESSO para o canal {chat_id}")
                 return True
     except Exception as e:
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao abrir ou enviar arquivo de vídeo especial: {str(e)}")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao abrir ou enviar arquivo de GIF especial: {str(e)}")
         return False
 
 # Função para enviar o GIF especial a cada 3 sinais (apenas para o canal português)
@@ -1537,22 +1895,21 @@ def bot2_enviar_gif_especial_pt():
             BOT2_LOGGER.info(f"[{horario_atual}] Arquivo GIF encontrado: {VIDEO_GIF_ESPECIAL_PT}")
             arquivo_gif = VIDEO_GIF_ESPECIAL_PT
 
-            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendVideo"
+            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
 
-            # Parâmetros para vídeo (sem definição de tamanho)
+            # Parâmetros para animação
             params = {
                 'chat_id': canal_pt,
-                'supports_streaming': True,
             }
 
-            with open(arquivo_gif, 'rb') as video_file:
-                files = {'video': video_file}
+            with open(arquivo_gif, 'rb') as animation_file:
+                files = {'animation': animation_file}
                 resposta = requests.post(url_base, data=params, files=files)
 
                 if resposta.status_code != 200:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial como vídeo para o canal {canal_pt}: {resposta.text}")
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {canal_pt}: {resposta.text}")
                 else:
-                    BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL PT ENVIADO COMO VÍDEO com sucesso para o canal {canal_pt}")
+                    BOT2_LOGGER.info(f"[{horario_atual}] GIF ESPECIAL PT ENVIADO COM SUCESSO para o canal {canal_pt}")
         except Exception as e:
             BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF especial para o canal {canal_pt}: {str(e)}")
             
