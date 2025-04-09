@@ -2313,204 +2313,30 @@ def schedule_messages():
     logging.info("Funo schedule_messages() do Bot 1 chamada (sem efeito)")
     pass
 
-# Funo para manter o Bot 2 em execuo
-def bot2_keep_bot_running():
-    """
-    Mantm o Bot 2 em execuo, verificando os agendamentos.
-    """
-    BOT2_LOGGER.info("Iniciando funo keep_bot_running do Bot 2")
-    try:
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro na funo keep_bot_running do Bot 2: {str(e)}")
-        traceback.print_exc()
-
-def bot2_schedule_messages():
-    """Agenda as mensagens do Bot 2 para envio nos intervalos especficos."""
-    try:
-        if hasattr(bot2_schedule_messages, 'scheduled'):
-            BOT2_LOGGER.info("Agendamentos j existentes. Pulando...")
-            return
-
-        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
-        
-        # Definir o minuto para envio dos sinais (sempre 3 minutos antes de um horrio que termina em 0 ou 5)
-        # Para terminar em 15, enviar no minuto 13
-        minuto_envio = 13
-        
-        # Agendar 1 sinal por hora, no minuto definido
-        for hora in range(0, 24):
-            schedule.every().day.at(f"{hora:02d}:{minuto_envio:02d}:02").do(bot2_send_message)
-            BOT2_LOGGER.info(f"Sinal agendado: {hora:02d}:{minuto_envio:02d}:02 (horrio de entrada: {hora:02d}:15)")
-
-        bot2_schedule_messages.scheduled = True
-        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concludo com sucesso")
-        
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao agendar mensagens: {str(e)}")
-        traceback.print_exc()
-
-def iniciar_ambos_bots():
-    """Inicializa ambos os bots."""
-    try:
-        # Configurar logs e inicializar variveis
-        BOT2_LOGGER.info("Iniciando o Bot 2...")
-        
-        # Definir o horrio especial dirio para a imagem especial
-        definir_horario_especial_diario()
-        agendar_redefinicao_horario_especial()
-        
-        # Remover chamada duplicada que j foi feita no escopo global
-        # definir_horario_especial_diario()
-        # agendar_redefinicao_horario_especial()
-        
-        # Inicializar horrios ativos
-        inicializar_horarios_ativos()
-
-        # Inicializar o Bot 1 (original)
-        try:
-            logging.info("Inicializando Bot 1...")
-            # Verifica se j existe uma instncia do bot rodando
-            if is_bot_already_running():
-                logging.error("O bot j est rodando em outra instncia. Encerrando...")
-                sys.exit(1)
-            schedule_messages()      # Funo original do bot 1
-        except Exception as e:
-            logging.error(f"Erro ao inicializar Bot 1: {str(e)}")
-        
-        # Inicializar o Bot 2
-        try:
-            BOT2_LOGGER.info("Inicializando Bot 2 em modo normal...")
-            bot2_schedule_messages()  # Agendar mensagens nos horrios normais
-            bot2_keep_bot_running()  # Chamada direta para a funo do Bot 2
-        except Exception as e:
-            BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
-        
-        logging.info("Ambos os bots esto em execuo!")
-        BOT2_LOGGER.info("Ambos os bots esto em execuo em modo normal!")
-        
-        # Loop principal para verificar os agendamentos
-        while True:
-            try:
-                schedule.run_pending()
-                time.sleep(1)
-            except Exception as e:
-                logging.error(f"Erro no loop principal: {str(e)}")
-                BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
-                time.sleep(5)  # Pausa maior em caso de erro
-
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao inicializar ambos os bots: {str(e)}")
-        traceback.print_exc()
-
-def bot2_enviar_mensagem_pre_sinal():
-    """
-    Envia uma mensagem promocional antes do sinal.
-    Esta funo  chamada aps o envio do vdeo pr-sinal.
-    """
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PR-SINAL...")
-
-        # Loop para enviar a mensagem para cada canal configurado
-        for chat_id in BOT2_CHAT_IDS:
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
-            link_corretora = config_canal["link_corretora"]
-
-            # Mensagem especfica para o idioma com o link embutido no texto
-            if idioma == "pt":
-                mensagem = f"????Abram a corretora Pessoal\n\n??FIQUEM ATENTOS??\n\n??Cadastre-se na XXBROKER agora mesmo??\n\n?? <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
-            elif idioma == "en":
-                mensagem = f"????Open the broker now\n\n??STAY ALERT??\n\n??Register on XXBROKER right now??\n\n?? <a href=\"{link_corretora}\">CLICK HERE</a>"
-            elif idioma == "es":
-                mensagem = f"????Abran el corredor ahora\n\n??MANTNGANSE ATENTOS??\n\n??Regstrese en XXBROKER ahora mismo??\n\n?? <a href=\"{link_corretora}\">CLIC AQU</a>"
-            else:
-                mensagem = f"????Abram a corretora Pessoal\n\n??FIQUEM ATENTOS??\n\n??Cadastre-se na XXBROKER agora mesmo??\n\n?? <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
-
-            # Enviar a mensagem para o canal especfico
-            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-            payload = {
-                'chat_id': chat_id,
-                'text': mensagem,
-                'parse_mode': 'HTML',
-                'disable_web_page_preview': True
-            }
-
-            resposta = requests.post(url_base, data=payload)
-
-            if resposta.status_code != 200:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pr-sinal para o canal {chat_id}: {resposta.text}")
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PR-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
-
-    except Exception as e:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pr-sinal: {str(e)}")
-        traceback.print_exc()
-
-# Executar se este arquivo for o script principal
-if __name__ == "__main__":
-    try:
-        print("=== INICIANDO O BOT TELEGRAM ===")
-        print(f"Diretrio base: {BASE_DIR}")
-        print(f"Diretrio de vdeos: {VIDEOS_DIR}")
-        print(f"Diretrio de GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
-        print(f"Arquivo GIF especial PT: {VIDEO_GIF_ESPECIAL_PT}")
-        
-        # Exibir caminhos das imagens ps-sinal
-        print(f"Caminho da imagem ps-sinal padro (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}")
-        print(f"Caminho da imagem ps-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}")
-        print(f"Caminho da imagem ps-sinal padro (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}")
-        print(f"Caminho da imagem ps-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}")
-        print(f"Caminho da imagem ps-sinal padro (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}")
-        print(f"Caminho da imagem ps-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}")
-        
-        # Verificar se os diretrios existem
-        print(f"Verificando pastas:")
-        print(f"VIDEOS_DIR existe: {os.path.exists(VIDEOS_DIR)}")
-        print(f"VIDEOS_POS_SINAL_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_DIR)}")
-        print(f"VIDEOS_POS_SINAL_PT_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_PT_DIR)}")
-        print(f"VIDEOS_ESPECIAL_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_DIR)}")
-        print(f"VIDEOS_ESPECIAL_PT_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_PT_DIR)}")
-        
-        # Criar pastas se no existirem
-        os.makedirs(VIDEOS_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
-        
-        # Iniciar os bots
-        iniciar_ambos_bots()
-    except Exception as e:
-        print(f"Erro ao iniciar bots: {str(e)}")
-        traceback.print_exc()
-
 def inicializar_horarios_ativos():
     """
-    Adiciona horrios padro para todos os ativos listados em ATIVOS_CATEGORIAS
-    que no tm uma configurao especfica em assets.
+    Adiciona horários padrão para todos os ativos listados em ATIVOS_CATEGORIAS
+    que não têm uma configuração específica em assets.
     """
+    global assets
     global BOT2_ATIVOS_CATEGORIAS
     
-    # Inicializa o dicionrio BOT2_ATIVOS_CATEGORIAS para ser usado pelo bot
+    # Inicializar assets se estiver vazio
+    if not assets:
+        assets = {}
+    
+    # Inicializa o dicionário BOT2_ATIVOS_CATEGORIAS para ser usado pelo bot
     BOT2_ATIVOS_CATEGORIAS = {}
     
     # Atualizar ATIVOS_CATEGORIAS para cada ativo na lista Digital
     for ativo in ATIVOS_CATEGORIAS["Digital"]:
-        # Adicionar ao dicionrio BOT2_ATIVOS_CATEGORIAS usado pelo bot
+        # Adicionar ao dicionário BOT2_ATIVOS_CATEGORIAS usado pelo bot
         BOT2_ATIVOS_CATEGORIAS[ativo] = "Digital"
         
-        # Tambm atualizar ATIVOS_CATEGORIAS para consistncia
+        # Também atualizar ATIVOS_CATEGORIAS para consistência
         ATIVOS_CATEGORIAS[ativo] = "Digital"
         
-        # Configurar horrios especficos para cada ativo
+        # Configurar horários específicos para cada ativo
         if ativo == "Gold/Silver (OTC)":
             assets[ativo] = {
                 "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
@@ -2731,7 +2557,7 @@ def inicializar_horarios_ativos():
                 "Saturday": [],
                 "Sunday": ["19:00-23:59"]
             }
-        elif ativo == "AUS_200_OTC":  # J existe, mas atualizando para os novos horrios
+        elif ativo == "AUS_200_OTC":  # Já existe, mas atualizando para os novos horários
             assets[ativo] = {
                 "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
                 "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
@@ -2761,7 +2587,7 @@ def inicializar_horarios_ativos():
                 "Saturday": [],
                 "Sunday": ["23:00-23:59"]
             }
-        elif ativo == "MELANIA_Coin_OTC":  # J existe, mantendo a mesma configurao
+        elif ativo == "MELANIA_Coin_OTC":  # Já existe, mantendo a mesma configuração
             assets[ativo] = {
                 "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
                 "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
@@ -2781,7 +2607,7 @@ def inicializar_horarios_ativos():
                 "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
                 "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"]
             }
-        elif ativo == "AUD/CAD (OTC)":  # J existe, atualizando a configurao
+        elif ativo == "AUD/CAD (OTC)":  # Já existe, atualizando a configuração
             assets[ativo] = {
                 "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
                 "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
@@ -2801,7 +2627,7 @@ def inicializar_horarios_ativos():
                 "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
                 "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"]
             }
-        elif ativo == "US 500_OTC":  # J existe, atualizando a configurao
+        elif ativo == "US 500_OTC":  # Já existe, atualizando a configuração
             assets[ativo] = {
                 "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
                 "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
@@ -2812,7 +2638,7 @@ def inicializar_horarios_ativos():
                 "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"]
             }
         else:
-            # Para outros ativos sem configurao especfica
+            # Para outros ativos sem configuração específica
             assets[ativo] = {
                 "Monday": ["00:00-23:59"],
                 "Tuesday": ["00:00-23:59"],
@@ -2822,3 +2648,209 @@ def inicializar_horarios_ativos():
                 "Saturday": ["00:00-23:59"],
                 "Sunday": ["00:00-23:59"]
             }
+    
+    # Adicionar ativos das categorias Binary e Blitz
+    for categoria in ["Binary", "Blitz"]:
+        for ativo in ATIVOS_CATEGORIAS.get(categoria, []):
+            BOT2_ATIVOS_CATEGORIAS[ativo] = categoria
+            
+    # Adicionar ativos com horários padrão 
+    todas_categorias = []
+    for categoria, ativos_da_categoria in ATIVOS_CATEGORIAS.items():
+        todas_categorias.extend(ativos_da_categoria)
+    
+    # Para cada ativo, adicionar os horários padrão se não existirem
+    for ativo in todas_categorias:
+        if ativo not in assets:
+            # Usar horário padrão: disponível 24/7
+            assets[ativo] = {
+                "Monday": ["00:00-23:59"],
+                "Tuesday": ["00:00-23:59"],
+                "Wednesday": ["00:00-23:59"],
+                "Thursday": ["00:00-23:59"],
+                "Friday": ["00:00-23:59"],
+                "Saturday": ["00:00-23:59"],
+                "Sunday": ["00:00-23:59"]
+            }
+    
+    BOT2_LOGGER.info(f"Horários de ativos inicializados. Total de ativos configurados: {len(assets)}")
+    return assets
+
+# Funo para manter o Bot 2 em execuo
+def bot2_keep_bot_running():
+    """
+    Mantm o Bot 2 em execuo, verificando os agendamentos.
+    """
+    BOT2_LOGGER.info("Iniciando funo keep_bot_running do Bot 2")
+    try:
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro na funo keep_bot_running do Bot 2: {str(e)}")
+        traceback.print_exc()
+
+def bot2_schedule_messages():
+    """Agenda as mensagens do Bot 2 para envio nos intervalos especficos."""
+    try:
+        if hasattr(bot2_schedule_messages, 'scheduled'):
+            BOT2_LOGGER.info("Agendamentos j existentes. Pulando...")
+            return
+
+        BOT2_LOGGER.info("Iniciando agendamento de mensagens para o Bot 2")
+        
+        # Definir o minuto para envio dos sinais (sempre 3 minutos antes de um horrio que termina em 0 ou 5)
+        # Para terminar em 15, enviar no minuto 13
+        minuto_envio = 13
+        
+        # Agendar 1 sinal por hora, no minuto definido
+        for hora in range(0, 24):
+            schedule.every().day.at(f"{hora:02d}:{minuto_envio:02d}:02").do(bot2_send_message)
+            BOT2_LOGGER.info(f"Sinal agendado: {hora:02d}:{minuto_envio:02d}:02 (horrio de entrada: {hora:02d}:15)")
+
+        bot2_schedule_messages.scheduled = True
+        BOT2_LOGGER.info("Agendamento de mensagens do Bot 2 concludo com sucesso")
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao agendar mensagens: {str(e)}")
+        traceback.print_exc()
+
+def iniciar_ambos_bots():
+    """Inicializa ambos os bots."""
+    try:
+        # Configurar logs e inicializar variveis
+        BOT2_LOGGER.info("Iniciando o Bot 2...")
+        
+        # Definir o horrio especial dirio para a imagem especial
+        definir_horario_especial_diario()
+        agendar_redefinicao_horario_especial()
+        
+        # Remover chamada duplicada que j foi feita no escopo global
+        # definir_horario_especial_diario()
+        # agendar_redefinicao_horario_especial()
+        
+        # Inicializar horrios ativos
+        inicializar_horarios_ativos()
+
+        # Inicializar o Bot 1 (original)
+        try:
+            logging.info("Inicializando Bot 1...")
+            # Verifica se j existe uma instncia do bot rodando
+            if is_bot_already_running():
+                logging.error("O bot j est rodando em outra instncia. Encerrando...")
+                sys.exit(1)
+            schedule_messages()      # Funo original do bot 1
+        except Exception as e:
+            logging.error(f"Erro ao inicializar Bot 1: {str(e)}")
+        
+        # Inicializar o Bot 2
+        try:
+            BOT2_LOGGER.info("Inicializando Bot 2 em modo normal...")
+            bot2_schedule_messages()  # Agendar mensagens nos horrios normais
+            bot2_keep_bot_running()  # Chamada direta para a funo do Bot 2
+        except Exception as e:
+            BOT2_LOGGER.error(f"Erro ao inicializar Bot 2: {str(e)}")
+        
+        logging.info("Ambos os bots esto em execuo!")
+        BOT2_LOGGER.info("Ambos os bots esto em execuo em modo normal!")
+        
+        # Loop principal para verificar os agendamentos
+        while True:
+            try:
+                schedule.run_pending()
+                time.sleep(1)
+            except Exception as e:
+                logging.error(f"Erro no loop principal: {str(e)}")
+                BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
+                time.sleep(5)  # Pausa maior em caso de erro
+
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao inicializar ambos os bots: {str(e)}")
+        traceback.print_exc()
+
+def bot2_enviar_mensagem_pre_sinal():
+    """
+    Envia uma mensagem promocional antes do sinal.
+    Esta funo  chamada aps o envio do vdeo pr-sinal.
+    """
+    try:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA MENSAGEM PR-SINAL...")
+
+        # Loop para enviar a mensagem para cada canal configurado
+        for chat_id in BOT2_CHAT_IDS:
+            config_canal = BOT2_CANAIS_CONFIG[chat_id]
+            idioma = config_canal["idioma"]
+            link_corretora = config_canal["link_corretora"]
+
+            # Mensagem especfica para o idioma com o link embutido no texto
+            if idioma == "pt":
+                mensagem = f"????Abram a corretora Pessoal\n\n??FIQUEM ATENTOS??\n\n??Cadastre-se na XXBROKER agora mesmo??\n\n?? <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
+            elif idioma == "en":
+                mensagem = f"????Open the broker now\n\n??STAY ALERT??\n\n??Register on XXBROKER right now??\n\n?? <a href=\"{link_corretora}\">CLICK HERE</a>"
+            elif idioma == "es":
+                mensagem = f"????Abran el corredor ahora\n\n??MANTNGANSE ATENTOS??\n\n??Regstrese en XXBROKER ahora mismo??\n\n?? <a href=\"{link_corretora}\">CLIC AQU</a>"
+            else:
+                mensagem = f"????Abram a corretora Pessoal\n\n??FIQUEM ATENTOS??\n\n??Cadastre-se na XXBROKER agora mesmo??\n\n?? <a href=\"{link_corretora}\">CLICANDO AQUI</a>"
+
+            # Enviar a mensagem para o canal especfico
+            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+            payload = {
+                'chat_id': chat_id,
+                'text': mensagem,
+                'parse_mode': 'HTML',
+                'disable_web_page_preview': True
+            }
+
+            resposta = requests.post(url_base, data=payload)
+
+            if resposta.status_code != 200:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pr-sinal para o canal {chat_id}: {resposta.text}")
+            else:
+                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PR-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
+
+    except Exception as e:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pr-sinal: {str(e)}")
+        traceback.print_exc()
+
+# Executar se este arquivo for o script principal
+if __name__ == "__main__":
+    try:
+        print("=== INICIANDO O BOT TELEGRAM ===")
+        print(f"Diretrio base: {BASE_DIR}")
+        print(f"Diretrio de vdeos: {VIDEOS_DIR}")
+        print(f"Diretrio de GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
+        print(f"Arquivo GIF especial PT: {VIDEO_GIF_ESPECIAL_PT}")
+        
+        # Exibir caminhos das imagens ps-sinal
+        print(f"Caminho da imagem ps-sinal padro (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}")
+        print(f"Caminho da imagem ps-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}")
+        print(f"Caminho da imagem ps-sinal padro (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}")
+        print(f"Caminho da imagem ps-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}")
+        print(f"Caminho da imagem ps-sinal padro (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}")
+        print(f"Caminho da imagem ps-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}")
+        
+        # Verificar se os diretrios existem
+        print(f"Verificando pastas:")
+        print(f"VIDEOS_DIR existe: {os.path.exists(VIDEOS_DIR)}")
+        print(f"VIDEOS_POS_SINAL_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_DIR)}")
+        print(f"VIDEOS_POS_SINAL_PT_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_PT_DIR)}")
+        print(f"VIDEOS_ESPECIAL_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_DIR)}")
+        print(f"VIDEOS_ESPECIAL_PT_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_PT_DIR)}")
+        
+        # Criar pastas se no existirem
+        os.makedirs(VIDEOS_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
+        
+        # Iniciar os bots
+        iniciar_ambos_bots()
+    except Exception as e:
+        print(f"Erro ao iniciar bots: {str(e)}")
+        traceback.print_exc()
