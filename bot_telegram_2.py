@@ -1510,61 +1510,83 @@ def bot2_enviar_gif_pos_sinal():
             # Envio do GIF normal pós-sinal para cada canal
             BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal padrão para todos os canais")
             
+            # Criar GIFs mínimos se não existirem
+            for idioma in ["pt", "en", "es"]:
+                gif_padrao_path = os.path.join(os.path.join(VIDEOS_POS_SINAL_DIR, idioma), "padrao.gif")
+                os.makedirs(os.path.dirname(gif_padrao_path), exist_ok=True)
+                
+                if not os.path.exists(gif_padrao_path):
+                    BOT2_LOGGER.warning(f"[{horario_atual}] Criando GIF padrão para {idioma} em {gif_padrao_path}")
+                    try:
+                        with open(gif_padrao_path, 'wb') as f:
+                            # GIF mínimo válido (1x1 pixel transparente)
+                            f.write(b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;')
+                        BOT2_LOGGER.info(f"[{horario_atual}] GIF padrão criado com sucesso para {idioma}")
+                    except Exception as e:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao criar GIF padrão para {idioma}: {str(e)}")
+            
             for chat_id in BOT2_CHAT_IDS:
                 try:
                     config_canal = BOT2_CANAIS_CONFIG[chat_id]
                     idioma = config_canal["idioma"]
                     
                     # Escolher o GIF correto baseado no idioma
+                    gif_path = None
                     if idioma in VIDEOS_POS_SINAL:
                         gif_path = VIDEOS_POS_SINAL[idioma][0]  # Usar o GIF padrão
-                        
-                        BOT2_LOGGER.info(f"[{horario_atual}] Verificando GIF: {gif_path}")
-                        
-                        # Verificar se o arquivo existe
-                        if not os.path.exists(gif_path):
-                            BOT2_LOGGER.warning(f"[{horario_atual}] Arquivo de GIF não encontrado: {gif_path}")
-                            parent_dir = os.path.dirname(gif_path)
-                            
-                            # Verificar se o diretório existe
-                            if not os.path.exists(parent_dir):
-                                os.makedirs(parent_dir, exist_ok=True)
-                                BOT2_LOGGER.info(f"[{horario_atual}] Diretório criado: {parent_dir}")
-                            
-                            # Tentar usar o GIF em PT como fallback
-                            if idioma != "pt":
-                                gif_path = VIDEOS_POS_SINAL["pt"][0]
-                                BOT2_LOGGER.info(f"[{horario_atual}] Tentando GIF PT como fallback: {gif_path}")
-                            
-                            # Se ainda não existe, criar um GIF vazio
-                            if not os.path.exists(gif_path):
-                                try:
-                                    # Criar um GIF placeholder básico
-                                    with open(gif_path, 'wb') as f:
-                                        f.write(b'GIF89a\x01\x00\x01\x00\x00\x00\x00;')
-                                    BOT2_LOGGER.info(f"[{horario_atual}] Criado GIF placeholder: {gif_path}")
-                                except Exception as e:
-                                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao criar GIF placeholder: {str(e)}")
-                                    continue  # Pular este canal
-                        
-                        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF como animação: {gif_path} para canal {chat_id}")
-                        
-                        # Enviar o GIF como animação via API Telegram
-                        url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                        
-                        with open(gif_path, 'rb') as gif_file:
-                            files = {'animation': gif_file}
-                            data = {'chat_id': chat_id}
-                            
-                            resposta = requests.post(url_base, data=data, files=files)
-                            
-                            if resposta.status_code == 200:
-                                BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF PÓS-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
-                            else:
-                                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar GIF: {resposta.text}")
                     else:
-                        BOT2_LOGGER.warning(f"[{horario_atual}] Idioma não suportado para GIF pós-sinal: {idioma}")
-                
+                        # Fallback para português
+                        gif_path = VIDEOS_POS_SINAL["pt"][0]
+                        
+                    BOT2_LOGGER.info(f"[{horario_atual}] Verificando GIF: {gif_path}")
+                    
+                    # Verificar se o arquivo existe
+                    if not os.path.exists(gif_path):
+                        BOT2_LOGGER.warning(f"[{horario_atual}] Arquivo de GIF não encontrado: {gif_path}")
+                        # Criar o diretório se não existir
+                        os.makedirs(os.path.dirname(gif_path), exist_ok=True)
+                        
+                        # Criar um GIF mínimo válido (1x1 pixel transparente)
+                        with open(gif_path, 'wb') as f:
+                            f.write(b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;')
+                        BOT2_LOGGER.info(f"[{horario_atual}] Criado GIF mínimo em: {gif_path}")
+                    
+                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF como animação: {gif_path}")
+                    
+                    # Verificar tamanho do arquivo
+                    file_size = os.path.getsize(gif_path)
+                    BOT2_LOGGER.info(f"[{horario_atual}] Tamanho do GIF: {file_size} bytes")
+                    
+                    # Enviar o GIF como animação via API Telegram
+                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                    
+                    with open(gif_path, 'rb') as gif_file:
+                        files = {'animation': gif_file}
+                        data = {'chat_id': chat_id}
+                        
+                        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF para o canal {chat_id}")
+                        resposta = requests.post(url_base, data=data, files=files)
+                        
+                        if resposta.status_code == 200:
+                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF PÓS-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
+                        else:
+                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar GIF: {resposta.text}")
+                            BOT2_LOGGER.info(f"[{horario_atual}] Tentando enviar mensagem de texto como alternativa")
+                            
+                            # Enviar uma mensagem de texto como alternativa
+                            mensagem = "🔍 Sinal finalizado! Acompanhe o próximo sinal no horário programado."
+                            url_base_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                            payload = {
+                                'chat_id': chat_id,
+                                'text': mensagem,
+                                'parse_mode': 'HTML'
+                            }
+                            
+                            resposta_msg = requests.post(url_base_msg, json=payload)
+                            if resposta_msg.status_code == 200:
+                                BOT2_LOGGER.info(f"[{horario_atual}] ✓ Mensagem alternativa enviada com sucesso")
+                            else:
+                                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar mensagem alternativa: {resposta_msg.text}")
                 except Exception as e:
                     BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar GIF para canal {chat_id}: {str(e)}")
                     traceback.print_exc()
