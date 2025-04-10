@@ -1363,6 +1363,12 @@ print(f"VIDEOS_ESPECIAL_PT_DIR: {VIDEOS_ESPECIAL_PT_DIR}")
 VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.gif")
 print(f"VIDEO_GIF_ESPECIAL_PT: {VIDEO_GIF_ESPECIAL_PT}")
 
+# Exibir caminhos completos para debug
+print(f"GIF pós-sinal PT padrao: {os.path.join(VIDEOS_POS_SINAL_PT_DIR, 'padrao.gif')}")
+print(f"GIF pós-sinal EN padrao: {os.path.join(VIDEOS_POS_SINAL_EN_DIR, 'padrao.gif')}")
+print(f"GIF pós-sinal ES padrao: {os.path.join(VIDEOS_POS_SINAL_ES_DIR, 'padrao.gif')}")
+print(f"GIF promo PT: {os.path.join(VIDEOS_PROMO_DIR, 'pt', 'promo.gif')}")
+
 # Contador para controle dos GIFs ps-sinal
 contador_pos_sinal = 0
 contador_desde_ultimo_especial = 0
@@ -1722,12 +1728,15 @@ if __name__ == "__main__":
         print("================================")
         
         # Exibir caminhos das imagens ps-sinal
-        print(f"Caminho da imagem ps-sinal padro (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}")
-        print(f"Caminho da imagem ps-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}")
-        print(f"Caminho da imagem ps-sinal padro (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}")
-        print(f"Caminho da imagem ps-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}")
-        print(f"Caminho da imagem ps-sinal padro (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}")
-        print(f"Caminho da imagem ps-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}")
+        print(f"Caminho da imagem ps-sinal padrao (PT): {os.path.join(VIDEOS_POS_SINAL_PT_DIR, 'padrao.gif')}")
+        print(f"Caminho da imagem ps-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_PT_DIR, 'especial.gif')}")
+        print(f"Caminho da imagem ps-sinal padrao (EN): {os.path.join(VIDEOS_POS_SINAL_EN_DIR, 'padrao.gif')}")
+        print(f"Caminho da imagem ps-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_EN_DIR, 'especial.gif')}")
+        print(f"Caminho da imagem ps-sinal padrao (ES): {os.path.join(VIDEOS_POS_SINAL_ES_DIR, 'padrao.gif')}")
+        print(f"Caminho da imagem ps-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_ES_DIR, 'especial.gif')}")
+        print(f"Caminho do GIF promocional (PT): {os.path.join(VIDEOS_PROMO_DIR, 'pt', 'promo.gif')}")
+        print(f"Caminho do GIF promocional (EN): {os.path.join(VIDEOS_PROMO_DIR, 'en', 'promo.gif')}")
+        print(f"Caminho do GIF promocional (ES): {os.path.join(VIDEOS_PROMO_DIR, 'es', 'promo.gif')}")
         
         # Verificar se os diretrios existem
         print(f"Verificando pastas:")
