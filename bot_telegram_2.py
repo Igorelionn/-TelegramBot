@@ -990,7 +990,7 @@ def is_asset_available(asset, current_time=None, current_day=None):
         return False
 
     current_time_obj = datetime.strptime(current_time, "%H:%M").time()
-    
+
     # Verificar cada intervalo de horário configurado para o ativo no dia atual
     for time_range in assets[asset][current_day]:
         start_time, end_time = parse_time_range(time_range)
@@ -1157,12 +1157,12 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_expiracao_local = bot2_converter_fuso_horario(hora_expiracao_br, fuso_horario)
     
     # Calcular horários de gale (reentrada) no fuso horário de Brasília
-    # 1° GALE é o horário de expiração + 1 minuto
+    # 1° GALE é o horário de expiração + 5 minutos
     hora_gale1_br = hora_expiracao_br + timedelta(minutes=5)
-    # 2° GALE é o 1° GALE + 1 minuto
-    hora_gale2_br = hora_gale1_br + timedelta(minutes=1)
-    # 3° GALE é o 2° GALE + 1 minuto
-    hora_gale3_br = hora_gale2_br + timedelta(minutes=1)
+    # 2° GALE é o 1° GALE + 5 minutos
+    hora_gale2_br = hora_gale1_br + timedelta(minutes=5)
+    # 3° GALE é o 2° GALE + 5 minutos
+    hora_gale3_br = hora_gale2_br + timedelta(minutes=5)
     
     # Converter gales para o fuso horário do canal
     hora_gale1_local = bot2_converter_fuso_horario(hora_gale1_br, fuso_horario)
@@ -1230,8 +1230,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"{texto_gale1} {hora_gale1_formatada}\n"
             f"{texto_gale2} {hora_gale2_formatada}\n"
             f"{texto_gale3} {hora_gale3_formatada}\n\n"
-            f"📲 <a href=\"{link_corretora}\" data-js-focus-visible=\"\">&#8203;{texto_corretora}</a>\n"
-            f"🙋‍♂️ Não sabe operar ainda? <a href=\"{link_video}\" data-js-focus-visible=\"\">&#8203;{texto_video}</a>")
+            f"📲 <a href=\"{link_corretora}\">{texto_corretora}</a>\n"
+            f"🙋‍♂️ Não sabe operar ainda? <a href=\"{link_video}\">{texto_video}</a>")
             
     # Mensagem em EN
     mensagem_en = (f"💰{tempo_expiracao_minutos} {texto_minutos_en} expiration\n"
@@ -1240,8 +1240,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"{texto_gale1} {hora_gale1_formatada}\n"
             f"{texto_gale2} {hora_gale2_formatada}\n"
             f"{texto_gale3} {hora_gale3_formatada}\n\n"
-            f"📲 <a href=\"{link_corretora}\" data-js-focus-visible=\"\">&#8203;{texto_corretora}</a>\n"
-            f"🙋‍♂️ Don't know how to trade yet? <a href=\"{link_video}\" data-js-focus-visible=\"\">&#8203;{texto_video}</a>")
+            f"📲 <a href=\"{link_corretora}\">{texto_corretora}</a>\n"
+            f"🙋‍♂️ Don't know how to trade yet? <a href=\"{link_video}\">{texto_video}</a>")
             
     # Mensagem em ES
     mensagem_es = (f"💰{tempo_expiracao_minutos} {texto_minutos_es} de expiración\n"
@@ -1250,8 +1250,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             f"{texto_gale1} {hora_gale1_formatada}\n"
             f"{texto_gale2} {hora_gale2_formatada}\n"
             f"{texto_gale3} {hora_gale3_formatada}\n\n"
-            f"📲 <a href=\"{link_corretora}\" data-js-focus-visible=\"\">&#8203;{texto_corretora}</a>\n"
-            f"🙋‍♂️ ¿No sabe operar todavía? <a href=\"{link_video}\" data-js-focus-visible=\"\">&#8203;{texto_video}</a>")
+            f"📲 <a href=\"{link_corretora}\">{texto_corretora}</a>\n"
+            f"🙋‍♂️ ¿No sabe operar todavía? <a href=\"{link_video}\">{texto_video}</a>")
             
     # Verificar se há algum texto não esperado antes de retornar a mensagem
     if idioma == "pt":
@@ -1322,7 +1322,7 @@ os.makedirs(VIDEOS_ESPECIAL_ES_DIR, exist_ok=True)
 # Configurar vdeos ps-sinal especficos para cada idioma 
 VIDEOS_POS_SINAL = {
     "pt": [
-        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "padro.gif"),  # Vdeo padro em portugus (9/10)
+        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "padrao.gif"),  # Vdeo padro em portugus (9/10)
         os.path.join(VIDEOS_POS_SINAL_PT_DIR, "especial.gif")  # Vdeo especial em portugus (1/10)
     ],
     "en": [
@@ -1427,15 +1427,6 @@ def bot2_enviar_gif_pos_sinal():
         schedule.clear('bot2_pos_sinal')
         BOT2_LOGGER.info(f"[{horario_atual}] Agendamento de gif pós-sinal limpo para evitar duplicações.")
         
-        # Tentar importar PIL para verificar se uma imagem tem transparência
-        try:
-            from PIL import Image
-            BOT2_LOGGER.info(f"[{horario_atual}] Biblioteca PIL (Pillow) disponível para processamento de imagem")
-            pillow_disponivel = True
-        except ImportError:
-            pillow_disponivel = False
-            BOT2_LOGGER.warning(f"[{horario_atual}] Biblioteca PIL (Pillow) não disponível. As imagens serão enviadas sem tratamento.")
-        
         # Incrementar o contador de envios pós-sinal
         contador_pos_sinal += 1
         contador_desde_ultimo_especial += 1
@@ -1456,12 +1447,6 @@ def bot2_enviar_gif_pos_sinal():
         # Verifica se deve enviar imagem especial (apenas no horário especial do dia)
         if horario_especial_agora:
             BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A MENSAGEM ESPECIAL DE PERDA (sinal {contador_pos_sinal})")
-            deve_enviar_especial = True
-            
-            # Se foi por causa do horário especial, registra isso
-            if horario_especial_agora:
-                BOT2_LOGGER.info(f"[{horario_atual}] Envio de mensagem especial foi acionado pelo horário especial do dia")
-            
             contador_desde_ultimo_especial = 0
             
             # Enviar mensagem de texto para cada canal em vez da imagem especial
@@ -1488,7 +1473,7 @@ def bot2_enviar_gif_pos_sinal():
                         "💪 Stay focused and disciplined. We're in this journey together!\n\n"
                         "📊 Our monthly success rate remains above 85%."
                     )
-                elif idioma == "es":
+                else:  # espanhol por padrão
                     mensagem = (
                         "⚠️ ATENCIÓN - RESULTADO NEGATIVO ⚠️\n\n"
                         "El mercado se movió contra nuestro análisis.\n\n"
@@ -1497,16 +1482,6 @@ def bot2_enviar_gif_pos_sinal():
                         "💪 Mantén el enfoque y la disciplina. ¡Estamos juntos en este camino!\n\n"
                         "📊 Nuestra tasa de éxito mensual sigue siendo superior al 85%."
                     )
-                else:
-                    # Fallback para português
-                    mensagem = (
-                        "⚠️ ATENÇÃO - RESULTADO NEGATIVO ⚠️\n\n"
-                        "O mercado se moveu contra nossa análise.\n\n"
-                        "🔄 Vamos seguir com nossa estratégia e entrar no próximo sinal com GERENCIAMENTO DE BANCA.\n\n"
-                        "🧠 Lembre-se: gerenciamento é a chave para o sucesso no longo prazo.\n\n"
-                        "💪 Mantenha o foco e a disciplina. Estamos juntos nessa jornada!\n\n"
-                        "📊 Nossa taxa de acerto continua superior a 85% no mês."
-                    )
                 
                 # Enviar a mensagem de texto
                 url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
@@ -1514,19 +1489,83 @@ def bot2_enviar_gif_pos_sinal():
                     'chat_id': chat_id,
                     'text': mensagem,
                     'parse_mode': 'HTML',
-                'disable_web_page_preview': True
-            }
+                    'disable_web_page_preview': True
+                }
 
-            resposta = requests.post(url_base, data=payload)
-
-            if resposta.status_code != 200:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pr-sinal para o canal {chat_id}: {resposta.text}")
-            else:
-                BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PR-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
-
+                try:
+                    resposta = requests.post(url_base, json=payload)
+                    if resposta.status_code == 200:
+                        BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PÓS-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
+                    else:
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pós-sinal para o canal {chat_id}: {resposta.text}")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Exceção ao enviar mensagem pós-sinal: {str(e)}")
+        else:
+            # Envio do GIF normal pós-sinal para cada canal
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal padrão para todos os canais")
+            
+            for chat_id in BOT2_CHAT_IDS:
+                try:
+                    config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                    idioma = config_canal["idioma"]
+                    
+                    # Escolher o GIF correto baseado no idioma
+                    if idioma in VIDEOS_POS_SINAL:
+                        gif_path = VIDEOS_POS_SINAL[idioma][0]  # Usar o GIF padrão
+                        
+                        BOT2_LOGGER.info(f"[{horario_atual}] Verificando GIF: {gif_path}")
+                        
+                        # Verificar se o arquivo existe
+                        if not os.path.exists(gif_path):
+                            BOT2_LOGGER.warning(f"[{horario_atual}] Arquivo de GIF não encontrado: {gif_path}")
+                            parent_dir = os.path.dirname(gif_path)
+                            
+                            # Verificar se o diretório existe
+                            if not os.path.exists(parent_dir):
+                                os.makedirs(parent_dir, exist_ok=True)
+                                BOT2_LOGGER.info(f"[{horario_atual}] Diretório criado: {parent_dir}")
+                            
+                            # Tentar usar o GIF em PT como fallback
+                            if idioma != "pt":
+                                gif_path = VIDEOS_POS_SINAL["pt"][0]
+                                BOT2_LOGGER.info(f"[{horario_atual}] Tentando GIF PT como fallback: {gif_path}")
+                            
+                            # Se ainda não existe, criar um GIF vazio
+                            if not os.path.exists(gif_path):
+                                try:
+                                    # Criar um GIF placeholder básico
+                                    with open(gif_path, 'wb') as f:
+                                        f.write(b'GIF89a\x01\x00\x01\x00\x00\x00\x00;')
+                                    BOT2_LOGGER.info(f"[{horario_atual}] Criado GIF placeholder: {gif_path}")
+                                except Exception as e:
+                                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao criar GIF placeholder: {str(e)}")
+                                    continue  # Pular este canal
+                        
+                        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF como animação: {gif_path} para canal {chat_id}")
+                        
+                        # Enviar o GIF como animação via API Telegram
+                        url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                        
+                        with open(gif_path, 'rb') as gif_file:
+                            files = {'animation': gif_file}
+                            data = {'chat_id': chat_id}
+                            
+                            resposta = requests.post(url_base, data=data, files=files)
+                            
+                            if resposta.status_code == 200:
+                                BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF PÓS-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
+                            else:
+                                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar GIF: {resposta.text}")
+                    else:
+                        BOT2_LOGGER.warning(f"[{horario_atual}] Idioma não suportado para GIF pós-sinal: {idioma}")
+                
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar GIF para canal {chat_id}: {str(e)}")
+                    traceback.print_exc()
+    
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pr-sinal: {str(e)}")
+        BOT2_LOGGER.error(f"[{horario_atual}] Erro geral ao enviar imagens pós-sinal: {str(e)}")
         traceback.print_exc()
 
 def bot2_send_message(ignorar_anti_duplicacao=False):
@@ -1586,11 +1625,18 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         # Agendar o gif pós-sinal para depois da expiração (5 minutos + 2 minutos adicionais)
         # Expiração = 5 minutos, acrescenta 2 minutos de margem para resultados
         tempo_pos_sinal = tempo_expiracao_minutos + 2
-        BOT2_LOGGER.info(f"[{horario_atual}] Agendando GIF pós-sinal para daqui a {tempo_pos_sinal} minutos")
-        schedule.every(tempo_pos_sinal).minutes.do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
+        
+        # Calcular a hora exata para o envio do GIF pós-sinal (hora atual + tempo_pos_sinal minutos)
+        horario_pos_sinal = agora + timedelta(minutes=tempo_pos_sinal)
+        hora_pos_sinal_str = horario_pos_sinal.strftime("%H:%M")
+        
+        BOT2_LOGGER.info(f"[{horario_atual}] Agendando GIF pós-sinal para {hora_pos_sinal_str} (daqui a {tempo_pos_sinal} minutos)")
+        
+        # Agendar para uma hora específica em vez de um intervalo relativo
+        schedule.every().day.at(hora_pos_sinal_str).do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
         
         return True
-        
+    
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao enviar sinal: {str(e)}")
         traceback.print_exc()
@@ -1645,11 +1691,11 @@ def iniciar_ambos_bots():
         # Loop principal para manter o programa em execução
         while True:
             # Executar tarefas agendadas
-            schedule.run_pending()
+                schedule.run_pending()
             
             # Pequena pausa para evitar uso excessivo de CPU
-            time.sleep(1)
-            
+                time.sleep(1)
+
     except KeyboardInterrupt:
         BOT2_LOGGER.info("Bots encerrados pelo usuário (Ctrl+C)")
     except Exception as e:
