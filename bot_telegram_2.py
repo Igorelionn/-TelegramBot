@@ -1284,6 +1284,9 @@ VIDEO_TELEGRAM_URL = "https://t.me/trendingbrazil/215"
 VIDEO_TELEGRAM_ES_URL = "https://t.me/trendingespanish/212"
 VIDEO_TELEGRAM_EN_URL = "https://t.me/trendingenglish/226"
 
+# URL base do GitHub para acessar os arquivos de mídia
+GITHUB_BASE_URL = "https://raw.githubusercontent.com/igorelias21/bot-signals/main/"
+
 # Base directory para os arquivos do projeto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -1319,10 +1322,26 @@ os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
 os.makedirs(VIDEOS_ESPECIAL_EN_DIR, exist_ok=True)
 os.makedirs(VIDEOS_ESPECIAL_ES_DIR, exist_ok=True)
 
-# Configurar vdeos ps-sinal especficos para cada idioma 
+# URLs dos GIFs diretamente do GitHub (seguindo a estrutura de seu repositório)
+VIDEOS_POS_SINAL_GITHUB = {
+    "pt": [
+        f"{GITHUB_BASE_URL}videos/pos_sinal/pt/padrão.gif",  # Vdeo padro em portugus (9/10)
+        f"{GITHUB_BASE_URL}videos/pos_sinal/pt/especial.gif"  # Vdeo especial em portugus (1/10)
+    ],
+    "en": [
+        f"{GITHUB_BASE_URL}videos/pos_sinal/en/padrao.gif",  # Vdeo padro em ingls (9/10)
+        f"{GITHUB_BASE_URL}videos/pos_sinal/en/especial.gif"  # Vdeo especial em ingls (1/10)
+    ],
+    "es": [
+        f"{GITHUB_BASE_URL}videos/pos_sinal/es/padrao.gif",  # Vdeo padro em espanhol (9/10)
+        f"{GITHUB_BASE_URL}videos/pos_sinal/es/especial.gif"  # Vdeo especial em espanhol (1/10)
+    ]
+}
+
+# Configurar vdeos ps-sinal especficos para cada idioma (local paths)
 VIDEOS_POS_SINAL = {
     "pt": [
-        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "padrao.gif"),  # Vdeo padro em portugus (9/10)
+        os.path.join(VIDEOS_POS_SINAL_PT_DIR, "padrão.gif"),  # Vdeo padro em portugus (9/10)
         os.path.join(VIDEOS_POS_SINAL_PT_DIR, "especial.gif")  # Vdeo especial em portugus (1/10)
     ],
     "en": [
@@ -1335,24 +1354,33 @@ VIDEOS_POS_SINAL = {
     ]
 }
 
-# Vdeo especial a cada 3 sinais (por idioma)
+# Vdeo especial a cada 3 sinais (por idioma) - URLs do GitHub
+VIDEOS_ESPECIAIS_GITHUB = {
+    "pt": f"{GITHUB_BASE_URL}videos/gif_especial/pt/especial.gif",
+    "en": f"{GITHUB_BASE_URL}videos/gif_especial/en/especial.gif",
+    "es": f"{GITHUB_BASE_URL}videos/gif_especial/es/especial.gif"
+}
+
+# Vdeo especial a cada 3 sinais (por idioma) - local paths
 VIDEOS_ESPECIAIS = {
     "pt": os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.gif"),
     "en": os.path.join(VIDEOS_ESPECIAL_EN_DIR, "especial.gif"),
     "es": os.path.join(VIDEOS_ESPECIAL_ES_DIR, "especial.gif")
 }
 
-# Vdeos promocionais por idioma
+# Vdeos promocionais por idioma - URLs do GitHub
+VIDEOS_PROMO_GITHUB = {
+    "pt": f"{GITHUB_BASE_URL}videos/promo/pt/promo.gif",
+    "en": f"{GITHUB_BASE_URL}videos/promo/en/promo.gif",
+    "es": f"{GITHUB_BASE_URL}videos/promo/es/promo.gif"
+}
+
+# Vdeos promocionais por idioma - local paths
 VIDEOS_PROMO = {
     "pt": os.path.join(VIDEOS_PROMO_DIR, "pt", "promo.gif"),
     "en": os.path.join(VIDEOS_PROMO_DIR, "en", "promo.gif"),
     "es": os.path.join(VIDEOS_PROMO_DIR, "es", "promo.gif")
 }
-
-# Diretrios para vdeos especiais em cada idioma
-VIDEOS_ESPECIAL_PT_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "pt")
-VIDEOS_ESPECIAL_EN_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "en")
-VIDEOS_ESPECIAL_ES_DIR = os.path.join(VIDEOS_ESPECIAL_DIR, "es")
 
 # Logs para diagnstico
 print(f"VIDEOS_DIR: {VIDEOS_DIR}")
@@ -1362,12 +1390,6 @@ print(f"VIDEOS_ESPECIAL_PT_DIR: {VIDEOS_ESPECIAL_PT_DIR}")
 # Caminho para o vdeo do GIF especial PT
 VIDEO_GIF_ESPECIAL_PT = os.path.join(VIDEOS_ESPECIAL_PT_DIR, "especial.gif")
 print(f"VIDEO_GIF_ESPECIAL_PT: {VIDEO_GIF_ESPECIAL_PT}")
-
-# Exibir caminhos completos para debug
-print(f"GIF pós-sinal PT padrao: {os.path.join(VIDEOS_POS_SINAL_PT_DIR, 'padrao.gif')}")
-print(f"GIF pós-sinal EN padrao: {os.path.join(VIDEOS_POS_SINAL_EN_DIR, 'padrao.gif')}")
-print(f"GIF pós-sinal ES padrao: {os.path.join(VIDEOS_POS_SINAL_ES_DIR, 'padrao.gif')}")
-print(f"GIF promo PT: {os.path.join(VIDEOS_PROMO_DIR, 'pt', 'promo.gif')}")
 
 # Contador para controle dos GIFs ps-sinal
 contador_pos_sinal = 0
@@ -1418,7 +1440,7 @@ definir_horario_especial_diario()
 agendar_redefinicao_horario_especial()
 
 def bot2_enviar_gif_pos_sinal():
-    """Envia um GIF ou imagem pós-sinal para todos os canais."""
+    """Envia um GIF ou imagem pós-sinal para todos os canais, buscando diretamente do GitHub."""
     try:
         global contador_pos_sinal
         global contador_desde_ultimo_especial
@@ -1457,73 +1479,60 @@ def bot2_enviar_gif_pos_sinal():
             
             # Enviar mensagem de texto para cada canal em vez da imagem especial
             for chat_id in BOT2_CHAT_IDS:
-                config_canal = BOT2_CANAIS_CONFIG[chat_id]
-                idioma = config_canal["idioma"]
-                
-                # Definir mensagem específica para cada idioma
-                if idioma == "pt":
-                    mensagem = (
-                        "⚠️ ATENÇÃO - RESULTADO NEGATIVO ⚠️\n\n"
-                        "O mercado se moveu contra nossa análise.\n\n"
-                        "🔄 Vamos seguir com nossa estratégia e entrar no próximo sinal com GERENCIAMENTO DE BANCA.\n\n"
-                        "🧠 Lembre-se: gerenciamento é a chave para o sucesso no longo prazo.\n\n"
-                        "💪 Mantenha o foco e a disciplina. Estamos juntos nessa jornada!\n\n"
-                        "📊 Nossa taxa de acerto continua superior a 85% no mês."
-                    )
-                elif idioma == "en":
-                    mensagem = (
-                        "⚠️ ATTENTION - NEGATIVE RESULT ⚠️\n\n"
-                        "The market moved against our analysis.\n\n"
-                        "🔄 Let's continue with our strategy and enter the next signal with proper BANKROLL MANAGEMENT.\n\n"
-                        "🧠 Remember: management is the key to long-term success.\n\n"
-                        "💪 Stay focused and disciplined. We're in this journey together!\n\n"
-                        "📊 Our monthly success rate remains above 85%."
-                    )
-                else:  # espanhol por padrão
-                    mensagem = (
-                        "⚠️ ATENCIÓN - RESULTADO NEGATIVO ⚠️\n\n"
-                        "El mercado se movió contra nuestro análisis.\n\n"
-                        "🔄 Continuemos con nuestra estrategia y entremos en la próxima señal con GESTIÓN DE BANCA.\n\n"
-                        "🧠 Recuerda: la gestión es la clave para el éxito a largo plazo.\n\n"
-                        "💪 Mantén el enfoque y la disciplina. ¡Estamos juntos en este camino!\n\n"
-                        "📊 Nuestra tasa de éxito mensual sigue siendo superior al 85%."
-                    )
-                
-                # Enviar a mensagem de texto
-                url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                payload = {
-                    'chat_id': chat_id,
-                    'text': mensagem,
-                    'parse_mode': 'HTML',
-                    'disable_web_page_preview': True
-                }
-
                 try:
+                    config_canal = BOT2_CANAIS_CONFIG[chat_id]
+                    idioma = config_canal["idioma"]
+                    
+                    # Definir mensagem específica para cada idioma
+                    if idioma == "pt":
+                        mensagem = (
+                            "⚠️ ATENÇÃO - RESULTADO NEGATIVO ⚠️\n\n"
+                            "O mercado se moveu contra nossa análise.\n\n"
+                            "🔄 Vamos seguir com nossa estratégia e entrar no próximo sinal com GERENCIAMENTO DE BANCA.\n\n"
+                            "🧠 Lembre-se: gerenciamento é a chave para o sucesso no longo prazo.\n\n"
+                            "💪 Mantenha o foco e a disciplina. Estamos juntos nessa jornada!\n\n"
+                            "📊 Nossa taxa de acerto continua superior a 85% no mês."
+                        )
+                    elif idioma == "en":
+                        mensagem = (
+                            "⚠️ ATTENTION - NEGATIVE RESULT ⚠️\n\n"
+                            "The market moved against our analysis.\n\n"
+                            "🔄 Let's continue with our strategy and enter the next signal with proper BANKROLL MANAGEMENT.\n\n"
+                            "🧠 Remember: management is the key to long-term success.\n\n"
+                            "💪 Stay focused and disciplined. We're in this journey together!\n\n"
+                            "📊 Our monthly success rate remains above 85%."
+                        )
+                    else:  # espanhol por padrão
+                        mensagem = (
+                            "⚠️ ATENCIÓN - RESULTADO NEGATIVO ⚠️\n\n"
+                            "El mercado se movió contra nuestro análisis.\n\n"
+                            "🔄 Continuemos con nuestra estrategia y entremos en la próxima señal con GESTIÓN DE BANCA.\n\n"
+                            "🧠 Recuerda: la gestión es la clave para el éxito a largo plazo.\n\n"
+                            "💪 Mantén el enfoque y la disciplina. ¡Estamos juntos en este camino!\n\n"
+                            "📊 Nuestra tasa de éxito mensual sigue siendo superior al 85%."
+                        )
+                    
+                    # Enviar a mensagem de texto
+                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                    payload = {
+                        'chat_id': chat_id,
+                        'text': mensagem,
+                        'parse_mode': 'HTML',
+                        'disable_web_page_preview': True
+                    }
+
                     resposta = requests.post(url_base, json=payload)
+                    
                     if resposta.status_code == 200:
                         BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PÓS-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
                     else:
                         BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pós-sinal para o canal {chat_id}: {resposta.text}")
+                        
                 except Exception as e:
                     BOT2_LOGGER.error(f"[{horario_atual}] Exceção ao enviar mensagem pós-sinal: {str(e)}")
         else:
-            # Envio do GIF normal pós-sinal para cada canal
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal padrão para todos os canais")
-            
-            # Criar GIFs mínimos se não existirem
-            for idioma in ["pt", "en", "es"]:
-                gif_padrao_path = os.path.join(os.path.join(VIDEOS_POS_SINAL_DIR, idioma), "padrao.gif")
-                os.makedirs(os.path.dirname(gif_padrao_path), exist_ok=True)
-                
-                if not os.path.exists(gif_padrao_path):
-                    BOT2_LOGGER.warning(f"[{horario_atual}] Criando GIF padrão para {idioma} em {gif_padrao_path}")
-                    try:
-                        with open(gif_padrao_path, 'wb') as f:
-                            # GIF mínimo válido (1x1 pixel transparente)
-                            f.write(b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;')
-                        BOT2_LOGGER.info(f"[{horario_atual}] GIF padrão criado com sucesso para {idioma}")
-                    except Exception as e:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao criar GIF padrão para {idioma}: {str(e)}")
+            # Envio do GIF normal pós-sinal para cada canal diretamente do GitHub
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal padrão diretamente do GitHub para todos os canais")
             
             for chat_id in BOT2_CHAT_IDS:
                 try:
@@ -1531,62 +1540,67 @@ def bot2_enviar_gif_pos_sinal():
                     idioma = config_canal["idioma"]
                     
                     # Escolher o GIF correto baseado no idioma
-                    gif_path = None
-                    if idioma in VIDEOS_POS_SINAL:
-                        gif_path = VIDEOS_POS_SINAL[idioma][0]  # Usar o GIF padrão
-                    else:
-                        # Fallback para português
-                        gif_path = VIDEOS_POS_SINAL["pt"][0]
+                    if idioma in VIDEOS_POS_SINAL_GITHUB:
+                        # Obter a URL do GIF no GitHub
+                        gif_url = VIDEOS_POS_SINAL_GITHUB[idioma][0]  # Usar o GIF padrão
                         
-                    BOT2_LOGGER.info(f"[{horario_atual}] Verificando GIF: {gif_path}")
-                    
-                    # Verificar se o arquivo existe
-                    if not os.path.exists(gif_path):
-                        BOT2_LOGGER.warning(f"[{horario_atual}] Arquivo de GIF não encontrado: {gif_path}")
-                        # Criar o diretório se não existir
-                        os.makedirs(os.path.dirname(gif_path), exist_ok=True)
+                        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF do GitHub: {gif_url} para canal {chat_id} (idioma: {idioma})")
                         
-                        # Criar um GIF mínimo válido (1x1 pixel transparente)
-                        with open(gif_path, 'wb') as f:
-                            f.write(b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;')
-                        BOT2_LOGGER.info(f"[{horario_atual}] Criado GIF mínimo em: {gif_path}")
-                    
-                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF como animação: {gif_path}")
-                    
-                    # Verificar tamanho do arquivo
-                    file_size = os.path.getsize(gif_path)
-                    BOT2_LOGGER.info(f"[{horario_atual}] Tamanho do GIF: {file_size} bytes")
-                    
-                    # Enviar o GIF como animação via API Telegram
-                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                    
-                    with open(gif_path, 'rb') as gif_file:
-                        files = {'animation': gif_file}
-                        data = {'chat_id': chat_id}
+                        # Enviar o GIF como animação via API Telegram, usando a URL direta do GitHub
+                        url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
                         
-                        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF para o canal {chat_id}")
-                        resposta = requests.post(url_base, data=data, files=files)
+                        # Criar os dados para o envio do GIF
+                        payload = {
+                            'chat_id': chat_id,
+                            'animation': gif_url
+                        }
+                        
+                        # Fazer a solicitação para a API do Telegram
+                        resposta = requests.post(url_base, json=payload)
                         
                         if resposta.status_code == 200:
                             BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF PÓS-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
                         else:
-                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar GIF: {resposta.text}")
-                            BOT2_LOGGER.info(f"[{horario_atual}] Tentando enviar mensagem de texto como alternativa")
+                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar GIF: {resposta.status_code}, {resposta.text}")
+                            BOT2_LOGGER.info(f"[{horario_atual}] Tentando baixar o GIF e enviar...")
                             
-                            # Enviar uma mensagem de texto como alternativa
-                            mensagem = "🔍 Sinal finalizado! Acompanhe o próximo sinal no horário programado."
-                            url_base_msg = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                            payload = {
-                                'chat_id': chat_id,
-                                'text': mensagem,
-                                'parse_mode': 'HTML'
-                            }
-                            
-                            resposta_msg = requests.post(url_base_msg, json=payload)
-                            if resposta_msg.status_code == 200:
-                                BOT2_LOGGER.info(f"[{horario_atual}] ✓ Mensagem alternativa enviada com sucesso")
-                            else:
-                                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar mensagem alternativa: {resposta_msg.text}")
+                            # Se falhar, tentar baixar o GIF e enviar como arquivo
+                            try:
+                                # Baixar o GIF
+                                gif_response = requests.get(gif_url)
+                                if gif_response.status_code == 200:
+                                    # Obter o nome do arquivo da URL
+                                    filename = os.path.basename(gif_url)
+                                    # Criar um arquivo temporário
+                                    temp_gif_path = os.path.join(VIDEOS_DIR, filename)
+                                    
+                                    # Salvar o GIF em um arquivo temporário
+                                    with open(temp_gif_path, 'wb') as f:
+                                        f.write(gif_response.content)
+                                    
+                                    # Enviar o GIF como animação via API Telegram
+                                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                                    
+                                    with open(temp_gif_path, 'rb') as gif_file:
+                                        files = {'animation': gif_file}
+                                        data = {'chat_id': chat_id}
+                                        
+                                        resposta = requests.post(url_base, data=data, files=files)
+                                        
+                                        if resposta.status_code == 200:
+                                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF PÓS-SINAL ENVIADO COM SUCESSO (modo fallback) para o canal {chat_id}")
+                                        else:
+                                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar GIF no modo fallback: {resposta.text}")
+                                    
+                                    # Remover o arquivo temporário
+                                    os.remove(temp_gif_path)
+                                else:
+                                    BOT2_LOGGER.error(f"[{horario_atual}] ✗ Não foi possível baixar o GIF: {gif_response.status_code}")
+                            except Exception as download_error:
+                                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao baixar e enviar GIF: {str(download_error)}")
+                    else:
+                        BOT2_LOGGER.warning(f"[{horario_atual}] Idioma não suportado para GIF pós-sinal: {idioma}")
+                
                 except Exception as e:
                     BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar GIF para canal {chat_id}: {str(e)}")
                     traceback.print_exc()
@@ -1750,15 +1764,12 @@ if __name__ == "__main__":
         print("================================")
         
         # Exibir caminhos das imagens ps-sinal
-        print(f"Caminho da imagem ps-sinal padrao (PT): {os.path.join(VIDEOS_POS_SINAL_PT_DIR, 'padrao.gif')}")
-        print(f"Caminho da imagem ps-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_PT_DIR, 'especial.gif')}")
-        print(f"Caminho da imagem ps-sinal padrao (EN): {os.path.join(VIDEOS_POS_SINAL_EN_DIR, 'padrao.gif')}")
-        print(f"Caminho da imagem ps-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_EN_DIR, 'especial.gif')}")
-        print(f"Caminho da imagem ps-sinal padrao (ES): {os.path.join(VIDEOS_POS_SINAL_ES_DIR, 'padrao.gif')}")
-        print(f"Caminho da imagem ps-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_ES_DIR, 'especial.gif')}")
-        print(f"Caminho do GIF promocional (PT): {os.path.join(VIDEOS_PROMO_DIR, 'pt', 'promo.gif')}")
-        print(f"Caminho do GIF promocional (EN): {os.path.join(VIDEOS_PROMO_DIR, 'en', 'promo.gif')}")
-        print(f"Caminho do GIF promocional (ES): {os.path.join(VIDEOS_PROMO_DIR, 'es', 'promo.gif')}")
+        print(f"Caminho da imagem ps-sinal padro (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}")
+        print(f"Caminho da imagem ps-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}")
+        print(f"Caminho da imagem ps-sinal padro (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}")
+        print(f"Caminho da imagem ps-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}")
+        print(f"Caminho da imagem ps-sinal padro (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}")
+        print(f"Caminho da imagem ps-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}")
         
         # Verificar se os diretrios existem
         print(f"Verificando pastas:")
