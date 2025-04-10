@@ -28,6 +28,10 @@ import telebot
 # Definição da variável global assets
 assets = {}
 
+# Definição de outras variáveis globais
+ultimo_ativo = None
+ultimo_signal = None
+
 # Configuração do logger específico para o Bot 2
 BOT2_LOGGER = logging.getLogger("bot2")
 BOT2_LOGGER.setLevel(logging.INFO)
@@ -1087,8 +1091,7 @@ def bot2_verificar_disponibilidade():
         return []
 
     BOT2_LOGGER.info(
-        f"Total de ativos na categoria Digital: {
-            len(ativos_digital)}"
+        f"Total de ativos na categoria Digital: {len(ativos_digital)}"
     )
 
     # Verificar disponibilidade de cada ativo
@@ -1097,8 +1100,7 @@ def bot2_verificar_disponibilidade():
             ativos_disponiveis.append(ativo)
 
     BOT2_LOGGER.info(
-        f"Ativos disponíveis no momento ({
-            len(ativos_disponiveis)}): {ativos_disponiveis}"
+        f"Ativos disponíveis no momento ({len(ativos_disponiveis)}): {ativos_disponiveis}"
     )
 
     return ativos_disponiveis
@@ -1134,8 +1136,7 @@ def bot2_gerar_sinal_aleatorio():
         expiracao_time = bot2_obter_hora_brasilia() + timedelta(
             minutes=tempo_expiracao_minutos
         )
-        expiracao_texto = f"🕒 Expiração: {tempo_expiracao_minutos} minutos ({
-            expiracao_time.strftime('%H:%M')})"
+        expiracao_texto = f"🕒 Expiração: {tempo_expiracao_minutos} minutos ({expiracao_time.strftime('%H:%M')})"
 
         # Registrar nos logs que um sinal foi gerado
         BOT2_LOGGER.info(
@@ -1543,16 +1544,14 @@ def definir_horario_especial_diario():
     )
 
     BOT2_LOGGER.info(
-        f"Horário especial diário definido para: {
-            horario_especial_diario.strftime('%H:%M')}"
+        f"Horário especial diário definido para: {horario_especial_diario.strftime('%H:%M')}"
     )
 
     # Se o horrio j passou hoje, reagenda para amanh
     if horario_especial_diario < horario_atual:
         horario_especial_diario = horario_especial_diario + timedelta(days=1)
         BOT2_LOGGER.info(
-            f"Horário já passou hoje, reagendado para amanhã: {
-                horario_especial_diario.strftime('%H:%M')}"
+            f"Horário já passou hoje, reagendado para amanhã: {horario_especial_diario.strftime('%H:%M')}"
         )
 
 
@@ -1898,8 +1897,7 @@ def bot2_iniciar_ciclo_sinais():
 
     except Exception as e:
         BOT2_LOGGER.error(
-            f"Erro ao iniciar ciclo de sinais do Bot 2: {
-                str(e)}"
+            f"Erro ao iniciar ciclo de sinais do Bot 2: {str(e)}"
         )
         bot2_sinais_agendados = False
         raise
@@ -1946,8 +1944,7 @@ def iniciar_ambos_bots():
             pending_jobs = schedule.get_jobs()
             if pending_jobs:
                 BOT2_LOGGER.debug(
-                    f"Executando {
-                        len(pending_jobs)} tarefas agendadas"
+                    f"Executando {len(pending_jobs)} tarefas agendadas"
                 )
             schedule.run_pending()
 
@@ -1985,66 +1982,38 @@ if __name__ == "__main__":
 
         # Exibir caminhos das imagens ps-sinal
         print(
-            f"Caminho da imagem ps-sinal padro (PT): {
-                os.path.join(
-                    VIDEOS_POS_SINAL_DIR,
-                    'pt',
-                    'padrao.jpg')}"
+            f"Caminho da imagem ps-sinal padro (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}"
         )
         print(
-            f"Caminho da imagem ps-sinal especial (PT): {
-                os.path.join(
-                    VIDEOS_POS_SINAL_DIR,
-                    'pt',
-                    'especial.jpg')}"
+            f"Caminho da imagem ps-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}"
         )
         print(
-            f"Caminho da imagem ps-sinal padro (EN): {
-                os.path.join(
-                    VIDEOS_POS_SINAL_DIR,
-                    'en',
-                    'padrao.jpg')}"
+            f"Caminho da imagem ps-sinal padro (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}"
         )
         print(
-            f"Caminho da imagem ps-sinal especial (EN): {
-                os.path.join(
-                    VIDEOS_POS_SINAL_DIR,
-                    'en',
-                    'especial.jpg')}"
+            f"Caminho da imagem ps-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}"
         )
         print(
-            f"Caminho da imagem ps-sinal padro (ES): {
-                os.path.join(
-                    VIDEOS_POS_SINAL_DIR,
-                    'es',
-                    'padrao.jpg')}"
+            f"Caminho da imagem ps-sinal padro (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}"
         )
         print(
-            f"Caminho da imagem ps-sinal especial (ES): {
-                os.path.join(
-                    VIDEOS_POS_SINAL_DIR,
-                    'es',
-                    'especial.jpg')}"
+            f"Caminho da imagem ps-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}"
         )
 
         # Verificar se os diretrios existem
         print(f"Verificando pastas:")
         print(f"VIDEOS_DIR existe: {os.path.exists(VIDEOS_DIR)}")
         print(
-            f"VIDEOS_POS_SINAL_DIR existe: {
-                os.path.exists(VIDEOS_POS_SINAL_DIR)}"
+            f"VIDEOS_POS_SINAL_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_DIR)}"
         )
         print(
-            f"VIDEOS_POS_SINAL_PT_DIR existe: {
-                os.path.exists(VIDEOS_POS_SINAL_PT_DIR)}"
+            f"VIDEOS_POS_SINAL_PT_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_PT_DIR)}"
         )
         print(
-            f"VIDEOS_ESPECIAL_DIR existe: {
-                os.path.exists(VIDEOS_ESPECIAL_DIR)}"
+            f"VIDEOS_ESPECIAL_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_DIR)}"
         )
         print(
-            f"VIDEOS_ESPECIAL_PT_DIR existe: {
-                os.path.exists(VIDEOS_ESPECIAL_PT_DIR)}"
+            f"VIDEOS_ESPECIAL_PT_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_PT_DIR)}"
         )
 
         # Criar pastas se no existirem
