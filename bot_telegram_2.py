@@ -1450,34 +1450,29 @@ def bot2_enviar_gif_pos_sinal():
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DA IMAGEM PÓS-SINAL...")
+        BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Preparando para enviar GIFs pós-sinal")
         
         # Limpar o próprio agendamento para garantir que este seja executado apenas uma vez por sinal
         schedule.clear('bot2_pos_sinal')
-        BOT2_LOGGER.info(f"[{horario_atual}] Agendamento de gif pós-sinal limpo para evitar duplicações.")
         
         # Incrementar o contador de envios pós-sinal
         contador_pos_sinal += 1
         contador_desde_ultimo_especial += 1
         
-        BOT2_LOGGER.info(f"[{horario_atual}] Contador pós-sinal: {contador_pos_sinal}, Contador desde último especial: {contador_desde_ultimo_especial}")
+        BOT2_LOGGER.info(f"[{horario_atual}] Contador pós-sinal: {contador_pos_sinal}")
         
         # Determinar se devemos enviar a imagem especial
-        # Verifica se é o horário especial definido para hoje e se a imagem especial ainda não foi enviada hoje
         horario_especial_agora = False
         if horario_especial_diario and not imagem_especial_ja_enviada_hoje:
-            # Compara apenas hora e minuto, ignorando segundos
-            if (agora.hour == horario_especial_diario.hour and 
-                agora.minute == horario_especial_diario.minute):
+            if (agora.hour == horario_especial_diario.hour and agora.minute == horario_especial_diario.minute):
                 horario_especial_agora = True
                 imagem_especial_ja_enviada_hoje = True
-                BOT2_LOGGER.info(f"[{horario_atual}] HORÁRIO ESPECIAL DETECTADO! Enviando imagem especial pela única vez no dia")
+                BOT2_LOGGER.info(f"[{horario_atual}] HORÁRIO ESPECIAL DETECTADO! Enviando mensagem especial")
         
-        # Verifica se deve enviar imagem especial (apenas no horário especial do dia)
+        # Verifica se deve enviar mensagem especial
         if horario_especial_agora:
-            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A MENSAGEM ESPECIAL DE PERDA (sinal {contador_pos_sinal})")
-            contador_desde_ultimo_especial = 0
+            BOT2_LOGGER.info(f"[{horario_atual}] ENVIANDO A MENSAGEM ESPECIAL DE PERDA")
             
-            # Enviar mensagem de texto para cada canal em vez da imagem especial
             for chat_id in BOT2_CHAT_IDS:
                 try:
                     config_canal = BOT2_CANAIS_CONFIG[chat_id]
@@ -1520,95 +1515,82 @@ def bot2_enviar_gif_pos_sinal():
                         'parse_mode': 'HTML',
                         'disable_web_page_preview': True
                     }
-
+                    
                     resposta = requests.post(url_base, json=payload)
                     
                     if resposta.status_code == 200:
-                        BOT2_LOGGER.info(f"[{horario_atual}] MENSAGEM PÓS-SINAL ENVIADA COM SUCESSO para o canal {chat_id}")
+                        BOT2_LOGGER.info(f"[{horario_atual}] ✓ MENSAGEM ESPECIAL ENVIADA COM SUCESSO para o canal {chat_id}")
                     else:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem pós-sinal para o canal {chat_id}: {resposta.text}")
+                        BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar mensagem especial: {resposta.text}")
                         
                 except Exception as e:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Exceção ao enviar mensagem pós-sinal: {str(e)}")
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem especial: {str(e)}")
         else:
-            # Envio do GIF normal pós-sinal para cada canal diretamente do GitHub
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal padrão diretamente do GitHub para todos os canais")
+            # Envio do GIF normal pós-sinal para cada canal
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal padrão para todos os canais")
             
             for chat_id in BOT2_CHAT_IDS:
                 try:
                     config_canal = BOT2_CANAIS_CONFIG[chat_id]
                     idioma = config_canal["idioma"]
                     
-                    # Escolher o GIF correto baseado no idioma
-                    if idioma in VIDEOS_POS_SINAL_GITHUB:
-                        # Obter a URL do GIF no GitHub
-                        gif_url = VIDEOS_POS_SINAL_GITHUB[idioma][0]  # Usar o GIF padrão
-                        
-                        BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF do GitHub: {gif_url} para canal {chat_id} (idioma: {idioma})")
-                        
-                        # Enviar o GIF como animação via API Telegram, usando a URL direta do GitHub
-                        url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                        
-                        # Criar os dados para o envio do GIF
-                        payload = {
-                            'chat_id': chat_id,
-                            'animation': gif_url
-                        }
-                        
-                        # Fazer a solicitação para a API do Telegram
-                        resposta = requests.post(url_base, json=payload)
-                        
-                        if resposta.status_code == 200:
-                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF PÓS-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
-                        else:
-                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar GIF: {resposta.status_code}, {resposta.text}")
-                            BOT2_LOGGER.info(f"[{horario_atual}] Tentando baixar o GIF e enviar...")
-                            
-                            # Se falhar, tentar baixar o GIF e enviar como arquivo
-                            try:
-                                # Baixar o GIF
-                                gif_response = requests.get(gif_url)
-                                if gif_response.status_code == 200:
-                                    # Obter o nome do arquivo da URL
-                                    filename = os.path.basename(gif_url)
-                                    # Criar um arquivo temporário
-                                    temp_gif_path = os.path.join(VIDEOS_DIR, filename)
-                                    
-                                    # Salvar o GIF em um arquivo temporário
-                                    with open(temp_gif_path, 'wb') as f:
-                                        f.write(gif_response.content)
-                                    
-                                    # Enviar o GIF como animação via API Telegram
-                                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
-                                    
-                                    with open(temp_gif_path, 'rb') as gif_file:
-                                        files = {'animation': gif_file}
-                                        data = {'chat_id': chat_id}
-                                        
-                                        resposta = requests.post(url_base, data=data, files=files)
-                                        
-                                        if resposta.status_code == 200:
-                                            BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF PÓS-SINAL ENVIADO COM SUCESSO (modo fallback) para o canal {chat_id}")
-                                        else:
-                                            BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar GIF no modo fallback: {resposta.text}")
-                                    
-                                    # Remover o arquivo temporário
-                                    os.remove(temp_gif_path)
-                                else:
-                                    BOT2_LOGGER.error(f"[{horario_atual}] ✗ Não foi possível baixar o GIF: {gif_response.status_code}")
-                            except Exception as download_error:
-                                BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao baixar e enviar GIF: {str(download_error)}")
+                    # Definir a URL do GIF no GitHub com base no idioma
+                    if idioma == "pt":
+                        gif_url = f"{GITHUB_BASE_URL}videos/pos_sinal/pt/padrão.gif"
+                    elif idioma == "en":
+                        gif_url = f"{GITHUB_BASE_URL}videos/pos_sinal/en/padrao.gif"
+                    else:  # "es"
+                        gif_url = f"{GITHUB_BASE_URL}videos/pos_sinal/es/padrao.gif"
+                    
+                    BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Preparando envio do GIF: {gif_url} para canal {chat_id}")
+                    
+                    # Enviar o GIF como animação via API Telegram
+                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                    payload = {
+                        'chat_id': chat_id,
+                        'animation': gif_url
+                    }
+                    
+                    BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Enviando requisição para API Telegram com payload: {payload}")
+                    
+                    resposta = requests.post(url_base, json=payload)
+                    
+                    if resposta.status_code == 200:
+                        BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF PÓS-SINAL ENVIADO COM SUCESSO para o canal {chat_id}")
+                        BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Resposta da API: {resposta.json()}")
                     else:
-                        BOT2_LOGGER.warning(f"[{horario_atual}] Idioma não suportado para GIF pós-sinal: {idioma}")
-                
+                        BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar GIF: {resposta.text}")
+                        BOT2_LOGGER.error(f"[{horario_atual}] 🎬 LOG GIF: Tentando método alternativo de envio...")
+                        
+                        # Tentar baixar o GIF e enviar como um arquivo
+                        try:
+                            BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Baixando GIF de {gif_url}")
+                            gif_data = requests.get(gif_url, timeout=30)
+                            if gif_data.status_code == 200:
+                                BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: GIF baixado com sucesso, tentando enviar como arquivo")
+                                
+                                url_base_documento = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
+                                files = {'document': ('animation.gif', gif_data.content)}
+                                data = {'chat_id': chat_id}
+                                
+                                resposta_alt = requests.post(url_base_documento, files=files, data=data)
+                                if resposta_alt.status_code == 200:
+                                    BOT2_LOGGER.info(f"[{horario_atual}] ✓ GIF enviado com sucesso como documento para o canal {chat_id}")
+                                else:
+                                    BOT2_LOGGER.error(f"[{horario_atual}] ✗ Erro ao enviar GIF como documento: {resposta_alt.text}")
+                            else:
+                                BOT2_LOGGER.error(f"[{horario_atual}] 🎬 LOG GIF: Falha ao baixar GIF: {gif_data.status_code}")
+                        except Exception as download_error:
+                            BOT2_LOGGER.error(f"[{horario_atual}] 🎬 LOG GIF: Erro ao baixar/enviar GIF alternativo: {str(download_error)}")
+                        
                 except Exception as e:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar GIF para canal {chat_id}: {str(e)}")
-                    traceback.print_exc()
-    
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar GIF: {str(e)}")
+                    BOT2_LOGGER.error(f"[{horario_atual}] 🎬 LOG GIF: Erro detalhado: {traceback.format_exc()}")
+                    
     except Exception as e:
         horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[{horario_atual}] Erro geral ao enviar imagens pós-sinal: {str(e)}")
-        traceback.print_exc()
+        BOT2_LOGGER.error(f"[{horario_atual}] 🎬 LOG GIF: Stack trace completo: {traceback.format_exc()}")
 
 def bot2_send_message(ignorar_anti_duplicacao=False):
     """Envia uma mensagem com sinal para todos os canais configurados."""
@@ -1664,15 +1646,16 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
         # Incrementa o contador global de sinais
         bot2_contador_sinais += 1
         
-        # Agendar o gif pós-sinal para depois da expiração (5 minutos + 2 minutos adicionais)
-        # Expiração = 5 minutos, acrescenta 2 minutos de margem para resultados
-        tempo_pos_sinal = tempo_expiracao_minutos + 2
+        # ALTERADO: Agendar o gif pós-sinal para 7 minutos após a expiração (5 minutos + 7 minutos)
+        # Tempo total = tempo_expiracao_minutos + 7 minutos após expiração
+        tempo_pos_sinal = tempo_expiracao_minutos + 7
         
         # Calcular a hora exata para o envio do GIF pós-sinal (hora atual + tempo_pos_sinal minutos)
         horario_pos_sinal = agora + timedelta(minutes=tempo_pos_sinal)
         hora_pos_sinal_str = horario_pos_sinal.strftime("%H:%M")
         
-        BOT2_LOGGER.info(f"[{horario_atual}] Agendando GIF pós-sinal para {hora_pos_sinal_str} (daqui a {tempo_pos_sinal} minutos)")
+        BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Agendando GIF pós-sinal para {hora_pos_sinal_str} (daqui a {tempo_pos_sinal} minutos)")
+        BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Tempo de expiração do sinal: {tempo_expiracao_minutos} minutos + 7 minutos de atraso = {tempo_pos_sinal} minutos total")
         
         # Agendar para uma hora específica em vez de um intervalo relativo
         schedule.every().day.at(hora_pos_sinal_str).do(bot2_enviar_gif_pos_sinal).tag('bot2_pos_sinal')
@@ -1682,7 +1665,6 @@ def bot2_send_message(ignorar_anti_duplicacao=False):
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao enviar sinal: {str(e)}")
         traceback.print_exc()
-        return False
 
 def bot2_iniciar_ciclo_sinais():
     """
