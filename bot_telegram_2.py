@@ -957,22 +957,50 @@ def is_asset_available(asset, current_time=None, current_day=None):
     """
     Verifica se um ativo está disponível no horário atual.
     """
-    if asset not in assets:
-        return False
-
-    if current_day not in assets[asset]:
-        return False
-
+    # Log para debug
+    agora = bot2_obter_hora_brasilia()
+    
+    if not current_day:
+        current_day = agora.strftime("%A")
+    
     if not current_time:
-        current_time = datetime.now().strftime("%H:%M")
+        current_time = agora.strftime("%H:%M")
+        
+    BOT2_LOGGER.info(f"Verificando disponibilidade do ativo {asset} no dia {current_day}, horário {current_time}")
+    
+    # Verificar se o ativo existe no dicionário assets
+    if asset not in assets:
+        BOT2_LOGGER.warning(f"Ativo {asset} não encontrado no dicionário assets")
+        # Tentar usar horário padrão para qualquer dia da semana
+        default_hours = {
+            "Monday": ["00:00-23:59"],
+            "Tuesday": ["00:00-23:59"],
+            "Wednesday": ["00:00-23:59"],
+            "Thursday": ["00:00-23:59"],
+            "Friday": ["00:00-23:59"],
+            "Saturday": ["00:00-23:59"],
+            "Sunday": ["00:00-23:59"]
+        }
+        assets[asset] = default_hours
+        BOT2_LOGGER.info(f"Criando horário padrão 24/7 para o ativo {asset}")
+
+    # Verificar se o dia atual existe no dicionário do ativo
+    if current_day not in assets[asset]:
+        BOT2_LOGGER.warning(f"Dia {current_day} não configurado para o ativo {asset}")
+        return False
 
     current_time_obj = datetime.strptime(current_time, "%H:%M").time()
-
+    
+    # Verificar cada intervalo de horário configurado para o ativo no dia atual
     for time_range in assets[asset][current_day]:
         start_time, end_time = parse_time_range(time_range)
         if start_time <= current_time_obj <= end_time:
+            BOT2_LOGGER.info(f"Ativo {asset} está disponível no horário {current_time} (dentro do intervalo {time_range})")
             return True
+        else:
+            BOT2_LOGGER.debug(f"Ativo {asset} não está disponível no intervalo {time_range}")
 
+    BOT2_LOGGER.warning(f"Ativo {asset} não está disponível em nenhum intervalo de horário do dia {current_day}")
     return False
 
 # Funo para obter hora no fuso horário de Brasília (específica para Bot 2)
@@ -985,34 +1013,35 @@ def bot2_obter_hora_brasilia():
 
 def bot2_verificar_disponibilidade():
     """
-    Verifica quais ativos da categoria Digital estão disponíveis para o sinal atual.
-    Retorna uma lista de ativos disponíveis.
+    Verifica quais ativos estão disponíveis no momento da verificação.
+    Retorna uma lista de ativos da categoria Digital disponíveis.
     """
-    global BOT2_ATIVOS_CATEGORIAS
+    ativos_disponiveis = []
     
+    # Obter hora atual no fuso horário de Brasília
     agora = bot2_obter_hora_brasilia()
-    current_time = agora.strftime("%H:%M")
-    current_day = agora.strftime("%A")
-
-    # Se BOT2_ATIVOS_CATEGORIAS estiver vazio, inicializar com os ativos das categorias
-    if not BOT2_ATIVOS_CATEGORIAS:
-        BOT2_LOGGER.info("Inicializando BOT2_ATIVOS_CATEGORIAS com ativos das categorias")
-        for categoria, ativos in ATIVOS_CATEGORIAS.items():
-            for ativo in ativos:
-                BOT2_ATIVOS_CATEGORIAS[ativo] = categoria
-
-    # Verificar ativos disponíveis apenas da categoria Digital
-    available_assets = []
+    dia_atual = agora.strftime("%A")
+    hora_atual = agora.strftime("%H:%M")
     
-    for ativo in ATIVOS_CATEGORIAS["Digital"]:
-        if is_asset_available(ativo, current_time, current_day):
-            available_assets.append(ativo)
+    BOT2_LOGGER.info(f"Verificando disponibilidade para o dia {dia_atual} às {hora_atual}")
     
-    # Se não houver ativos disponíveis, logar aviso
-    if not available_assets:
-        BOT2_LOGGER.warning(f"Nenhum ativo da categoria Digital disponível no momento.")
+    # Filtrar apenas ativos da categoria Digital
+    ativos_digital = [ativo for ativo in ATIVOS_CATEGORIAS["Digital"]]
     
-    return available_assets
+    if not ativos_digital:
+        BOT2_LOGGER.warning("Nenhum ativo na categoria Digital encontrado!")
+        return []
+    
+    BOT2_LOGGER.info(f"Total de ativos na categoria Digital: {len(ativos_digital)}")
+    
+    # Verificar disponibilidade de cada ativo
+    for ativo in ativos_digital:
+        if is_asset_available(ativo, hora_atual, dia_atual):
+            ativos_disponiveis.append(ativo)
+    
+    BOT2_LOGGER.info(f"Ativos disponíveis no momento ({len(ativos_disponiveis)}): {ativos_disponiveis}")
+    
+    return ativos_disponiveis
 
 def bot2_gerar_sinal_aleatorio():
     """
