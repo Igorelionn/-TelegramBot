@@ -1691,17 +1691,74 @@ def bot2_enviar_gif_pos_sinal(signal=None):
 
                 BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Preparando envio do GIF: {gif_url} para canal {chat_id}")
                 
-                # Enviar o GIF como animação diretamente com a URL nas dimensões 208 x 83.69 pixels
-                bot2.send_animation(
-                    chat_id=chat_id,
-                    animation=gif_url,
-                    caption="",
-                    parse_mode="HTML",
-                    width=208,
-                    height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
-                )
-                BOT2_LOGGER.info(f"GIF enviado com sucesso como animação para o canal {chat_id}")
-                gif_enviado_com_sucesso = True
+                try:
+                    # Baixar o arquivo para enviar como arquivo em vez de URL
+                    BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Baixando arquivo de {gif_url}")
+                    arquivo_resposta = requests.get(gif_url, stream=True, timeout=10)
+                    
+                    if arquivo_resposta.status_code == 200:
+                        # Criar um arquivo temporário no formato correto
+                        extensao = ".gif"
+                        if ".webp" in gif_url.lower():
+                            extensao = ".webp"
+                        
+                        nome_arquivo_temp = f"temp_gif_{random.randint(1000, 9999)}{extensao}"
+                        
+                        # Salvar o arquivo temporariamente
+                        with open(nome_arquivo_temp, 'wb') as f:
+                            f.write(arquivo_resposta.content)
+                        
+                        BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Arquivo baixado com sucesso como {nome_arquivo_temp}")
+                        
+                        # Abrir o arquivo e enviar como animação
+                        with open(nome_arquivo_temp, 'rb') as f_gif:
+                            # Enviar o GIF como animação diretamente do arquivo nas dimensões especificadas
+                            BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Enviando arquivo como animação")
+                            bot2.send_animation(
+                                chat_id=chat_id,
+                                animation=f_gif,
+                                caption="",
+                                parse_mode="HTML",
+                                width=208,
+                                height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
+                            )
+                        
+                        # Remover o arquivo temporário
+                        try:
+                            os.remove(nome_arquivo_temp)
+                            BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Arquivo temporário {nome_arquivo_temp} removido")
+                        except:
+                            BOT2_LOGGER.warning(f"[{horario_atual}] 🎬 LOG GIF: Não foi possível remover o arquivo temporário {nome_arquivo_temp}")
+                        
+                        BOT2_LOGGER.info(f"GIF enviado com sucesso como animação para o canal {chat_id}")
+                        gif_enviado_com_sucesso = True
+                    else:
+                        BOT2_LOGGER.error(f"[{horario_atual}] 🎬 LOG GIF: Erro ao baixar o arquivo. Status code: {arquivo_resposta.status_code}")
+                        # Tentar enviar diretamente com a URL como fallback
+                        bot2.send_animation(
+                            chat_id=chat_id,
+                            animation=gif_url,
+                            caption="",
+                            parse_mode="HTML",
+                            width=208,
+                            height=84
+                        )
+                        BOT2_LOGGER.info(f"GIF enviado com sucesso como URL para o canal {chat_id} (fallback)")
+                        gif_enviado_com_sucesso = True
+                except Exception as download_error:
+                    BOT2_LOGGER.error(f"[{horario_atual}] 🎬 LOG GIF: Erro ao baixar/enviar o arquivo: {str(download_error)}")
+                    # Tentar enviar diretamente com a URL como fallback
+                    bot2.send_animation(
+                        chat_id=chat_id,
+                        animation=gif_url,
+                        caption="",
+                        parse_mode="HTML",
+                        width=208,
+                        height=84
+                    )
+                    BOT2_LOGGER.info(f"GIF enviado com sucesso como URL para o canal {chat_id} (fallback após erro)")
+                    gif_enviado_com_sucesso = True
+                
         except Exception as e:
             BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar para o canal {chat_id}: {str(e)}")
             BOT2_LOGGER.error(f"[{horario_atual}] Erro detalhado: {traceback.format_exc()}")
@@ -2089,19 +2146,74 @@ def bot2_enviar_gif_especial():
                 f"Tentando enviar GIF especial como animação do URL: {gif_url} para o canal {chat_id}"
             )
             
-            # Enviar o GIF diretamente como animação nas dimensões específicas
-            bot2.send_animation(
-                chat_id=chat_id, 
-                animation=gif_url, 
-                caption="", 
-                parse_mode="HTML",
-                width=208,
-                height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
-            )
-            BOT2_LOGGER.info(
-                f"GIF especial enviado com sucesso como animação para o canal {chat_id}"
-            )
-            gif_enviado_com_sucesso = True
+            try:
+                # Baixar o arquivo para enviar como arquivo em vez de URL
+                BOT2_LOGGER.info(f"Baixando arquivo de {gif_url}")
+                arquivo_resposta = requests.get(gif_url, stream=True, timeout=10)
+                
+                if arquivo_resposta.status_code == 200:
+                    # Criar um arquivo temporário no formato correto
+                    extensao = ".gif"
+                    if ".webp" in gif_url.lower():
+                        extensao = ".webp"
+                    
+                    nome_arquivo_temp = f"temp_gif_{random.randint(1000, 9999)}{extensao}"
+                    
+                    # Salvar o arquivo temporariamente
+                    with open(nome_arquivo_temp, 'wb') as f:
+                        f.write(arquivo_resposta.content)
+                    
+                    BOT2_LOGGER.info(f"Arquivo baixado com sucesso como {nome_arquivo_temp}")
+                    
+                    # Abrir o arquivo e enviar como animação
+                    with open(nome_arquivo_temp, 'rb') as f_gif:
+                        # Enviar o GIF como animação diretamente do arquivo nas dimensões especificadas
+                        BOT2_LOGGER.info(f"Enviando arquivo como animação")
+                        bot2.send_animation(
+                            chat_id=chat_id,
+                            animation=f_gif,
+                            caption="",
+                            parse_mode="HTML",
+                            width=208,
+                            height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
+                        )
+                    
+                    # Remover o arquivo temporário
+                    try:
+                        os.remove(nome_arquivo_temp)
+                        BOT2_LOGGER.info(f"Arquivo temporário {nome_arquivo_temp} removido")
+                    except:
+                        BOT2_LOGGER.warning(f"Não foi possível remover o arquivo temporário {nome_arquivo_temp}")
+                    
+                    BOT2_LOGGER.info(f"GIF especial enviado com sucesso como animação para o canal {chat_id}")
+                    gif_enviado_com_sucesso = True
+                else:
+                    BOT2_LOGGER.error(f"Erro ao baixar o arquivo. Status code: {arquivo_resposta.status_code}")
+                    # Tentar enviar diretamente com a URL como fallback
+                    bot2.send_animation(
+                        chat_id=chat_id,
+                        animation=gif_url,
+                        caption="",
+                        parse_mode="HTML",
+                        width=208,
+                        height=84
+                    )
+                    BOT2_LOGGER.info(f"GIF enviado com sucesso como URL para o canal {chat_id} (fallback)")
+                    gif_enviado_com_sucesso = True
+            except Exception as download_error:
+                BOT2_LOGGER.error(f"Erro ao baixar/enviar o arquivo: {str(download_error)}")
+                # Tentar enviar diretamente com a URL como fallback
+                bot2.send_animation(
+                    chat_id=chat_id,
+                    animation=gif_url,
+                    caption="",
+                    parse_mode="HTML",
+                    width=208,
+                    height=84
+                )
+                BOT2_LOGGER.info(f"GIF enviado com sucesso como URL para o canal {chat_id} (fallback após erro)")
+                gif_enviado_com_sucesso = True
+            
         except Exception as e:
             BOT2_LOGGER.error(
                 f"Erro ao enviar GIF especial para o canal {chat_id}: {str(e)}"
@@ -2153,19 +2265,74 @@ def bot2_enviar_gif_promo(idioma="pt"):
                 f"Tentando enviar GIF promo como animação do URL: {gif_url} para o canal {chat_id}"
             )
             
-            # Enviar o GIF diretamente como animação nas dimensões específicas
-            bot2.send_animation(
-                chat_id=chat_id, 
-                animation=gif_url, 
-                caption="", 
-                parse_mode="HTML",
-                width=208,
-                height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
-            )
-            BOT2_LOGGER.info(
-                f"GIF promocional enviado com sucesso como animação para o canal {chat_id}"
-            )
-            gif_enviado_com_sucesso = True
+            try:
+                # Baixar o arquivo para enviar como arquivo em vez de URL
+                BOT2_LOGGER.info(f"Baixando arquivo de {gif_url}")
+                arquivo_resposta = requests.get(gif_url, stream=True, timeout=10)
+                
+                if arquivo_resposta.status_code == 200:
+                    # Criar um arquivo temporário no formato correto
+                    extensao = ".gif"
+                    if ".webp" in gif_url.lower():
+                        extensao = ".webp"
+                    
+                    nome_arquivo_temp = f"temp_gif_{random.randint(1000, 9999)}{extensao}"
+                    
+                    # Salvar o arquivo temporariamente
+                    with open(nome_arquivo_temp, 'wb') as f:
+                        f.write(arquivo_resposta.content)
+                    
+                    BOT2_LOGGER.info(f"Arquivo baixado com sucesso como {nome_arquivo_temp}")
+                    
+                    # Abrir o arquivo e enviar como animação
+                    with open(nome_arquivo_temp, 'rb') as f_gif:
+                        # Enviar o GIF como animação diretamente do arquivo nas dimensões especificadas
+                        BOT2_LOGGER.info(f"Enviando arquivo como animação")
+                        bot2.send_animation(
+                            chat_id=chat_id,
+                            animation=f_gif,
+                            caption="",
+                            parse_mode="HTML",
+                            width=208,
+                            height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
+                        )
+                    
+                    # Remover o arquivo temporário
+                    try:
+                        os.remove(nome_arquivo_temp)
+                        BOT2_LOGGER.info(f"Arquivo temporário {nome_arquivo_temp} removido")
+                    except:
+                        BOT2_LOGGER.warning(f"Não foi possível remover o arquivo temporário {nome_arquivo_temp}")
+                    
+                    BOT2_LOGGER.info(f"GIF promocional enviado com sucesso como animação para o canal {chat_id}")
+                    gif_enviado_com_sucesso = True
+                else:
+                    BOT2_LOGGER.error(f"Erro ao baixar o arquivo. Status code: {arquivo_resposta.status_code}")
+                    # Tentar enviar diretamente com a URL como fallback
+                    bot2.send_animation(
+                        chat_id=chat_id,
+                        animation=gif_url,
+                        caption="",
+                        parse_mode="HTML",
+                        width=208,
+                        height=84
+                    )
+                    BOT2_LOGGER.info(f"GIF enviado com sucesso como URL para o canal {chat_id} (fallback)")
+                    gif_enviado_com_sucesso = True
+            except Exception as download_error:
+                BOT2_LOGGER.error(f"Erro ao baixar/enviar o arquivo: {str(download_error)}")
+                # Tentar enviar diretamente com a URL como fallback
+                bot2.send_animation(
+                    chat_id=chat_id,
+                    animation=gif_url,
+                    caption="",
+                    parse_mode="HTML",
+                    width=208,
+                    height=84
+                )
+                BOT2_LOGGER.info(f"GIF enviado com sucesso como URL para o canal {chat_id} (fallback após erro)")
+                gif_enviado_com_sucesso = True
+            
         except Exception as e:
             BOT2_LOGGER.error(
                 f"Erro ao enviar GIF promocional para o canal {chat_id}: {str(e)}"
