@@ -1691,12 +1691,14 @@ def bot2_enviar_gif_pos_sinal(signal=None):
 
                 BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Preparando envio do GIF: {gif_url} para canal {chat_id}")
                 
-                # Enviar o GIF como animação diretamente com a URL
+                # Enviar o GIF como animação diretamente com a URL nas dimensões 208 x 83.69 pixels
                 bot2.send_animation(
                     chat_id=chat_id,
                     animation=gif_url,
                     caption="",
-                    parse_mode="HTML"
+                    parse_mode="HTML",
+                    width=208,
+                    height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
                 )
                 BOT2_LOGGER.info(f"GIF enviado com sucesso como animação para o canal {chat_id}")
                 gif_enviado_com_sucesso = True
