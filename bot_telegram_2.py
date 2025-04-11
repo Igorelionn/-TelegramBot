@@ -1787,20 +1787,26 @@ def bot2_enviar_gif_pos_sinal(signal=None):
 
 def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=False):
     """Envia uma mensagem com sinal para todos os canais configurados."""
-    global bot2_contador_sinais, ultimo_sinal_enviado
+    global bot2_contador_sinais, ultimo_sinal_enviado, BOT2_LOGGER, BOT2_CHAT_IDS, BOT2_CANAIS_CONFIG, BOT2_TOKEN
     
     try:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
         
+        # Verificar se há ativos disponíveis antes de tentar enviar sinais
+        ativos_disponiveis = bot2_verificar_disponibilidade()
+        if not ativos_disponiveis:
+            BOT2_LOGGER.warning("Não há ativos disponíveis no momento. Mensagem não enviada.")
+            return False
+            
         # Gerar o sinal aleatório
         sinal = bot2_gerar_sinal_aleatorio()
         if not sinal:
             BOT2_LOGGER.error(
                 f"[{horario_atual}] Não foi possível gerar um sinal válido. Tentando novamente mais tarde."
             )
-            return
+            return False
         
         # Armazenar o sinal na variável global para uso posterior
         ultimo_sinal_enviado = sinal
@@ -1811,11 +1817,15 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
         tempo_expiracao_minutos = sinal["tempo_expiracao_minutos"]
         categoria = sinal["categoria"]
 
+        # Registra o sinal
+        bot2_registrar_envio(ativo, direcao, categoria)
+
         # Calcular o horário de entrada (2 minutos após o envio do sinal)
         hora_entrada = agora + timedelta(minutes=2)
         hora_formatada = hora_entrada.strftime("%H:%M")
         
         # Enviar para cada canal
+        mensagens_enviadas = 0
         for chat_id in BOT2_CHAT_IDS:
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal["idioma"]
@@ -1845,6 +1855,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                     BOT2_LOGGER.info(
                         f"[{horario_atual}] SUCESSO: SINAL ENVIADO COM SUCESSO para o canal {chat_id}"
                     )
+                    mensagens_enviadas += 1
                 else:
                     BOT2_LOGGER.error(
                         f"[{horario_atual}] ERRO: Erro ao enviar mensagem para o canal {chat_id}: {resposta.text}"
@@ -1852,64 +1863,58 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
             except Exception as msg_error:
                 BOT2_LOGGER.error(
                     f"[{horario_atual}] ERRO: Exceção ao enviar mensagem para o canal {chat_id}: {str(msg_error)}"
-                )
-        
+                    )
+
         # Incrementa o contador global de sinais
         bot2_contador_sinais += 1
 
-        # MODIFICADO: Agendar o gif pós-sinal para 7 minutos após o envio do sinal
-        tempo_pos_sinal = 7
-
-        # Calcular a hora exata para o envio do GIF pós-sinal (hora atual + 7 minutos)
-        horario_pos_sinal = agora + timedelta(minutes=tempo_pos_sinal)
-        hora_pos_sinal_str = horario_pos_sinal.strftime("%H:%M")
-
-        BOT2_LOGGER.info(
-            f"[{horario_atual}] LOG GIF: Agendando GIF pós-sinal para {hora_pos_sinal_str} (daqui a {tempo_pos_sinal} minutos)"
-        )
-        BOT2_LOGGER.info(
-            f"[{horario_atual}] LOG GIF: O GIF será enviado exatamente 7 minutos após o sinal"
-        )
-
-        # Limpar quaisquer agendamentos anteriores para o GIF pós-sinal
-        schedule.clear("bot2_pos_sinal")
-
-        # Verificar se deve enviar o GIF imediatamente (para testes)
-        if enviar_gif_imediatamente:
+        if mensagens_enviadas > 0:
             BOT2_LOGGER.info(
-                f"[{horario_atual}] LOG GIF: Opção de envio imediato ativada - enviando GIF agora..."
+                f"[{horario_atual}] Sinal enviado com sucesso para {mensagens_enviadas} canais: {ativo} {direcao} {categoria}"
             )
-            bot2_enviar_gif_pos_sinal(sinal)
-        else:
-            # Modificar para agendar em minutos, não em dia
-            scheduler_job = (
-                schedule.every(tempo_pos_sinal)
-                .minutes
-                .do(bot2_enviar_gif_pos_sinal, sinal)
-                .tag("bot2_pos_sinal")
+            
+            # MODIFICADO: Agendar o gif pós-sinal para 7 minutos após o envio do sinal
+            tempo_pos_sinal = 7
+
+            # Calcular a hora exata para o envio do GIF pós-sinal (hora atual + 7 minutos)
+            horario_pos_sinal = agora + timedelta(minutes=tempo_pos_sinal)
+            hora_pos_sinal_str = horario_pos_sinal.strftime("%H:%M")
+
+            BOT2_LOGGER.info(
+                f"[{horario_atual}] LOG GIF: Agendando GIF pós-sinal para {hora_pos_sinal_str} (daqui a {tempo_pos_sinal} minutos)"
             )
-
-            # Verificar se o agendamento foi bem-sucedido
-            if scheduler_job:
+            
+            # Limpar quaisquer agendamentos anteriores para o GIF pós-sinal
+            schedule.clear("gif_pos_sinal")
+            
+            # Verificar se deve enviar o GIF imediatamente (para testes)
+            if enviar_gif_imediatamente:
                 BOT2_LOGGER.info(
-                    f"[{horario_atual}] LOG GIF: Agendamento criado com sucesso: {scheduler_job}"
+                    f"[{horario_atual}] LOG GIF: Opção de envio imediato ativada - enviando GIF agora..."
                 )
-
-                # Listar todos os trabalhos agendados para verificar
-                jobs = schedule.get_jobs()
-                BOT2_LOGGER.info(
-                    f"[{horario_atual}] LOG GIF: Total de trabalhos agendados: {len(jobs)}"
-                )
-                for i, job in enumerate(jobs):
-                    BOT2_LOGGER.info(
-                        f"[{horario_atual}] LOG GIF: Trabalho {i + 1}: {job} - Próxima execução: {job.next_run}"
-                    )
+                bot2_enviar_gif_pos_sinal(sinal)
             else:
-                BOT2_LOGGER.error(
-                    f"[{horario_atual}] LOG GIF: FALHA ao criar agendamento para o GIF pós-sinal!"
+                # Agendar o envio do GIF pós-sinal (apenas uma vez)
+                scheduler_job = (
+                    schedule.every(tempo_pos_sinal)
+                    .minutes
+                    .do(bot2_enviar_gif_pos_sinal, sinal)
+                    .tag("gif_pos_sinal")
                 )
 
-        return True
+                if scheduler_job:
+                    BOT2_LOGGER.info(
+                        f"[{horario_atual}] LOG GIF: Agendamento criado com sucesso: {scheduler_job}"
+                    )
+                else:
+                    BOT2_LOGGER.error(
+                        f"[{horario_atual}] LOG GIF: FALHA ao criar agendamento para o GIF pós-sinal!"
+                    )
+
+            return True
+        else:
+            BOT2_LOGGER.warning("Nenhuma mensagem foi enviada para os canais.")
+            return False
 
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao enviar sinal: {str(e)}")
