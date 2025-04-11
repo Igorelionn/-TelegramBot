@@ -1784,12 +1784,10 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
         # Incrementa o contador global de sinais
         bot2_contador_sinais += 1
 
-        # ALTERADO: Agendar o gif pós-sinal para 7 minutos após a expiração (5 minutos + 7 minutos)
-        # Tempo total = tempo_expiracao_minutos + 7 minutos após expiração
-        tempo_pos_sinal = tempo_expiracao_minutos + 7
+        # MODIFICADO: Agendar o gif pós-sinal para 7 minutos após o envio do sinal
+        tempo_pos_sinal = 7
 
-        # Calcular a hora exata para o envio do GIF pós-sinal (hora atual +
-        # tempo_pos_sinal minutos)
+        # Calcular a hora exata para o envio do GIF pós-sinal (hora atual + 7 minutos)
         horario_pos_sinal = agora + timedelta(minutes=tempo_pos_sinal)
         hora_pos_sinal_str = horario_pos_sinal.strftime("%H:%M")
 
@@ -1797,7 +1795,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
             f"[{horario_atual}] LOG GIF: Agendando GIF pós-sinal para {hora_pos_sinal_str} (daqui a {tempo_pos_sinal} minutos)"
         )
         BOT2_LOGGER.info(
-            f"[{horario_atual}] LOG GIF: Tempo de expiração do sinal: {tempo_expiracao_minutos} minutos + 7 minutos de atraso = {tempo_pos_sinal} minutos total"
+            f"[{horario_atual}] LOG GIF: O GIF será enviado exatamente 7 minutos após o sinal"
         )
 
         # Limpar quaisquer agendamentos anteriores para o GIF pós-sinal
