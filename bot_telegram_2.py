@@ -969,6 +969,12 @@ URLS_GIFS_DIRETAS = {
 # Adicionar variável global para controlar mensagem de perda enviada por dia
 mensagem_perda_enviada_hoje = False
 
+# Variável para armazenar o último sinal enviado
+ultimo_sinal_enviado = None
+
+# Contador para controlar a sequência de GIFs pós-sinal
+contador_pos_sinal = 0
+
 def adicionar_blitz(lista_ativos):
     for ativo in lista_ativos:
         if ativo in HORARIOS_PADRAO:
@@ -1615,7 +1621,7 @@ def verificar_url_gif(url):
 
 def bot2_enviar_gif_pos_sinal(signal=None):
     """Envia um GIF após o resultado do sinal."""
-    global contador_pos_sinal, mensagem_perda_enviada_hoje
+    global contador_pos_sinal, mensagem_perda_enviada_hoje, ultimo_sinal_enviado
     contador_pos_sinal += 1
     
     agora = bot2_obter_hora_brasilia()
@@ -1627,6 +1633,11 @@ def bot2_enviar_gif_pos_sinal(signal=None):
     gif_enviado_com_sucesso = False
 
     # Verificar se foi passado um sinal e se o ativo está dentro do horário de operação
+    if signal is None and ultimo_sinal_enviado is not None:
+        # Usar o último sinal enviado se não for fornecido um sinal específico
+        signal = ultimo_sinal_enviado
+        BOT2_LOGGER.info(f"Usando último sinal enviado: {signal}")
+    
     if signal:
         BOT2_LOGGER.info(f"Sinal recebido: {signal}")
         categoria = signal.get('categoria', 'Digital')
@@ -1776,7 +1787,7 @@ def bot2_enviar_gif_pos_sinal(signal=None):
 
 def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=False):
     """Envia uma mensagem com sinal para todos os canais configurados."""
-    global bot2_contador_sinais
+    global bot2_contador_sinais, ultimo_sinal_enviado
     
     try:
         agora = bot2_obter_hora_brasilia()
@@ -1790,6 +1801,9 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                 f"[{horario_atual}] Não foi possível gerar um sinal válido. Tentando novamente mais tarde."
             )
             return
+        
+        # Armazenar o sinal na variável global para uso posterior
+        ultimo_sinal_enviado = sinal
             
         # Em vez de desempacotar diretamente, obtenha os valores do dicionário
         ativo = sinal["ativo"]
@@ -1865,13 +1879,13 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
             BOT2_LOGGER.info(
                 f"[{horario_atual}] LOG GIF: Opção de envio imediato ativada - enviando GIF agora..."
             )
-            bot2_enviar_gif_pos_sinal()
+            bot2_enviar_gif_pos_sinal(sinal)
         else:
-            # Agendar para uma hora específica em vez de um intervalo relativo
+            # Modificar para agendar em minutos, não em dia
             scheduler_job = (
-                schedule.every()
-                .day.at(hora_pos_sinal_str)
-                .do(bot2_enviar_gif_pos_sinal)
+                schedule.every(tempo_pos_sinal)
+                .minutes
+                .do(bot2_enviar_gif_pos_sinal, sinal)
                 .tag("bot2_pos_sinal")
             )
 
