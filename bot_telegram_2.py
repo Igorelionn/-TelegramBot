@@ -100,7 +100,7 @@ URLS_GIFS_DIRETAS = {
     "promo_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnVvZ203ZXphMXc5N2dwMm1uaDk4Nmp4Z3A1OGkwZnd0a2JtdHo1bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1Q3HkjW2vvNTfAnPA4/giphy.gif",
     "promo_en": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnJqZDV6OWJsd2xtOXpvMjduMDB3Nnc1dG8zZG40NzY5aGtsMHV0OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Btx7R7ul9qaeCt8eEk/giphy.gif",
     "promo_es": "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGY5aG93cTV4NWg2dzM2anpmaWd5ajlqenkwcjd3bXVjdG0wYnlmYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5IG2JKmARkpsfMkp4z/giphy.gif",
-    "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif",
+    "pos_sinal_padrao": "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal/pt/180398513446716419%20(7).webp",
     "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWo4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
 }
 
@@ -2089,12 +2089,14 @@ def bot2_enviar_gif_especial():
                 f"Tentando enviar GIF especial como animação do URL: {gif_url} para o canal {chat_id}"
             )
             
-            # Enviar o GIF diretamente como animação
+            # Enviar o GIF diretamente como animação nas dimensões específicas
             bot2.send_animation(
                 chat_id=chat_id, 
                 animation=gif_url, 
                 caption="", 
-                parse_mode="HTML"
+                parse_mode="HTML",
+                width=208,
+                height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
             )
             BOT2_LOGGER.info(
                 f"GIF especial enviado com sucesso como animação para o canal {chat_id}"
@@ -2151,12 +2153,14 @@ def bot2_enviar_gif_promo(idioma="pt"):
                 f"Tentando enviar GIF promo como animação do URL: {gif_url} para o canal {chat_id}"
             )
             
-            # Enviar o GIF diretamente como animação
+            # Enviar o GIF diretamente como animação nas dimensões específicas
             bot2.send_animation(
                 chat_id=chat_id, 
                 animation=gif_url, 
                 caption="", 
-                parse_mode="HTML"
+                parse_mode="HTML",
+                width=208,
+                height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
             )
             BOT2_LOGGER.info(
                 f"GIF promocional enviado com sucesso como animação para o canal {chat_id}"
