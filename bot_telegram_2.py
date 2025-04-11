@@ -93,10 +93,15 @@ GIFS_VALIDOS = {
 }
 
 # URLs alternativas para GIFs (utilizadas apenas na verificação)
-ALTERNATIVE_GIFS = {
-    "pt": "https://media.giphy.com/media/xT0xem7ZlZ2DOYqpG0/giphy.gif",
-    "en": "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",
-    "es": "https://media.giphy.com/media/3o7aTnQqygA3TcukFi/giphy.gif",
+ALTERNATIVE_GIFS = {}
+
+# URLs diretas para GIFs do Giphy
+URLS_GIFS_DIRETAS = {
+    "promo_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnVvZ203ZXphMXc5N2dwMm1uaDk4Nmp4Z3A1OGkwZnd0a2JtdHo1bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1Q3HkjW2vvNTfAnPA4/giphy.gif",
+    "promo_en": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnJqZDV6OWJsd2xtOXpvMjduMDB3Nnc1dG8zZG40NzY5aGtsMHV0OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Btx7R7ul9qaeCt8eEk/giphy.gif",
+    "promo_es": "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGY5aG93cTV4NWg2dzM2anpmaWd5ajlqenkwcjd3bXVjdG0wYnlmYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5IG2JKmARkpsfMkp4z/giphy.gif",
+    "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif",
+    "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWo4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
 }
 
 # ID para compatibilidade com cdigo existente
@@ -952,6 +957,17 @@ HORARIOS_PADRAO = {
     },
 }
 
+# URLs diretas para GIFs
+URLS_GIFS_DIRETAS = {
+    "promo_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnVvZ203ZXphMXc5N2dwMm1uaDk4Nmp4Z3A1OGkwZnd0a2JtdHo1bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1Q3HkjW2vvNTfAnPA4/giphy.gif",
+    "promo_en": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnJqZDV6OWJsd2xtOXpvMjduMDB3Nnc1dG8zZG40NzY5aGtsMHV0OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Btx7R7ul9qaeCt8eEk/giphy.gif",
+    "promo_es": "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGY5aG93cTV4NWg2dzM2anpmaWd5ajlqenkwcjd3bXVjdG0wYnlmYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5IG2JKmARkpsfMkp4z/giphy.gif",
+    "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif",
+    "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWo4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
+}
+
+# Adicionar variável global para controlar mensagem de perda enviada por dia
+mensagem_perda_enviada_hoje = False
 
 def adicionar_blitz(lista_ativos):
     for ativo in lista_ativos:
@@ -1167,25 +1183,25 @@ def bot2_gerar_sinal_aleatorio():
 def bot2_converter_fuso_horario(hora_brasilia, fuso_destino):
     """
     Converte uma hora do fuso horário de Brasília para o fuso horário de destino.
-
+    
     Args:
         hora_brasilia (datetime): Hora no fuso horário de Brasília
         fuso_destino (str): Nome do fuso horário de destino (ex: 'America/New_York')
-
+        
     Returns:
         datetime: Hora convertida para o fuso horário de destino
     """
     # Garantir que hora_brasilia tenha informações de fuso horário
     fuso_horario_brasilia = pytz.timezone("America/Sao_Paulo")
-
+    
     # Se a hora não tiver informação de fuso, adicionar
     if hora_brasilia.tzinfo is None:
         hora_brasilia = fuso_horario_brasilia.localize(hora_brasilia)
-
+    
     # Converter para o fuso horário de destino
     fuso_destino_tz = pytz.timezone(fuso_destino)
     hora_destino = hora_brasilia.astimezone(fuso_destino_tz)
-
+    
     return hora_destino
 
 
@@ -1220,31 +1236,31 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
 
     # Encontrar o fuso horário adequado para o idioma
     fuso_horario = "America/Sao_Paulo"  # Padrão (Brasil)
-
+    
     # Buscar o fuso horário na configuração dos canais
     for chat_id, config in BOT2_CANAIS_CONFIG.items():
         if config["idioma"] == idioma:
             fuso_horario = config.get("fuso_horario", "America/Sao_Paulo")
             break
-
+    
     # Hora de entrada convertida para datetime no fuso horário de Brasília
     hora_entrada = datetime.strptime(hora_formatada, "%H:%M")
     hora_entrada_br = bot2_obter_hora_brasilia().replace(
         hour=hora_entrada.hour, minute=hora_entrada.minute, second=0, microsecond=0
     )
-
+    
     # Converter para o fuso horário do canal
     hora_entrada_local = bot2_converter_fuso_horario(
         hora_entrada_br, fuso_horario)
-
+    
     # Calcular horário de expiração no fuso horário de Brasília
     hora_expiracao_br = hora_entrada_br + \
         timedelta(minutes=tempo_expiracao_minutos)
-
+    
     # Converter expiração para o fuso horário do canal
     hora_expiracao_local = bot2_converter_fuso_horario(
         hora_expiracao_br, fuso_horario)
-
+    
     # Calcular horários de gale (reentrada) no fuso horário de Brasília
     # 1° GALE é o horário de expiração + 5 minutos
     hora_gale1_br = hora_expiracao_br + timedelta(minutes=5)
@@ -1252,19 +1268,19 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     hora_gale2_br = hora_gale1_br + timedelta(minutes=5)
     # 3° GALE é o 2° GALE + 5 minutos
     hora_gale3_br = hora_gale2_br + timedelta(minutes=5)
-
+    
     # Converter gales para o fuso horário do canal
     hora_gale1_local = bot2_converter_fuso_horario(hora_gale1_br, fuso_horario)
     hora_gale2_local = bot2_converter_fuso_horario(hora_gale2_br, fuso_horario)
     hora_gale3_local = bot2_converter_fuso_horario(hora_gale3_br, fuso_horario)
-
+    
     # Formatar os horários para exibição (no fuso horário local)
     hora_entrada_formatada = hora_entrada_local.strftime("%H:%M")
     hora_expiracao_formatada = hora_expiracao_local.strftime("%H:%M")
     hora_gale1_formatada = hora_gale1_local.strftime("%H:%M")
     hora_gale2_formatada = hora_gale2_local.strftime("%H:%M")
     hora_gale3_formatada = hora_gale3_local.strftime("%H:%M")
-
+    
     # Registrar a conversão de fuso horário
     BOT2_LOGGER.info(
         f"Horários convertidos para fuso {fuso_horario}: Entrada={hora_entrada_formatada}, "
@@ -1312,7 +1328,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         texto_gale1 = "1º GALE — TIEMPO HASTA"
         texto_gale2 = "2º GALE TIEMPO HASTA"
         texto_gale3 = "3º GALE TIEMPO HASTA"
-
+    
     # Determinar a categoria de exibição (Binary, Digital)
     categoria_exibicao = "Binary"
     if isinstance(categoria, list) and len(categoria) > 0:
@@ -1332,7 +1348,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         f'📲 <a href="{link_corretora}">{texto_corretora}</a>\n'
         f'🙋‍♂️ Não sabe operar ainda? <a href="{link_video}">{texto_video}</a>'
     )
-
+            
     # Mensagem em EN
     mensagem_en = (
         f"💰{tempo_expiracao_minutos} {texto_minutos_en} expiration\n"
@@ -1344,7 +1360,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         f'📲 <a href="{link_corretora}">{texto_corretora}</a>\n'
         f'🙋‍♂️ Don\'t know how to trade yet? <a href="{link_video}">{texto_video}</a>'
     )
-
+            
     # Mensagem em ES
     mensagem_es = (
         f"💰{tempo_expiracao_minutos} {texto_minutos_es} de expiración\n"
@@ -1356,7 +1372,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         f'📲 <a href="{link_corretora}">{texto_corretora}</a>\n'
         f'🙋‍♂️ ¿No sabe operar todavía? <a href="{link_video}">{texto_video}</a>'
     )
-
+            
     # Verificar se há algum texto não esperado antes de retornar a mensagem
     if idioma == "pt":
         mensagem_final = mensagem_pt
@@ -1366,7 +1382,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         mensagem_final = mensagem_es
     else:  # Padrão para qualquer outro idioma (português)
         mensagem_final = mensagem_pt
-
+        
     BOT2_LOGGER.info(
         f"Mensagem formatada final para idioma {idioma}: {mensagem_final}")
     return mensagem_final
@@ -1522,31 +1538,32 @@ imagem_especial_ja_enviada_hoje = False
 
 
 def definir_horario_especial_diario():
-    global horario_especial_diario, imagem_especial_ja_enviada_hoje
-
-    # Reseta o status de envio da imagem especial
+    global horario_especial_diario, imagem_especial_ja_enviada_hoje, mensagem_perda_enviada_hoje
+    
+    # Reseta o status de envio da imagem especial e mensagem de perda
     imagem_especial_ja_enviada_hoje = False
-
+    mensagem_perda_enviada_hoje = False
+    
     # Define um horrio aleatrio entre 0 e 23 horas
     horas_disponiveis = list(range(0, 24))
     hora_aleatoria = random.choice(horas_disponiveis)
-
+    
     # Definir o mesmo minuto usado para o envio de sinais
     minuto_envio = 13
-
+    
     # Define o horrio especial para hoje
     horario_atual = bot2_obter_hora_brasilia()
     horario_especial_diario = horario_atual.replace(
-        hour=hora_aleatoria,
+        hour=hora_aleatoria, 
         minute=minuto_envio,  # Mesmo minuto usado para envio de sinais
-        second=0,
+        second=0, 
         microsecond=0,
     )
-
+    
     BOT2_LOGGER.info(
         f"Horário especial diário definido para: {horario_especial_diario.strftime('%H:%M')}"
     )
-
+    
     # Se o horrio j passou hoje, reagenda para amanh
     if horario_especial_diario < horario_atual:
         horario_especial_diario = horario_especial_diario + timedelta(days=1)
@@ -1590,21 +1607,7 @@ def verificar_url_gif(url):
             return url, True
         else:
             BOT2_LOGGER.warning(f"URL de GIF inválida (código {response.status_code}): {url}")
-            
-            # Se a URL principal não estiver acessível, usar URL alternativa do Giphy
-            idioma = None
-            for lang in ["pt", "en", "es"]:
-                if lang in url:
-                    idioma = lang
-                    break
-                    
-            if idioma and idioma in ALTERNATIVE_GIFS:
-                alt_url = ALTERNATIVE_GIFS[idioma]
-                BOT2_LOGGER.info(f"Usando URL alternativa: {alt_url}")
-                return alt_url, True
-            else:
-                BOT2_LOGGER.error(f"Nenhuma URL alternativa disponível para o idioma")
-                return url, False
+            return url, False
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao verificar URL {url}: {str(e)}")
         return url, False
@@ -1612,7 +1615,7 @@ def verificar_url_gif(url):
 
 def bot2_enviar_gif_pos_sinal(signal=None):
     """Envia um GIF após o resultado do sinal."""
-    global contador_pos_sinal
+    global contador_pos_sinal, mensagem_perda_enviada_hoje
     contador_pos_sinal += 1
     
     agora = bot2_obter_hora_brasilia()
@@ -1635,111 +1638,92 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                 f"Ativo {ativo} não está dentro do horário de operação. Não enviando GIF pós-sinal.")
             return
     
-    # Decidir se enviar GIF padrão ou especial (a cada 3 sinais)
-    if contador_pos_sinal % 3 == 0:
+    # Decidir se enviar GIF padrão, GIF especial ou mensagem de perda
+    if not mensagem_perda_enviada_hoje and random.random() < 0.20:  # 20% de chance de enviar mensagem de perda, mas apenas uma vez por dia
+        BOT2_LOGGER.info(f"[{horario_atual}] Enviando mensagem de GERENCIAMENTO para canal {chat_id}")
+        enviar_mensagem_perda = True
+        mensagem_perda_enviada_hoje = True
+        usar_gif_especial = False
+    elif contador_pos_sinal % 3 == 0:
         BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal ESPECIAL (contador: {contador_pos_sinal})")
+        enviar_mensagem_perda = False
         usar_gif_especial = True
     else:
         BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal padrão para todos os canais")
+        enviar_mensagem_perda = False
         usar_gif_especial = False
 
     for chat_id, config in BOT2_CANAIS_CONFIG.items():
         idioma = config.get("idioma", "pt")
 
         try:
-            # Definir a URL do GIF no GitHub com base no idioma
-            if usar_gif_especial:
-                gif_key = f"pos_sinal_{idioma}"
-                if gif_key in GIFS_VALIDOS:
-                    gif_path = GIFS_VALIDOS[gif_key].replace("padrao.gif", "especial.gif").replace("padrão.gif", "especial.gif")
-                    gif_url = f"{GITHUB_BASE_URL}{gif_path}"
-                else:
-                    # Usar o gif em inglês por padrão
-                    gif_path = GIFS_VALIDOS["pos_sinal_en"].replace("padrao.gif", "especial.gif")
-                    gif_url = f"{GITHUB_BASE_URL}{gif_path}"
-            else:
-                gif_key = f"pos_sinal_{idioma}"
-                if gif_key in GIFS_VALIDOS:
-                    gif_path = GIFS_VALIDOS[gif_key]
-                    gif_url = f"{GITHUB_BASE_URL}{gif_path}"
-                else:
-                    # Usar o gif em inglês por padrão
-                    gif_path = GIFS_VALIDOS["pos_sinal_en"]
-                    gif_url = f"{GITHUB_BASE_URL}{gif_path}"
-
-            BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Preparando envio do GIF: {gif_url} para canal {chat_id}")
-            
-            try:
-                # Verificar se a URL está acessível
-                gif_url_verificada, is_valid = verificar_url_gif(gif_url)
+            if enviar_mensagem_perda:
+                # Enviar mensagem de perda
+                BOT2_LOGGER.info(f"[{horario_atual}] Enviando mensagem de GERENCIAMENTO para canal {chat_id}")
                 
-                if is_valid:
-                    # Enviar o GIF como animação
-                    bot2.send_animation(
-                        chat_id=chat_id,
-                        animation=gif_url_verificada,
-                        caption="",
-                        parse_mode="HTML"
-                    )
-                    BOT2_LOGGER.info(
-                        f"GIF enviado com sucesso como animação para o canal {chat_id}")
-                    gif_enviado_com_sucesso = True
+                if idioma == "pt":
+                    link_corretora = config.get("link_corretora", "")
+                    texto_perda = f"⚠️ GERENCIAMENTO DE BANCA ⚠️\n\nSinal anterior não alcançou o resultado esperado!\nLembre-se de seguir seu gerenciamento para recuperar na próxima entrada.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">Continue operando</font></a> 📈"
+                elif idioma == "en":
+                    link_corretora = config.get("link_corretora", "")
+                    texto_perda = f"⚠️ BANKROLL MANAGEMENT ⚠️\n\nPrevious signal did not reach the expected outcome!\nRemember to follow your management to recover in the next entry.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">Keep trading</font></a> 📈"
+                else:  # es
+                    link_corretora = config.get("link_corretora", "")
+                    texto_perda = f"⚠️ GESTIÓN DE BANCA ⚠️\n\nLa señal anterior no alcanzó el resultado esperado!\nRecuerde seguir su gestión para recuperarse en la próxima entrada.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">Sigue operando</font></a> 📈"
+                
+                bot2.send_message(
+                    chat_id=chat_id,
+                    text=texto_perda,
+                    parse_mode="HTML"
+                )
+                BOT2_LOGGER.info(f"Mensagem de gerenciamento enviada com sucesso para o canal {chat_id}")
+                gif_enviado_com_sucesso = True
+            else:
+                # Definir a URL do GIF para envio
+                if usar_gif_especial and idioma == "pt":
+                    # Apenas para português, usar o GIF especial
+                    gif_url = URLS_GIFS_DIRETAS["gif_especial_pt"]
+                    BOT2_LOGGER.info(f"[{horario_atual}] Usando GIF especial para canal PT")
                 else:
-                    # Se a URL não estiver acessível, tentar URL alternativa do Giphy
-                    if idioma in ALTERNATIVE_GIFS:
-                        alt_url = ALTERNATIVE_GIFS[idioma]
-                        BOT2_LOGGER.info(
-                            f"Tentando URL alternativa do Giphy: {alt_url} para o canal {chat_id}")
-                        
-                        bot2.send_animation(
-                            chat_id=chat_id,
-                            animation=alt_url,
-                            caption="",
-                            parse_mode="HTML"
-                        )
-                        BOT2_LOGGER.info(
-                            f"GIF alternativo enviado com sucesso para o canal {chat_id}")
-                        gif_enviado_com_sucesso = True
-                    else:
-                        # Último recurso: enviar uma mensagem de texto simples
-                        bot2.send_message(
-                            chat_id=chat_id,
-                            text="📊 Signal result completed!",
-                            parse_mode="HTML"
-                        )
-                        BOT2_LOGGER.info(
-                            f"Enviada mensagem de texto alternativa para {chat_id}")
-                        gif_enviado_com_sucesso = True
-            except Exception as e:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao processar GIF: {str(e)}")
-                BOT2_LOGGER.error(f"[{horario_atual}] 🎬 LOG GIF: Erro detalhado: {traceback.format_exc()}")
+                    # Para os demais casos, usar o GIF padrão
+                    gif_url = URLS_GIFS_DIRETAS["pos_sinal_padrao"]
+                    BOT2_LOGGER.info(f"[{horario_atual}] Usando GIF padrão para canal {idioma}")
 
+                BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Preparando envio do GIF: {gif_url} para canal {chat_id}")
+                
+                # Enviar o GIF como animação diretamente com a URL
+                bot2.send_animation(
+                    chat_id=chat_id,
+                    animation=gif_url,
+                    caption="",
+                    parse_mode="HTML"
+                )
+                BOT2_LOGGER.info(f"GIF enviado com sucesso como animação para o canal {chat_id}")
+                gif_enviado_com_sucesso = True
         except Exception as e:
-            BOT2_LOGGER.error(
-                f"Erro ao enviar GIF pós-sinal para o canal {chat_id}: {str(e)}")
+            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar para o canal {chat_id}: {str(e)}")
+            BOT2_LOGGER.error(f"[{horario_atual}] Erro detalhado: {traceback.format_exc()}")
 
             if "rights to send" in str(e).lower():
-                BOT2_LOGGER.error(
-                    f"Bot não tem permissões de administrador no canal {chat_id}")
+                BOT2_LOGGER.error(f"Bot não tem permissões de administrador no canal {chat_id}")
 
     if gif_enviado_com_sucesso:
-        BOT2_LOGGER.info("✓ Teste de envio de GIF realizado com sucesso!")
+        BOT2_LOGGER.info("✓ Teste de envio realizado com sucesso!")
         return True
     else:
-        BOT2_LOGGER.warning(
-            "Não foi possível enviar o GIF pós-sinal em nenhum canal")
+        BOT2_LOGGER.warning("Não foi possível enviar para nenhum canal")
         return False
 
 
 def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=False):
     """Envia uma mensagem com sinal para todos os canais configurados."""
     global bot2_contador_sinais
-
+    
     try:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
-
+        
         # Gerar o sinal aleatório
         sinal = bot2_gerar_sinal_aleatorio()
         if not sinal:
@@ -1747,7 +1731,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                 f"[{horario_atual}] Não foi possível gerar um sinal válido. Tentando novamente mais tarde."
             )
             return
-
+            
         # Em vez de desempacotar diretamente, obtenha os valores do dicionário
         ativo = sinal["ativo"]
         direcao = sinal["direcao"]
@@ -1757,21 +1741,21 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
         # Calcular o horário de entrada (2 minutos após o envio do sinal)
         hora_entrada = agora + timedelta(minutes=2)
         hora_formatada = hora_entrada.strftime("%H:%M")
-
+        
         # Enviar para cada canal
         for chat_id in BOT2_CHAT_IDS:
             config_canal = BOT2_CANAIS_CONFIG[chat_id]
             idioma = config_canal["idioma"]
-
+            
             mensagem_formatada = bot2_formatar_mensagem(
                 sinal, hora_formatada, idioma)
             url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-
+            
             # Registrar envio nos logs
             BOT2_LOGGER.info(
                 f"[{horario_atual}] Enviando sinal: Ativo={ativo}, Direção={direcao}, Categoria={categoria}, Tempo={tempo_expiracao_minutos}, Idioma={idioma}"
             )
-
+            
             try:
                 resposta = requests.post(
                     url_base,
@@ -1783,7 +1767,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                     },
                     timeout=10,
                 )
-
+                
                 if resposta.status_code == 200:
                     BOT2_LOGGER.info(
                         f"[{horario_atual}] SUCESSO: SINAL ENVIADO COM SUCESSO para o canal {chat_id}"
@@ -1796,7 +1780,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                 BOT2_LOGGER.error(
                     f"[{horario_atual}] ERRO: Exceção ao enviar mensagem para o canal {chat_id}: {str(msg_error)}"
                 )
-
+        
         # Incrementa o contador global de sinais
         bot2_contador_sinais += 1
 
@@ -2098,58 +2082,24 @@ def bot2_enviar_gif_especial():
             continue
 
         try:
-            # Usar o GIF especial apenas para o canal PT
-            gif_path = GIFS_VALIDOS["gif_especial_pt"]
-            gif_url = f"{GITHUB_BASE_URL}{gif_path}"
+            # Usar o GIF especial do Giphy para o canal PT
+            gif_url = URLS_GIFS_DIRETAS["gif_especial_pt"]
 
             BOT2_LOGGER.info(
                 f"Tentando enviar GIF especial como animação do URL: {gif_url} para o canal {chat_id}"
             )
-
-            # Verificar se a URL está acessível
-            gif_url_verificada, is_valid = verificar_url_gif(gif_url)
             
-            if is_valid:
-                # Tentar enviar o GIF diretamente como uma animação
-                bot2.send_animation(
-                    chat_id=chat_id, 
-                    animation=gif_url_verificada, 
-                    caption="", 
-                    parse_mode="HTML"
-                )
-                BOT2_LOGGER.info(
-                    f"GIF especial enviado com sucesso como animação para o canal {chat_id}"
-                )
-                gif_enviado_com_sucesso = True
-            else:
-                # Se a URL não estiver acessível, tentar URL alternativa do Giphy
-                if "pt" in ALTERNATIVE_GIFS:
-                    alt_url = ALTERNATIVE_GIFS["pt"]
-                    BOT2_LOGGER.info(
-                        f"Tentando URL alternativa do Giphy: {alt_url} para o canal {chat_id}"
-                    )
-                    
-                    bot2.send_animation(
-                        chat_id=chat_id,
-                        animation=alt_url,
-                        caption="",
-                        parse_mode="HTML"
-                    )
-                    BOT2_LOGGER.info(
-                        f"GIF alternativo enviado com sucesso para o canal {chat_id}"
-                    )
-                    gif_enviado_com_sucesso = True
-                else:
-                    # Último recurso: enviar uma mensagem de texto simples
-                    bot2.send_message(
-                        chat_id=chat_id,
-                        text="⚠️ ATENÇÃO - RESULTADO ESPECIAL ⚠️",
-                        parse_mode="HTML",
-                    )
-                    BOT2_LOGGER.info(
-                        f"Enviada mensagem de texto alternativa para {chat_id}"
-                    )
-                    gif_enviado_com_sucesso = True
+            # Enviar o GIF diretamente como animação
+            bot2.send_animation(
+                chat_id=chat_id, 
+                animation=gif_url, 
+                caption="", 
+                parse_mode="HTML"
+            )
+            BOT2_LOGGER.info(
+                f"GIF especial enviado com sucesso como animação para o canal {chat_id}"
+            )
+            gif_enviado_com_sucesso = True
         except Exception as e:
             BOT2_LOGGER.error(
                 f"Erro ao enviar GIF especial para o canal {chat_id}: {str(e)}"
@@ -2189,64 +2139,29 @@ def bot2_enviar_gif_promo(idioma="pt"):
             continue
 
         try:
-            # Definir a URL do GIF no GitHub com base no idioma
+            # Definir a URL do GIF do Giphy com base no idioma
             gif_key = f"promo_{idioma}"
-            if gif_key in GIFS_VALIDOS:
-                gif_path = GIFS_VALIDOS[gif_key]
-                gif_url = f"{GITHUB_BASE_URL}{gif_path}"
+            if gif_key in URLS_GIFS_DIRETAS:
+                gif_url = URLS_GIFS_DIRETAS[gif_key]
             else:
                 # Usar o gif promocional em inglês como padrão
-                gif_path = GIFS_VALIDOS["promo_en"]
-                gif_url = f"{GITHUB_BASE_URL}{gif_path}"
+                gif_url = URLS_GIFS_DIRETAS["promo_en"]
 
             BOT2_LOGGER.info(
                 f"Tentando enviar GIF promo como animação do URL: {gif_url} para o canal {chat_id}"
             )
-
-            # Verificar se a URL está acessível
-            gif_url_verificada, is_valid = verificar_url_gif(gif_url)
             
-            if is_valid:
-                # Tentar enviar o GIF diretamente como uma animação
-                bot2.send_animation(
-                    chat_id=chat_id, 
-                    animation=gif_url_verificada, 
-                    caption="", 
-                    parse_mode="HTML"
-                )
-                BOT2_LOGGER.info(
-                    f"GIF promocional enviado com sucesso como animação para o canal {chat_id}"
-                )
-                gif_enviado_com_sucesso = True
-            else:
-                # Se a URL não estiver acessível, tentar URL alternativa do Giphy
-                if idioma in ALTERNATIVE_GIFS:
-                    alt_url = ALTERNATIVE_GIFS[idioma]
-                    BOT2_LOGGER.info(
-                        f"Tentando URL alternativa do Giphy: {alt_url} para o canal {chat_id}"
-                    )
-                    
-                    bot2.send_animation(
-                        chat_id=chat_id,
-                        animation=alt_url,
-                        caption="",
-                        parse_mode="HTML"
-                    )
-                    BOT2_LOGGER.info(
-                        f"GIF alternativo enviado com sucesso para o canal {chat_id}"
-                    )
-                    gif_enviado_com_sucesso = True
-                else:
-                    # Último recurso: enviar uma mensagem de texto simples
-                    bot2.send_message(
-                        chat_id=chat_id,
-                        text="📣 Preparando-se para o próximo sinal! 📣",
-                        parse_mode="HTML",
-                    )
-                    BOT2_LOGGER.info(
-                        f"Enviada mensagem de texto alternativa para {chat_id}"
-                    )
-                    gif_enviado_com_sucesso = True
+            # Enviar o GIF diretamente como animação
+            bot2.send_animation(
+                chat_id=chat_id, 
+                animation=gif_url, 
+                caption="", 
+                parse_mode="HTML"
+            )
+            BOT2_LOGGER.info(
+                f"GIF promocional enviado com sucesso como animação para o canal {chat_id}"
+            )
+            gif_enviado_com_sucesso = True
         except Exception as e:
             BOT2_LOGGER.error(
                 f"Erro ao enviar GIF promocional para o canal {chat_id}: {str(e)}"
