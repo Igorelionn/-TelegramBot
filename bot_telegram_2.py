@@ -56,9 +56,9 @@ bot2 = telebot.TeleBot(BOT2_TOKEN)
 
 # Configuração dos canais para cada idioma
 BOT2_CANAIS_CONFIG = {
-    "pt": [],  # Lista de IDs dos canais em português
-    "en": [],  # Lista de IDs dos canais em inglês
-    "es": []   # Lista de IDs dos canais em espanhol
+    "pt": ["-1002424874613"],  # Canal para mensagens em português
+    "en": ["-1002453956387"],  # Canal para mensagens em inglês
+    "es": ["-1002446547846"]   # Canal para mensagens em espanhol
 }
 
 # Configurações adicionais por idioma
@@ -78,7 +78,9 @@ CONFIGS_IDIOMA = {
 }
 
 # Lista de IDs dos canais para facilitar iterao
-BOT2_CHAT_IDS = list(BOT2_CANAIS_CONFIG.keys())
+BOT2_CHAT_IDS = []
+for idioma, chats in BOT2_CANAIS_CONFIG.items():
+    BOT2_CHAT_IDS.extend(chats)
 
 # Base URL do GitHub para os arquivos
 GITHUB_BASE_URL = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/"
@@ -1832,7 +1834,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
     Returns:
         bool: True se o sinal foi enviado com sucesso, False caso contrário
     """
-    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, ultimo_sinal_enviado
+    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, ultimo_sinal_enviado, bot2_contador_sinais
     
     try:
         agora = bot2_obter_hora_brasilia()
@@ -2189,40 +2191,88 @@ if __name__ == "__main__":
         def enviar_gif_teste_direto():
             """Função simplificada para testar o envio direto do GIF."""
             try:
+                agora = bot2_obter_hora_brasilia()
+                horario_atual = agora.strftime("%H:%M:%S")
+                
                 # URL direta da imagem a ser usada
                 gif_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal/pt/180398513446716419%20(7).webp"
                 
-                # Primeiro canal de cada idioma
+                BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO TESTE DIRETO DE GIF...")
+                BOT2_LOGGER.info(f"[{horario_atual}] Usando URL: {gif_url}")
+                
+                # Lista de canais de teste
                 canais_teste = []
+                
+                # Verificar estrutura de canais
+                BOT2_LOGGER.info(f"Estrutura de canais: {BOT2_CANAIS_CONFIG}")
+                
+                # Se a estrutura for por idioma
                 for idioma, chats in BOT2_CANAIS_CONFIG.items():
                     if chats:
-                        canais_teste.append(chats[0])
+                        for chat_id in chats:
+                            canais_teste.append(chat_id)
+                            BOT2_LOGGER.info(f"Adicionado canal {chat_id} do idioma {idioma} para teste")
+                
+                # Se não houver canais na estrutura por idioma, tentar usar BOT2_CHAT_IDS
+                if not canais_teste and BOT2_CHAT_IDS:
+                    canais_teste = BOT2_CHAT_IDS
+                    BOT2_LOGGER.info(f"Usando lista alternativa de canais: {BOT2_CHAT_IDS}")
+                
+                # Última tentativa: usar os IDs de canal diretamente
+                if not canais_teste:
+                    canais_teste = ["-1002424874613", "-1002453956387", "-1002446547846"]
+                    BOT2_LOGGER.info(f"Usando IDs de canal hardcoded como última opção")
                 
                 if not canais_teste:
                     BOT2_LOGGER.error("Não há canais configurados para teste.")
                     return False
                 
+                BOT2_LOGGER.info(f"Tentando enviar para os seguintes canais: {canais_teste}")
+                
                 # Tentar enviar para cada canal
                 sucesso = False
                 for chat_id in canais_teste:
                     try:
-                        bot2.send_animation(
-                            chat_id=chat_id,
-                            animation=gif_url,
-                            caption="GIF de Teste",
-                            parse_mode="HTML",
-                            width=208,
-                            height=84
-                        )
-                        BOT2_LOGGER.info(f"GIF de teste enviado com sucesso para o canal {chat_id}")
-                        sucesso = True
-                        break  # Se enviou com sucesso para um canal, podemos parar
+                        BOT2_LOGGER.info(f"Tentando enviar GIF para canal {chat_id}...")
+                        
+                        # Tentar o método animation primeiro
+                        try:
+                            bot2.send_animation(
+                                chat_id=chat_id,
+                                animation=gif_url,
+                                caption="GIF de Teste",
+                                parse_mode="HTML",
+                                width=208,
+                                height=84
+                            )
+                            BOT2_LOGGER.info(f"GIF de teste enviado com sucesso para o canal {chat_id}")
+                            sucesso = True
+                            break  # Se enviou com sucesso para um canal, podemos parar
+                        except Exception as animation_error:
+                            BOT2_LOGGER.warning(f"Erro ao enviar com send_animation: {str(animation_error)}")
+                            
+                            # Tentar com método alternativo
+                            bot2.send_document(
+                                chat_id=chat_id,
+                                document=gif_url,
+                                caption="GIF de Teste (método alternativo)",
+                                parse_mode="HTML"
+                            )
+                            BOT2_LOGGER.info(f"GIF de teste enviado com método alternativo para o canal {chat_id}")
+                            sucesso = True
+                            break
                     except Exception as e:
                         BOT2_LOGGER.error(f"Erro ao enviar GIF para {chat_id}: {str(e)}")
+                
+                if sucesso:
+                    BOT2_LOGGER.info("Teste direto de GIF concluído com sucesso!")
+                else:
+                    BOT2_LOGGER.error("Falha em todos os canais ao tentar enviar o GIF de teste.")
                 
                 return sucesso
             except Exception as e:
                 BOT2_LOGGER.error(f"Erro no teste direto de GIF: {str(e)}")
+                traceback.print_exc()
                 return False
 
         # Testar a função de envio de GIF usando o método direto
