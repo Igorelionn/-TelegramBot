@@ -99,11 +99,11 @@ ALTERNATIVE_GIFS = {}
 
 # URLs diretas para GIFs do Giphy
 URLS_GIFS_DIRETAS = {
-    "promo_pt": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdWhpcnA1NTliMTY1OXM3NWlsNnYwdW42azdmMXdnM21uNGprMGJubiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/0AJRWmC2UQhb4eIwHE/giphy.gif",
-    "promo_en": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3lrc3BoZmd3amM2cXZ2OG84c3YwdXZ4bnAydHIyZmZjbDVoa2Y5eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6N6JXhvUGfHtedBTAl/giphy.gif",
-    "promo_es": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGlncXFmd2Y5bGM2NzdzY2hoZ3ZnYnMzenZrZ3M5c2I5NXZ1MmkxNSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/uECvtL5g3osWLbFgPU/giphy.gif",
-    "pos_sinal_padrao": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNXJvMXF3OGF4dG9qaXVyeGZwOXZ4YjBkaWlwbHc5d2tncHl3MWwwbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/okDZSjQJOEr5mqYCUf/giphy.gif",
-    "gif_especial_pt": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjB3eXQ2eGkweGQ2anR0dzd2eDN2cTZoM2lpeHc5bmRhYW5yOHAzYyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/OGpKLRbMKsQeVBJ3Fr/giphy.gif",
+    "promo_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnVvZ203ZXphMXc5N2dwMm1uaDk4Nmp4Z3A1OGkwZnd0a2JtdHo1bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1Q3HkjW2vvNTfAnPA4/giphy.gif",
+    "promo_en": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnJqZDV6OWJsd2xtOXpvMjduMDB3Nnc1dG8zZG40NzY5aGtsMHV0OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Btx7R7ul9qaeCt8eEk/giphy.gif",
+    "promo_es": "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGY5aG93cTV4NWg2dzM2anpmaWd5ajlqenkwcjd3bXVjdG0wYnlmYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5IG2JKmARkpsfMkp4z/giphy.gif",
+    "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif",
+    "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWo4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
 }
 
 # ID para compatibilidade com cdigo existente
