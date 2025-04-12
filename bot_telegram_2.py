@@ -1357,8 +1357,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"{texto_gale1} {hora_gale1_formatada}\n"
                 f"{texto_gale2} {hora_gale2_formatada}\n"
                 f"{texto_gale3} {hora_gale3_formatada}\n\n"
-            f'📲 <a href="{link_corretora}">{texto_corretora}</a>\n'
-            f'🙋‍♂️ Não sabe operar ainda? <a href="{link_video}">{texto_video}</a>'
+            f'📲 <a href="{link_corretora}" title="">{texto_corretora}</a>\n'
+            f'🙋‍♂️ Não sabe operar ainda? <a href="{link_video}" title="">{texto_video}</a>'
         )
                 
         # Mensagem em EN
@@ -1369,8 +1369,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"{texto_gale1} {hora_gale1_formatada}\n"
                 f"{texto_gale2} {hora_gale2_formatada}\n"
                 f"{texto_gale3} {hora_gale3_formatada}\n\n"
-            f'📲 <a href="{link_corretora}">{texto_corretora}</a>\n'
-            f'🙋‍♂️ Don\'t know how to trade yet? <a href="{link_video}">{texto_video}</a>'
+            f'📲 <a href="{link_corretora}" title="">{texto_corretora}</a>\n'
+            f'🙋‍♂️ Don\'t know how to trade yet? <a href="{link_video}" title="">{texto_video}</a>'
         )
                 
         # Mensagem em ES
@@ -1381,8 +1381,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"{texto_gale1} {hora_gale1_formatada}\n"
                 f"{texto_gale2} {hora_gale2_formatada}\n"
                 f"{texto_gale3} {hora_gale3_formatada}\n\n"
-            f'📲 <a href="{link_corretora}">{texto_corretora}</a>\n'
-            f'🙋‍♂️ ¿No sabe operar todavía? <a href="{link_video}">{texto_video}</a>'
+            f'📲 <a href="{link_corretora}" title="">{texto_corretora}</a>\n'
+            f'🙋‍♂️ ¿No sabe operar todavía? <a href="{link_video}" title="">{texto_video}</a>'
         )
                 
         # Verificar se há algum texto não esperado antes de retornar a mensagem
@@ -1688,11 +1688,11 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                         link_corretora = config_idioma.get("link_corretora", "")
                 
                         if idioma == "pt":
-                            texto_perda = f"⚠️ GERENCIAMENTO DE BANCA ⚠️\n\nSinal anterior não alcançou o resultado esperado!\nLembre-se de seguir seu gerenciamento para recuperar na próxima entrada.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">Continue operando</font></a> 📈"
+                            texto_perda = f"⚠️ GERENCIAMENTO DE BANCA ⚠️\n\nSinal anterior não alcançou o resultado esperado!\nLembre-se de seguir seu gerenciamento para recuperar na próxima entrada.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">Continue operando</font></a> 📈"
                         elif idioma == "en":
-                            texto_perda = f"⚠️ BANKROLL MANAGEMENT ⚠️\n\nPrevious signal did not reach the expected outcome!\nRemember to follow your management to recover in the next entry.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">Keep trading</font></a> 📈"
+                            texto_perda = f"⚠️ BANKROLL MANAGEMENT ⚠️\n\nPrevious signal did not reach the expected outcome!\nRemember to follow your management to recover in the next entry.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">Keep trading</font></a> 📈"
                         else:  # es
-                            texto_perda = f"⚠️ GESTIÓN DE BANCA ⚠️\n\nLa señal anterior no alcanzó el resultado esperado!\nRecuerde seguir su gestión para recuperarse en la próxima entrada.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">Sigue operando</font></a> 📈"
+                            texto_perda = f"⚠️ GESTIÓN DE BANCA ⚠️\n\nLa señal anterior no alcanzó el resultado esperado!\nRecuerde seguir su gestión para recuperarse en la próxima entrada.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">Sigue operando</font></a> 📈"
                 
                         # URL base para a API do Telegram
                         url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
@@ -2381,11 +2381,11 @@ def bot2_enviar_mensagem_cadastro():
             link_corretora = config_idioma.get("link_corretora", "")
             
             if idioma == "pt":
-                texto_cadastro = f"🔴 ATENÇÃO 🔴\n\nATUALIZAÇÃO DE CADASTRO NECESSÁRIA!\n\nPara continuar recebendo os sinais, clique no link abaixo e atualize seus dados de cadastro.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">ATUALIZAR CADASTRO</font></a> 🔹"
+                texto_cadastro = f"🔴 ATENÇÃO 🔴\n\nATUALIZAÇÃO DE CADASTRO NECESSÁRIA!\n\nPara continuar recebendo os sinais, clique no link abaixo e atualize seus dados de cadastro.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">ATUALIZAR CADASTRO</font></a> 🔹"
             elif idioma == "en":
-                texto_cadastro = f"🔴 ATTENTION 🔴\n\nREGISTRATION UPDATE REQUIRED!\n\nTo continue receiving signals, click the link below and update your registration data.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">UPDATE REGISTRATION</font></a> 🔹"
+                texto_cadastro = f"🔴 ATTENTION 🔴\n\nREGISTRATION UPDATE REQUIRED!\n\nTo continue receiving signals, click the link below and update your registration data.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">UPDATE REGISTRATION</font></a> 🔹"
             else:  # es
-                texto_cadastro = f"🔴 ATENCIÓN 🔴\n\n¡ACTUALIZACIÓN DE REGISTRO NECESARIA!\n\nPara seguir recibiendo las señales, haga clic en el enlace a continuación y actualice sus datos de registro.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">ACTUALIZAR REGISTRO</font></a> 🔹"
+                texto_cadastro = f"🔴 ATENCIÓN 🔴\n\n¡ACTUALIZACIÓN DE REGISTRO NECESARIA!\n\nPara seguir recibiendo las señales, haga clic en el enlace a continuación y actualice sus datos de registro.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">ACTUALIZAR REGISTRO</font></a> 🔹"
             
             for chat_id in chats:
                 try:
@@ -2456,11 +2456,11 @@ def bot2_enviar_mensagem_abertura_corretora():
             link_corretora = config_idioma.get("link_corretora", "")
             
             if idioma == "pt":
-                texto_abertura = f"⏰ CORRETORA ABERTA ⏰\n\nA corretora já está aberta para operações! 🎯\n\nLembre-se de seguir corretamente seu gerenciamento para obter os melhores resultados.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">ACESSAR CORRETORA</font></a> 📈"
+                texto_abertura = f"⏰ CORRETORA ABERTA ⏰\n\nA corretora já está aberta para operações! 🎯\n\nLembre-se de seguir corretamente seu gerenciamento para obter os melhores resultados.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">ACESSAR CORRETORA</font></a> 📈"
             elif idioma == "en":
-                texto_abertura = f"⏰ BROKER OPEN ⏰\n\nThe broker is now open for trading! 🎯\n\nRemember to correctly follow your management to achieve the best results.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">ACCESS BROKER</font></a> 📈"
+                texto_abertura = f"⏰ BROKER OPEN ⏰\n\nThe broker is now open for trading! 🎯\n\nRemember to correctly follow your management to achieve the best results.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">ACCESS BROKER</font></a> 📈"
             else:  # es
-                texto_abertura = f"⏰ CORREDOR ABIERTO ⏰\n\n¡El corredor ya está abierto para operaciones! 🎯\n\nRecuerde seguir correctamente su gestión para obtener los mejores resultados.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">ACCEDER AL CORREDOR</font></a> 📈"
+                texto_abertura = f"⏰ CORREDOR ABIERTO ⏰\n\n¡El corredor ya está abierto para operaciones! 🎯\n\nRecuerde seguir correctamente su gestión para obtener los mejores resultados.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">ACCEDER AL CORREDOR</font></a> 📈"
             
             for chat_id in chats:
                 try:
