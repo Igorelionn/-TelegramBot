@@ -2079,9 +2079,9 @@ def iniciar_ambos_bots():
 if __name__ == "__main__":
     try:
         print("=== INICIANDO O BOT TELEGRAM ===")
-        print(f"Diretrio base: {BASE_DIR}")
-        print(f"Diretrio de vdeos: {VIDEOS_DIR}")
-        print(f"Diretrio de GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
+        print(f"Diretório base: {BASE_DIR}")
+        print(f"Diretório de vídeos: {VIDEOS_DIR}")
+        print(f"Diretório de GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
         print(f"Arquivo GIF especial PT: {VIDEO_GIF_ESPECIAL_PT}")
 
         # Informações sobre a configuração atual
@@ -2094,27 +2094,27 @@ if __name__ == "__main__":
         )
         print("================================")
 
-        # Exibir caminhos das imagens ps-sinal
+        # Exibir caminhos das imagens pós-sinal
         print(
-            f"Caminho da imagem ps-sinal padro (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}"
+            f"Caminho da imagem pós-sinal padrão (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}"
         )
         print(
-            f"Caminho da imagem ps-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}"
+            f"Caminho da imagem pós-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}"
         )
         print(
-            f"Caminho da imagem ps-sinal padro (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}"
+            f"Caminho da imagem pós-sinal padrão (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}"
         )
         print(
-            f"Caminho da imagem ps-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}"
+            f"Caminho da imagem pós-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}"
         )
         print(
-            f"Caminho da imagem ps-sinal padro (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}"
+            f"Caminho da imagem pós-sinal padrão (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}"
         )
         print(
-            f"Caminho da imagem ps-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}"
+            f"Caminho da imagem pós-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}"
         )
 
-        # Verificar se os diretrios existem
+        # Verificar se os diretórios existem
         print(f"Verificando pastas:")
         print(f"VIDEOS_DIR existe: {os.path.exists(VIDEOS_DIR)}")
         print(
@@ -2130,7 +2130,7 @@ if __name__ == "__main__":
             f"VIDEOS_ESPECIAL_PT_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_PT_DIR)}"
         )
 
-        # Criar pastas se no existirem
+        # Criar pastas se não existirem
         os.makedirs(VIDEOS_DIR, exist_ok=True)
         os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
         os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
@@ -2161,8 +2161,9 @@ if __name__ == "__main__":
             print("\n=== IMPORTANTE ===")
             print("Para que o bot funcione corretamente, ele precisa ser promovido a ADMINISTRADOR em todos os canais.")
             print("Se estiver recebendo erros 'need administrator rights', adicione o bot como administrador nos canais:")
-            for chat_id in BOT2_CHAT_IDS:
-                print(f"  - Canal {chat_id}")
+            for idioma, chats in BOT2_CANAIS_CONFIG.items():
+                for chat_id in chats:
+                    print(f"  - Canal {chat_id} (idioma: {idioma})")
             print("================================\n")
 
         # Verificar URLs de GIFs no GitHub
@@ -2171,9 +2172,9 @@ if __name__ == "__main__":
         # Teste manual de envio de GIF
         print("=== TESTE MANUAL DE ENVIO DE GIF ===")
         print("Enviando um teste do GIF pós-sinal diretamente...")
-        
+
         BOT2_LOGGER.info("=== INICIANDO TESTE MANUAL DE ENVIO DE GIF ===")
-        
+
         # Criar um sinal de teste para o GIF
         if not ultimo_sinal_enviado:
             ultimo_sinal_enviado = {
@@ -2183,20 +2184,65 @@ if __name__ == "__main__":
                 "tempo_expiracao_minutos": 5,
                 "expiracao_texto": "🕑 Expiração: 5 minutos"
             }
+
+        # Função específica para teste direto do GIF
+        def enviar_gif_teste_direto():
+            """Função simplificada para testar o envio direto do GIF."""
+            try:
+                # URL direta da imagem a ser usada
+                gif_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal/pt/180398513446716419%20(7).webp"
+                
+                # Primeiro canal de cada idioma
+                canais_teste = []
+                for idioma, chats in BOT2_CANAIS_CONFIG.items():
+                    if chats:
+                        canais_teste.append(chats[0])
+                
+                if not canais_teste:
+                    BOT2_LOGGER.error("Não há canais configurados para teste.")
+                    return False
+                
+                # Tentar enviar para cada canal
+                sucesso = False
+                for chat_id in canais_teste:
+                    try:
+                        bot2.send_animation(
+                            chat_id=chat_id,
+                            animation=gif_url,
+                            caption="GIF de Teste",
+                            parse_mode="HTML",
+                            width=208,
+                            height=84
+                        )
+                        BOT2_LOGGER.info(f"GIF de teste enviado com sucesso para o canal {chat_id}")
+                        sucesso = True
+                        break  # Se enviou com sucesso para um canal, podemos parar
+                    except Exception as e:
+                        BOT2_LOGGER.error(f"Erro ao enviar GIF para {chat_id}: {str(e)}")
+                
+                return sucesso
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro no teste direto de GIF: {str(e)}")
+                return False
+
+        # Testar a função de envio de GIF usando o método direto
+        teste_direto = enviar_gif_teste_direto()
         
-        # Configurar para forçar o envio de GIF
-        bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje = datetime.now().strftime("%Y-%m-%d")
-        
-        # Testar a função de envio de GIF
-        teste_result = bot2_enviar_gif_pos_sinal()
-        
-        if teste_result:
-            print("✅ SUCESSO: Teste de envio de GIF concluído com sucesso!")
-            BOT2_LOGGER.info("SUCESSO: Teste de envio de GIF concluído com sucesso!")
+        if teste_direto:
+            print("✅ SUCESSO: Teste direto de GIF concluído com sucesso!")
+            BOT2_LOGGER.info("SUCESSO: Teste direto de GIF concluído com sucesso!")
         else:
-            print("❌ ERRO: Falha no teste de envio de GIF!")
-            BOT2_LOGGER.error("ERRO: Falha no teste de envio de GIF!")
+            # Se falhou no teste direto, tente a função normal com forçar GIF
+            bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje = datetime.now().strftime("%Y-%m-%d")
+            teste_result = bot2_enviar_gif_pos_sinal()
             
+            if teste_result:
+                print("✅ SUCESSO: Teste de envio de GIF concluído com sucesso!")
+                BOT2_LOGGER.info("SUCESSO: Teste de envio de GIF concluído com sucesso!")
+            else:
+                print("❌ ERRO: Falha no teste de envio de GIF!")
+                BOT2_LOGGER.error("ERRO: Falha no teste de envio de GIF!")
+
         print("=== FIM DO TESTE MANUAL ===")
 
         # Iniciar os bots
