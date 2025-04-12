@@ -81,7 +81,7 @@ CONFIGS_IDIOMA = {
 BOT2_CHAT_IDS = list(BOT2_CANAIS_CONFIG.keys())
 
 # Base URL do GitHub para os arquivos
-GITHUB_BASE_URL = "https://raw.githubusercontent.com/igoredson/signalbotrender/main/"
+GITHUB_BASE_URL = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/"
 
 # Dicionário de mapeamento de caminhos dos GIFs válidos
 GIFS_VALIDOS = {
@@ -99,10 +99,10 @@ ALTERNATIVE_GIFS = {}
 
 # URLs diretas para GIFs do Giphy
 URLS_GIFS_DIRETAS = {
-    "promo_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnVvZ203ZXphMXc5N2dwMm1uaDk4Nmp4Z3A1OGkwZnd0a2JtdHo1bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1Q3HkjW2vvNTfAnPA4/giphy.gif",
-    "promo_en": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnJqZDV6OWJsd2xtOXpvMjduMDB3Nnc1dG8zZG40NzY5aGtsMHV0OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Btx7R7ul9qaeCt8eEk/giphy.gif",
-    "promo_es": "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGY5aG93cTV4NWg2dzM2anpmaWd5ajlqenkwcjd3bXVjdG0wYnlmYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5IG2JKmARkpsfMkp4z/giphy.gif",
-    "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif",
+    "promo_pt": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
+    "promo_en": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
+    "promo_es": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
+    "pos_sinal_padrao": "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal/pt/180398513446716419%20(7).webp",
     "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWo4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
 }
 
@@ -1643,7 +1643,8 @@ def bot2_enviar_gif_pos_sinal(signal=None):
         if not hasattr(bot2_enviar_gif_pos_sinal, "mensagem_perda_enviada_hoje"):
             bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje = ""
         
-        # Decidir se vamos enviar uma mensagem de perda ou o gif normal
+        # Para testes, forçamos o envio do GIF definindo a mensagem como já enviada hoje
+        bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje = data_atual
         enviar_mensagem_perda = bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje != data_atual
         
         if enviar_mensagem_perda:
@@ -1665,7 +1666,7 @@ def bot2_enviar_gif_pos_sinal(signal=None):
         # Verifica se o ativo está dentro do horário de operação
         ativo = signal.get('ativo', None)
         categoria = signal.get('categoria', 'Digital')
-        
+
         if ativo and not bot2_verificar_horario_ativo(ativo, categoria):
             BOT2_LOGGER.warning(
                 f"Ativo {ativo} não está dentro do horário de operação. Não enviando mensagem/GIF pós-sinal.")
@@ -1685,14 +1686,14 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                         # Preparar a mensagem de perda conforme o idioma
                         config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
                         link_corretora = config_idioma.get("link_corretora", "")
-                        
+                
                         if idioma == "pt":
                             texto_perda = f"⚠️ GERENCIAMENTO DE BANCA ⚠️\n\nSinal anterior não alcançou o resultado esperado!\nLembre-se de seguir seu gerenciamento para recuperar na próxima entrada.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">Continue operando</font></a> 📈"
                         elif idioma == "en":
                             texto_perda = f"⚠️ BANKROLL MANAGEMENT ⚠️\n\nPrevious signal did not reach the expected outcome!\nRemember to follow your management to recover in the next entry.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">Keep trading</font></a> 📈"
                         else:  # es
                             texto_perda = f"⚠️ GESTIÓN DE BANCA ⚠️\n\nLa señal anterior no alcanzó el resultado esperado!\nRecuerde seguir su gestión para recuperarse en la próxima entrada.\n\n<a href=\"{link_corretora}\"><font color=\"blue\">Sigue operando</font></a> 📈"
-                        
+                
                         # URL base para a API do Telegram
                         url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
                         
@@ -1725,15 +1726,10 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                             bot2_enviar_gif_pos_sinal.contador_pos_sinal = 0
                         bot2_enviar_gif_pos_sinal.contador_pos_sinal += 1
                         
-                        if usar_gif_especial and idioma == "pt":
-                            # Apenas para português, usar o GIF especial
-                            gif_url = URLS_GIFS_DIRETAS["gif_especial_pt"]
-                            BOT2_LOGGER.info(f"[{horario_atual}] Usando GIF especial para canal PT")
-                        else:
-                            # Para os demais casos, usar o GIF padrão
-                            gif_url = URLS_GIFS_DIRETAS["pos_sinal_padrao"]
-                            BOT2_LOGGER.info(f"[{horario_atual}] Usando GIF padrão para canal {idioma}")
-                        
+                        # Sempre usaremos a imagem do GitHub para o GIF pós-sinal
+                        gif_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal/pt/180398513446716419%20(7).webp"
+                        BOT2_LOGGER.info(f"[{horario_atual}] Usando GIF do GitHub para canal {idioma}")
+
                         BOT2_LOGGER.info(f"[{horario_atual}] 🎬 LOG GIF: Preparando envio do GIF: {gif_url} para canal {chat_id}")
                         
                         try:
@@ -1743,9 +1739,7 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                             
                             if arquivo_resposta.status_code == 200:
                                 # Criar um arquivo temporário no formato correto
-                                extensao = ".gif"
-                                if ".webp" in gif_url.lower():
-                                    extensao = ".webp"
+                                extensao = ".webp"  # Sempre usar .webp para o arquivo do GitHub
                                 
                                 nome_arquivo_temp = f"temp_gif_{random.randint(1000, 9999)}{extensao}"
                                 
@@ -1803,13 +1797,13 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                             )
                             BOT2_LOGGER.info(f"GIF enviado com sucesso como URL para o canal {chat_id} (fallback após erro)")
                             envios_com_sucesso += 1
-                
+                    
                 except Exception as e:
                     BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar para o canal {chat_id}: {str(e)}")
-                    
+
                     if "rights to send" in str(e).lower():
                         BOT2_LOGGER.error(f"Bot não tem permissões de administrador no canal {chat_id}")
-        
+
         if envios_com_sucesso > 0:
             if enviar_mensagem_perda:
                 BOT2_LOGGER.info(f"[{horario_atual}] Total de {envios_com_sucesso} mensagens de gerenciamento enviadas com sucesso")
@@ -2187,8 +2181,11 @@ if __name__ == "__main__":
                 "direcao": "CALL",
                 "categoria": "Digital",
                 "tempo_expiracao_minutos": 5,
-                "expiracao_texto": "🕒 Expiração: 5 minutos"
+                "expiracao_texto": "🕑 Expiração: 5 minutos"
             }
+        
+        # Configurar para forçar o envio de GIF
+        bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje = datetime.now().strftime("%Y-%m-%d")
         
         # Testar a função de envio de GIF
         teste_result = bot2_enviar_gif_pos_sinal()
