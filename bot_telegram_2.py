@@ -1363,8 +1363,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"{texto_gale1} {hora_gale1_formatada}\n"
                 f"{texto_gale2} {hora_gale2_formatada}\n"
                 f"{texto_gale3} {hora_gale3_formatada}\n\n"
-            f'📲 <a href="{link_corretora}" title="">{texto_corretora}</a>\n'
-            f'🙋‍♂️ Não sabe operar ainda? <a href="{link_video}" title="">{texto_video}</a>'
+            f'📲 <a href="{link_corretora}" title="">Clique para abrir a corretora</a>\n'
+            f'🙋‍♂️ Não sabe operar ainda? <a href="{link_video}" title="">Clique aqui</a>'
         )
                 
         # Mensagem em EN
@@ -1375,8 +1375,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"{texto_gale1} {hora_gale1_formatada}\n"
                 f"{texto_gale2} {hora_gale2_formatada}\n"
                 f"{texto_gale3} {hora_gale3_formatada}\n\n"
-            f'📲 <a href="{link_corretora}" title="">{texto_corretora}</a>\n'
-            f'🙋‍♂️ Don\'t know how to trade yet? <a href="{link_video}" title="">{texto_video}</a>'
+            f'📲 <a href="{link_corretora}" title="">Click to open broker</a>\n'
+            f'🙋‍♂️ Don\'t know how to trade yet? <a href="{link_video}" title="">Click here</a>'
         )
                 
         # Mensagem em ES
@@ -1387,8 +1387,8 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 f"{texto_gale1} {hora_gale1_formatada}\n"
                 f"{texto_gale2} {hora_gale2_formatada}\n"
                 f"{texto_gale3} {hora_gale3_formatada}\n\n"
-            f'📲 <a href="{link_corretora}" title="">{texto_corretora}</a>\n'
-            f'🙋‍♂️ ¿No sabe operar todavía? <a href="{link_video}" title="">{texto_video}</a>'
+            f'📲 <a href="{link_corretora}" title="">Haga clic para abrir el corredor</a>\n'
+            f'🙋‍♂️ ¿No sabe operar todavía? <a href="{link_video}" title="">Haga clic aquí</a>'
         )
                 
         # Verificar se há algum texto não esperado antes de retornar a mensagem
@@ -1922,57 +1922,18 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
         # Incrementa o contador global de sinais
         bot2_contador_sinais += 1
 
-        # MODIFICADO: Agendar o gif pós-sinal para 7 minutos após o envio do sinal
-        tempo_pos_sinal = 7
-
-        # Calcular a hora exata para o envio do GIF pós-sinal (hora atual + 7 minutos)
-        horario_pos_sinal = agora + timedelta(minutes=tempo_pos_sinal)
-        hora_pos_sinal_str = horario_pos_sinal.strftime("%H:%M")
-
-        BOT2_LOGGER.info(
-            f"[{horario_atual}] LOG GIF: Agendando GIF pós-sinal para {hora_pos_sinal_str} (daqui a {tempo_pos_sinal} minutos)"
-        )
-        BOT2_LOGGER.info(
-            f"[{horario_atual}] LOG GIF: O GIF será enviado exatamente 7 minutos após o sinal"
-        )
-
-        # Limpar quaisquer agendamentos anteriores para o GIF pós-sinal
-        schedule.clear("bot2_pos_sinal")
-
-        # Verificar se deve enviar o GIF imediatamente (para testes)
+        # Verificar se deve enviar o GIF imediatamente
         if enviar_gif_imediatamente:
-            BOT2_LOGGER.info(
-                f"[{horario_atual}] LOG GIF: Opção de envio imediato ativada - enviando GIF agora..."
-            )
-            bot2_enviar_gif_pos_sinal()
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal imediatamente...")
+            bot2_enviar_gif_pos_sinal(sinal)
         else:
-            # Agendar para uma hora específica em vez de um intervalo relativo
-            scheduler_job = (
-                schedule.every()
-                .day.at(hora_pos_sinal_str)
-                .do(bot2_enviar_gif_pos_sinal)
-                .tag("bot2_pos_sinal")
-            )
-
-            # Verificar se o agendamento foi bem-sucedido
-            if scheduler_job:
-                BOT2_LOGGER.info(
-                    f"[{horario_atual}] LOG GIF: Agendamento criado com sucesso: {scheduler_job}"
-                )
-
-                # Listar todos os trabalhos agendados para verificar
-                jobs = schedule.get_jobs()
-                BOT2_LOGGER.info(
-                    f"[{horario_atual}] LOG GIF: Total de trabalhos agendados: {len(jobs)}"
-                )
-                for i, job in enumerate(jobs):
-                    BOT2_LOGGER.info(
-                        f"[{horario_atual}] LOG GIF: Trabalho {i + 1}: {job} - Próxima execução: {job.next_run}"
-                    )
-            else:
-                BOT2_LOGGER.error(
-                    f"[{horario_atual}] LOG GIF: FALHA ao criar agendamento para o GIF pós-sinal!"
-                )
+            # Agendar o envio do GIF pós-sinal para 7 minutos após o envio do sinal
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF pós-sinal para 7 minutos após o sinal...")
+            # Limpar agendamentos anteriores de GIFs pós-sinal
+            schedule.clear("gif_pos_sinal")
+            # Agendar o novo GIF pós-sinal
+            schedule.every(7).minutes.do(bot2_enviar_gif_pos_sinal, sinal).tag("gif_pos_sinal")
+            BOT2_LOGGER.info(f"[{horario_atual}] GIF pós-sinal agendado com sucesso!")
 
         return True
 
