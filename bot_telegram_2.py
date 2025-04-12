@@ -2399,3 +2399,123 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
         traceback.print_exc()
         return False
 
+
+def bot2_iniciar_ciclo_sinais():
+    """
+    Agenda o envio de sinais do Bot 2 a cada hora no minuto 13.
+    """
+    global bot2_sinais_agendados, BOT2_LOGGER
+    
+    try:
+        # Limpar agendamentos anteriores de sinais
+        schedule.clear("bot2_sinais")
+        
+        # Configurar para enviar sempre no minuto 13 de cada hora
+        minuto_envio = 13
+        
+        # Agendar a cada hora no minuto 13
+        schedule.every().hour.at(f":{minuto_envio:02d}").do(bot2_send_message).tag("bot2_sinais")
+        
+        BOT2_LOGGER.info(f"Sinal do Bot 2 agendado para o minuto {minuto_envio} de cada hora")
+        BOT2_LOGGER.info("Configuração atual: 1 sinal por hora, no minuto 13")
+        
+        # Verificar próximo horário de envio
+        agora = bot2_obter_hora_brasilia()
+        hora_atual = agora.hour
+        minuto_atual = agora.minute
+        
+        if minuto_atual >= minuto_envio:
+            # Se já passou do minuto 13 dessa hora, o próximo será na próxima hora
+            proximo_envio = f"{(hora_atual + 1) % 24:02d}:{minuto_envio:02d}"
+        else:
+            # Se ainda não chegou no minuto 13 dessa hora, será nessa hora mesmo
+            proximo_envio = f"{hora_atual:02d}:{minuto_envio:02d}"
+            
+        BOT2_LOGGER.info(f"Próximo sinal agendado para: {proximo_envio}")
+        
+        bot2_sinais_agendados = True
+        return True
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao iniciar ciclo de sinais do Bot 2: {str(e)}")
+        traceback.print_exc()
+        bot2_sinais_agendados = False
+        return False
+
+
+def iniciar_ambos_bots():
+    """
+    Inicializa o Bot 2 e mantém o programa em execução,
+    tratando as tarefas agendadas periodicamente.
+    """
+    global bot2_sinais_agendados, BOT2_LOGGER
+    
+    try:
+        # Iniciar o Bot 2
+        if not bot2_sinais_agendados:
+            bot2_iniciar_ciclo_sinais()  # Agendar sinais para o Bot 2
+            
+        BOT2_LOGGER.info("=== BOT 2 INICIADO COM SUCESSO! ===")
+        BOT2_LOGGER.info("Aguardando envio de sinais nos horários programados...")
+        
+        # Teste inicial (descomentar para testes)
+        # bot2_send_message(enviar_gif_imediatamente=True)
+        
+        # Loop principal para manter o programa em execução
+        while True:
+            # Registrar todas as tarefas pendentes a cada 5 minutos (diagnóstico)
+            agora = bot2_obter_hora_brasilia()
+            if agora.minute % 5 == 0 and agora.second == 0:
+                jobs = schedule.get_jobs()
+                BOT2_LOGGER.info(f"[{agora.strftime('%H:%M:%S')}] DIAGNÓSTICO: Verificando {len(jobs)} tarefas agendadas")
+                for i, job in enumerate(jobs):
+                    BOT2_LOGGER.info(f"[{agora.strftime('%H:%M:%S')}] DIAGNÓSTICO: Tarefa {i + 1}: {job} - Próxima execução: {job.next_run}")
+            
+            # Executar tarefas agendadas
+            schedule.run_pending()
+            
+            # Pequena pausa para evitar uso excessivo de CPU
+            time.sleep(1)
+            
+    except KeyboardInterrupt:
+        BOT2_LOGGER.info("Bot encerrado pelo usuário (Ctrl+C)")
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro na execução do bot: {str(e)}")
+        traceback.print_exc()
+        raise
+
+
+# Executar se este arquivo for o script principal
+if __name__ == "__main__":
+    try:
+        # Exibir informações de inicialização
+        print("=== INICIANDO O BOT TELEGRAM DE SINAIS ===")
+        print("Bot configurado para enviar sinais no minuto 13 de cada hora")
+        
+        # Verificar URLs de GIFs
+        print("=== VERIFICANDO DISPONIBILIDADE DOS GIFS ===")
+        for nome, url in URLS_GIFS_DIRETAS.items():
+            print(f"Verificando GIF {nome}: {url}")
+            try:
+                response = requests.head(url, timeout=5)
+                if response.status_code == 200:
+                    print(f"  ✓ GIF {nome} disponível")
+                else:
+                    print(f"  ✗ GIF {nome} não disponível (código {response.status_code})")
+            except Exception as e:
+                print(f"  ✗ Erro ao verificar GIF {nome}: {str(e)}")
+        
+        # Inicializar o bot
+        print("\n=== INICIANDO BOT ===")
+        BOT2_LOGGER.info("Bot iniciado")
+        
+        # Teste de envio de GIF (descomentar para testar)
+        # bot2_enviar_gif_pos_sinal()
+        
+        # Iniciar o ciclo de sinais e manter o bot em execução
+        iniciar_ambos_bots()
+        
+    except Exception as e:
+        print(f"Erro ao iniciar o bot: {str(e)}")
+        traceback.print_exc()
+
