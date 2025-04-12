@@ -1251,11 +1251,9 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         # Encontrar o fuso horário adequado para o idioma
         fuso_horario = "America/Sao_Paulo"  # Padrão (Brasil)
         
-        # Buscar o fuso horário na configuração dos canais
-        for chat_id, config in BOT2_CANAIS_CONFIG.items():
-            if config["idioma"] == idioma:
-                fuso_horario = config.get("fuso_horario", "America/Sao_Paulo")
-                break
+        # Usar configuração de idioma diretamente
+        if idioma in CONFIGS_IDIOMA:
+            fuso_horario = CONFIGS_IDIOMA[idioma].get("fuso_horario", "America/Sao_Paulo")
         
         # Hora de entrada convertida para datetime no fuso horário de Brasília
         hora_entrada = datetime.strptime(hora_formatada, "%H:%M")
