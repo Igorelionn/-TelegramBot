@@ -1979,327 +1979,118 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
 
 
 def bot2_iniciar_ciclo_sinais():
-    """Inicia o ciclo de envio de sinais do Bot 2."""
-    global BOT2_LOGGER, ATIVOS_CATEGORIAS, bot2, ultimo_sinal_enviado
+    """
+    Agenda o envio de sinais do Bot 2 a cada hora no minuto 13.
+    """
+    global bot2_sinais_agendados, BOT2_LOGGER
     
     try:
-        BOT2_LOGGER.info("Iniciando ciclo de sinais do Bot 2")
+        # Limpar agendamentos anteriores de sinais
+        schedule.clear("bot2_sinais")
         
-        # Definir o minuto de envio dos sinais
+        # Configurar para enviar sempre no minuto 13 de cada hora
         minuto_envio = 13
         
-        # Agendar o envio de sinais a cada hora no minuto 13
+        # Agendar a cada hora no minuto 13
         schedule.every().hour.at(f":{minuto_envio:02d}").do(bot2_send_message).tag("bot2_sinais")
         
-        BOT2_LOGGER.info(f"Sinal do Bot 2 agendado para minuto {minuto_envio} de cada hora")
-        BOT2_LOGGER.info(
-            "Configuração atual: 1 sinal por hora, apenas ativos Digital, expiração de 5 minutos"
-        )
-        
-        # Criar um sinal de teste para uso com bot2_enviar_gif_pos_sinal
-        if not ultimo_sinal_enviado:
-            ultimo_sinal_enviado = {
-                "ativo": "EURUSD",
-                "direcao": "CALL",
-                "categoria": "Digital",
-                "tempo_expiracao_minutos": 5,
-                "expiracao_texto": "🕒 Expiração: 5 minutos"
-            }
-        
+        BOT2_LOGGER.info(f"Sinal do Bot 2 agendado para o minuto {minuto_envio} de cada hora")
+        BOT2_LOGGER.info("Configuração atual: 1 sinal por hora, apenas ativos Digital, expiração de 5 minutos")
         BOT2_LOGGER.info(f"Total de ativos da categoria Digital disponíveis: {len(ATIVOS_CATEGORIAS['Digital'])}")
-
+        
+        # Verificar próximo horário de envio
+        agora = bot2_obter_hora_brasilia()
+        hora_atual = agora.hour
+        minuto_atual = agora.minute
+        
+        if minuto_atual >= minuto_envio:
+            # Se já passou do minuto 13 dessa hora, o próximo será na próxima hora
+            proximo_envio = f"{(hora_atual + 1) % 24:02d}:{minuto_envio:02d}"
+        else:
+            # Se ainda não chegou no minuto 13 dessa hora, será nessa hora mesmo
+            proximo_envio = f"{hora_atual:02d}:{minuto_envio:02d}"
+            
+        BOT2_LOGGER.info(f"Próximo sinal agendado para: {proximo_envio}")
+        
+        # Verificar se estamos próximos do horário de envio (dentro de 1 minuto)
+        if (minuto_atual == minuto_envio) or (minuto_atual == minuto_envio - 1):
+            BOT2_LOGGER.info(f"Estamos próximos do horário de envio! Enviando sinal imediatamente...")
+            bot2_send_message()
+        
         bot2_sinais_agendados = True
-        BOT2_LOGGER.info("Ciclo de sinais do Bot 2 iniciado com sucesso")
-
+        return True
+        
     except Exception as e:
-        BOT2_LOGGER.error(
-            f"Erro ao iniciar ciclo de sinais do Bot 2: {str(e)}"
-        )
+        BOT2_LOGGER.error(f"Erro ao iniciar ciclo de sinais do Bot 2: {str(e)}")
+        traceback.print_exc()
         bot2_sinais_agendados = False
-        raise
-
-
-# Funo para manter o Bot 2 em execuo
+        return False
 
 
 def iniciar_ambos_bots():
     """
-    Inicializa ambos os bots (Bot 1 e Bot 2) e mantém o programa em execução,
+    Inicializa o Bot 2 e mantém o programa em execução,
     tratando as tarefas agendadas periodicamente.
     """
-    global bot2_sinais_agendados
-
+    global bot2_sinais_agendados, BOT2_LOGGER
+    
     try:
         # Iniciar o Bot 2
         if not bot2_sinais_agendados:
             bot2_iniciar_ciclo_sinais()  # Agendar sinais para o Bot 2
-
+            
         BOT2_LOGGER.info("=== BOT 2 INICIADO COM SUCESSO! ===")
-        BOT2_LOGGER.info(
-            "Aguardando envio de sinais nos horários programados...")
-
-        # Teste inicial: enviar um sinal imediatamente com GIF (descomentar apenas para teste)
+        BOT2_LOGGER.info("Aguardando envio de sinais nos horários programados...")
+        
+        # Teste inicial (descomentar para testes)
         # bot2_send_message(enviar_gif_imediatamente=True)
-
+        
         # Loop principal para manter o programa em execução
         while True:
-            # Registrar todas as tarefas pendentes a cada 5 minutos (apenas
-            # para diagnóstico)
+            # Registrar todas as tarefas pendentes a cada 5 minutos (diagnóstico)
             agora = bot2_obter_hora_brasilia()
+            
+            # Verificação adicional para enviar no minuto 13 de cada hora
+            if agora.minute == 13 and agora.second == 0:
+                BOT2_LOGGER.info(f"[{agora.strftime('%H:%M:%S')}] Chegou o horário programado! Enviando sinal agora...")
+                bot2_send_message()
+            
             if agora.minute % 5 == 0 and agora.second == 0:
                 jobs = schedule.get_jobs()
-                BOT2_LOGGER.info(
-                    f"[{agora.strftime('%H:%M:%S')}] DIAGNOSTICO: Verificando {len(jobs)} tarefas agendadas"
-                )
+                BOT2_LOGGER.info(f"[{agora.strftime('%H:%M:%S')}] DIAGNÓSTICO: Verificando {len(jobs)} tarefas agendadas")
                 for i, job in enumerate(jobs):
-                    BOT2_LOGGER.info(
-                        f"[{agora.strftime('%H:%M:%S')}] DIAGNOSTICO: Tarefa {i + 1}: {job} - Próxima execução: {job.next_run}"
-                    )
-
+                    BOT2_LOGGER.info(f"[{agora.strftime('%H:%M:%S')}] DIAGNÓSTICO: Tarefa {i + 1}: {job} - Próxima execução: {job.next_run}")
+            
             # Executar tarefas agendadas
-            pending_jobs = schedule.get_jobs()
-            if pending_jobs:
-                BOT2_LOGGER.debug(
-                    f"Executando {len(pending_jobs)} tarefas agendadas"
-                )
             schedule.run_pending()
-
+            
             # Pequena pausa para evitar uso excessivo de CPU
             time.sleep(1)
-
+            
     except KeyboardInterrupt:
         BOT2_LOGGER.info("Bots encerrados pelo usuário (Ctrl+C)")
     except Exception as e:
         BOT2_LOGGER.error(f"Erro na execução dos bots: {str(e)}")
-        import traceback
-
-        BOT2_LOGGER.error(traceback.format_exc())
+        traceback.print_exc()
         raise
 
-
-# Executar se este arquivo for o script principal
-if __name__ == "__main__":
+# Função para enviar sinal manualmente (para testes)
+def enviar_sinal_manual():
+    """Função para enviar um sinal manualmente para testes."""
     try:
-        print("=== INICIANDO O BOT TELEGRAM ===")
-        print(f"Diretório base: {BASE_DIR}")
-        print(f"Diretório de vídeos: {VIDEOS_DIR}")
-        print(f"Diretório de GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
-        print(f"Arquivo GIF especial PT: {VIDEO_GIF_ESPECIAL_PT}")
-
-        # Informações sobre a configuração atual
-        print("=== CONFIGURAÇÃO ATUAL DO BOT ===")
-        print("- Enviando apenas 1 sinal por hora (no minuto 13)")
-        print("- Usando apenas ativos da categoria Digital")
-        print("- Tempo de expiração fixo em 5 minutos")
-        print(
-            "- GIF pós-sinal agendado para 7 minutos após o sinal (expiração + 2 min)"
-        )
-        print("================================")
-
-        # Exibir caminhos das imagens pós-sinal
-        print(
-            f"Caminho da imagem pós-sinal padrão (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}"
-        )
-        print(
-            f"Caminho da imagem pós-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}"
-        )
-        print(
-            f"Caminho da imagem pós-sinal padrão (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}"
-        )
-        print(
-            f"Caminho da imagem pós-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}"
-        )
-        print(
-            f"Caminho da imagem pós-sinal padrão (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}"
-        )
-        print(
-            f"Caminho da imagem pós-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}"
-        )
-
-        # Verificar se os diretórios existem
-        print(f"Verificando pastas:")
-        print(f"VIDEOS_DIR existe: {os.path.exists(VIDEOS_DIR)}")
-        print(
-            f"VIDEOS_POS_SINAL_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_DIR)}"
-        )
-        print(
-            f"VIDEOS_POS_SINAL_PT_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_PT_DIR)}"
-        )
-        print(
-            f"VIDEOS_ESPECIAL_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_DIR)}"
-        )
-        print(
-            f"VIDEOS_ESPECIAL_PT_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_PT_DIR)}"
-        )
-
-        # Criar pastas se não existirem
-        os.makedirs(VIDEOS_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
-        os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
-
-        def verificar_urls_gifs():
-            """Verifica se as URLs dos GIFs estão acessíveis."""
-            print("=== VERIFICANDO URLS DOS GIFS NO GITHUB ===")
-
-            for gif_key, gif_path in GIFS_VALIDOS.items():
-                gif_url = f"{GITHUB_BASE_URL}{gif_path}"
-                print(f"Verificando URL: {gif_url}")
-
-                try:
-                    response = requests.head(gif_url, timeout=5)
-                    if response.status_code == 200:
-                        print(
-                            f"  SUCESSO: URL acessível (código {response.status_code})")
-                    else:
-                        print(
-                            f"  ERRO: URL inacessível (código {response.status_code})")
-                except Exception as e:
-                    print(f"  ERRO: Falha ao verificar URL: {str(e)}")
-
-            print("\n=== IMPORTANTE ===")
-            print("Para que o bot funcione corretamente, ele precisa ser promovido a ADMINISTRADOR em todos os canais.")
-            print("Se estiver recebendo erros 'need administrator rights', adicione o bot como administrador nos canais:")
-            for idioma, chats in BOT2_CANAIS_CONFIG.items():
-                for chat_id in chats:
-                    print(f"  - Canal {chat_id} (idioma: {idioma})")
-            print("================================\n")
-
-        # Verificar URLs de GIFs no GitHub
-        verificar_urls_gifs()
-
-        # Teste manual de envio de GIF
-        print("=== TESTE MANUAL DE ENVIO DE GIF ===")
-        print("Enviando um teste do GIF pós-sinal diretamente...")
-
-        BOT2_LOGGER.info("=== INICIANDO TESTE MANUAL DE ENVIO DE GIF ===")
-
-        # Criar um sinal de teste para o GIF
-        if not ultimo_sinal_enviado:
-            ultimo_sinal_enviado = {
-                "ativo": "EURUSD",
-                "direcao": "CALL",
-                "categoria": "Digital",
-                "tempo_expiracao_minutos": 5,
-                "expiracao_texto": "🕑 Expiração: 5 minutos"
-            }
-
-        # Função específica para teste direto do GIF
-        def enviar_gif_teste_direto():
-            """Função simplificada para testar o envio direto do GIF."""
-            try:
-                agora = bot2_obter_hora_brasilia()
-                horario_atual = agora.strftime("%H:%M:%S")
-                
-                # URL direta da imagem a ser usada
-                gif_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal/pt/180398513446716419%20(7).webp"
-                
-                BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO TESTE DIRETO DE GIF...")
-                BOT2_LOGGER.info(f"[{horario_atual}] Usando URL: {gif_url}")
-                
-                # Lista de canais de teste
-                canais_teste = []
-                
-                # Verificar estrutura de canais
-                BOT2_LOGGER.info(f"Estrutura de canais: {BOT2_CANAIS_CONFIG}")
-                
-                # Se a estrutura for por idioma
-                for idioma, chats in BOT2_CANAIS_CONFIG.items():
-                    if chats:
-                        for chat_id in chats:
-                            canais_teste.append(chat_id)
-                            BOT2_LOGGER.info(f"Adicionado canal {chat_id} do idioma {idioma} para teste")
-                
-                # Se não houver canais na estrutura por idioma, tentar usar BOT2_CHAT_IDS
-                if not canais_teste and BOT2_CHAT_IDS:
-                    canais_teste = BOT2_CHAT_IDS
-                    BOT2_LOGGER.info(f"Usando lista alternativa de canais: {BOT2_CHAT_IDS}")
-                
-                # Última tentativa: usar os IDs de canal diretamente
-                if not canais_teste:
-                    canais_teste = ["-1002424874613", "-1002453956387", "-1002446547846"]
-                    BOT2_LOGGER.info(f"Usando IDs de canal hardcoded como última opção")
-                
-                if not canais_teste:
-                    BOT2_LOGGER.error("Não há canais configurados para teste.")
-                    return False
-                
-                BOT2_LOGGER.info(f"Tentando enviar para os seguintes canais: {canais_teste}")
-                
-                # Tentar enviar para cada canal
-                sucesso = False
-                for chat_id in canais_teste:
-                    try:
-                        BOT2_LOGGER.info(f"Tentando enviar GIF para canal {chat_id}...")
-                        
-                        # Tentar o método animation primeiro
-                        try:
-                            bot2.send_animation(
-                                chat_id=chat_id,
-                                animation=gif_url,
-                                caption="GIF de Teste",
-                                parse_mode="HTML",
-                                width=208,
-                                height=84
-                            )
-                            BOT2_LOGGER.info(f"GIF de teste enviado com sucesso para o canal {chat_id}")
-                            sucesso = True
-                            break  # Se enviou com sucesso para um canal, podemos parar
-                        except Exception as animation_error:
-                            BOT2_LOGGER.warning(f"Erro ao enviar com send_animation: {str(animation_error)}")
-                            
-                            # Tentar com método alternativo
-                            bot2.send_document(
-                                chat_id=chat_id,
-                                document=gif_url,
-                                caption="GIF de Teste (método alternativo)",
-                                parse_mode="HTML"
-                            )
-                            BOT2_LOGGER.info(f"GIF de teste enviado com método alternativo para o canal {chat_id}")
-                            sucesso = True
-                            break
-                    except Exception as e:
-                        BOT2_LOGGER.error(f"Erro ao enviar GIF para {chat_id}: {str(e)}")
-                
-                if sucesso:
-                    BOT2_LOGGER.info("Teste direto de GIF concluído com sucesso!")
-                else:
-                    BOT2_LOGGER.error("Falha em todos os canais ao tentar enviar o GIF de teste.")
-                
-                return sucesso
-            except Exception as e:
-                BOT2_LOGGER.error(f"Erro no teste direto de GIF: {str(e)}")
-                traceback.print_exc()
-                return False
-
-        # Testar a função de envio de GIF usando o método direto
-        teste_direto = enviar_gif_teste_direto()
+        BOT2_LOGGER.info("Enviando sinal manualmente para teste...")
+        resultado = bot2_send_message()
         
-        if teste_direto:
-            print("✅ SUCESSO: Teste direto de GIF concluído com sucesso!")
-            BOT2_LOGGER.info("SUCESSO: Teste direto de GIF concluído com sucesso!")
+        if resultado:
+            BOT2_LOGGER.info("Sinal manual enviado com sucesso!")
+            return True
         else:
-            # Se falhou no teste direto, tente a função normal com forçar GIF
-            bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje = datetime.now().strftime("%Y-%m-%d")
-            teste_result = bot2_enviar_gif_pos_sinal()
-            
-            if teste_result:
-                print("✅ SUCESSO: Teste de envio de GIF concluído com sucesso!")
-                BOT2_LOGGER.info("SUCESSO: Teste de envio de GIF concluído com sucesso!")
-            else:
-                print("❌ ERRO: Falha no teste de envio de GIF!")
-                BOT2_LOGGER.error("ERRO: Falha no teste de envio de GIF!")
-
-        print("=== FIM DO TESTE MANUAL ===")
-
-        # Iniciar os bots
-        iniciar_ambos_bots()
+            BOT2_LOGGER.error("Falha ao enviar sinal manual.")
+            return False
     except Exception as e:
-        print(f"Erro ao iniciar bots: {str(e)}")
+        BOT2_LOGGER.error(f"Erro ao enviar sinal manual: {str(e)}")
         traceback.print_exc()
+        return False
 
 
 def bot2_enviar_gif_especial():
@@ -2712,5 +2503,261 @@ def bot2_enviar_mensagem_abertura_corretora():
     
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao enviar mensagem de abertura: {str(e)}")
+        traceback.print_exc()
+        return False
+
+# Executar se este arquivo for o script principal
+if __name__ == "__main__":
+    try:
+        print("=== INICIANDO O BOT TELEGRAM ===")
+        print(f"Diretório base: {BASE_DIR}")
+        print(f"Diretório de vídeos: {VIDEOS_DIR}")
+        print(f"Diretório de GIFs especiais: {VIDEOS_ESPECIAL_DIR}")
+        print(f"Arquivo GIF especial PT: {VIDEO_GIF_ESPECIAL_PT}")
+
+        # Informações sobre a configuração atual
+        print("=== CONFIGURAÇÃO ATUAL DO BOT ===")
+        print("- Enviando apenas 1 sinal por hora (no minuto 13)")
+        print("- Usando apenas ativos da categoria Digital")
+        print("- Tempo de expiração fixo em 5 minutos")
+        print(
+            "- GIF pós-sinal agendado para 7 minutos após o sinal (expiração + 2 min)"
+        )
+        print("================================")
+
+        # Exibir caminhos das imagens pós-sinal
+        print(
+            f"Caminho da imagem pós-sinal padrão (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'padrao.jpg')}"
+        )
+        print(
+            f"Caminho da imagem pós-sinal especial (PT): {os.path.join(VIDEOS_POS_SINAL_DIR, 'pt', 'especial.jpg')}"
+        )
+        print(
+            f"Caminho da imagem pós-sinal padrão (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'padrao.jpg')}"
+        )
+        print(
+            f"Caminho da imagem pós-sinal especial (EN): {os.path.join(VIDEOS_POS_SINAL_DIR, 'en', 'especial.jpg')}"
+        )
+        print(
+            f"Caminho da imagem pós-sinal padrão (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'padrao.jpg')}"
+        )
+        print(
+            f"Caminho da imagem pós-sinal especial (ES): {os.path.join(VIDEOS_POS_SINAL_DIR, 'es', 'especial.jpg')}"
+        )
+
+        # Verificar se os diretórios existem
+        print(f"Verificando pastas:")
+        print(f"VIDEOS_DIR existe: {os.path.exists(VIDEOS_DIR)}")
+        print(
+            f"VIDEOS_POS_SINAL_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_DIR)}"
+        )
+        print(
+            f"VIDEOS_POS_SINAL_PT_DIR existe: {os.path.exists(VIDEOS_POS_SINAL_PT_DIR)}"
+        )
+        print(
+            f"VIDEOS_ESPECIAL_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_DIR)}"
+        )
+        print(
+            f"VIDEOS_ESPECIAL_PT_DIR existe: {os.path.exists(VIDEOS_ESPECIAL_PT_DIR)}"
+        )
+
+        # Criar pastas se não existirem
+        os.makedirs(VIDEOS_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_ESPECIAL_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_ESPECIAL_PT_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_PT_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_EN_DIR, exist_ok=True)
+        os.makedirs(VIDEOS_POS_SINAL_ES_DIR, exist_ok=True)
+
+        def verificar_urls_gifs():
+            """Verifica se as URLs dos GIFs estão acessíveis."""
+            print("=== VERIFICANDO URLS DOS GIFS NO GITHUB ===")
+
+            for gif_key, gif_path in GIFS_VALIDOS.items():
+                gif_url = f"{GITHUB_BASE_URL}{gif_path}"
+                print(f"Verificando URL: {gif_url}")
+
+                try:
+                    response = requests.head(gif_url, timeout=5)
+                    if response.status_code == 200:
+                        print(
+                            f"  SUCESSO: URL acessível (código {response.status_code})")
+                    else:
+                        print(
+                            f"  ERRO: URL inacessível (código {response.status_code})")
+                except Exception as e:
+                    print(f"  ERRO: Falha ao verificar URL: {str(e)}")
+
+            print("\n=== IMPORTANTE ===")
+            print("Para que o bot funcione corretamente, ele precisa ser promovido a ADMINISTRADOR em todos os canais.")
+            print("Se estiver recebendo erros 'need administrator rights', adicione o bot como administrador nos canais:")
+            for idioma, chats in BOT2_CANAIS_CONFIG.items():
+                for chat_id in chats:
+                    print(f"  - Canal {chat_id} (idioma: {idioma})")
+            print("================================\n")
+
+        # Verificar URLs de GIFs no GitHub
+        verificar_urls_gifs()
+
+        # Teste manual de envio de GIF
+        print("=== TESTE MANUAL DE ENVIO DE GIF ===")
+        print("Enviando um teste do GIF pós-sinal diretamente...")
+
+        BOT2_LOGGER.info("=== INICIANDO TESTE MANUAL DE ENVIO DE GIF ===")
+
+        # Criar um sinal de teste para o GIF
+        if not ultimo_sinal_enviado:
+            ultimo_sinal_enviado = {
+                "ativo": "EURUSD",
+                "direcao": "CALL",
+                "categoria": "Digital",
+                "tempo_expiracao_minutos": 5,
+                "expiracao_texto": "🕑 Expiração: 5 minutos"
+            }
+        
+        # Teste da função de envio de GIF
+        teste_direto = enviar_gif_teste_direto()
+        
+        if teste_direto:
+            print("✅ SUCESSO: Teste direto de GIF concluído com sucesso!")
+            BOT2_LOGGER.info("SUCESSO: Teste direto de GIF concluído com sucesso!")
+        else:
+            # Se falhou no teste direto, tente a função normal
+            bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje = datetime.now().strftime("%Y-%m-%d")
+            teste_result = bot2_enviar_gif_pos_sinal()
+            
+            if teste_result:
+                print("✅ SUCESSO: Teste de envio de GIF concluído com sucesso!")
+                BOT2_LOGGER.info("SUCESSO: Teste de envio de GIF concluído com sucesso!")
+            else:
+                print("❌ ERRO: Falha no teste de envio de GIF!")
+                BOT2_LOGGER.error("ERRO: Falha no teste de envio de GIF!")
+
+        print("=== FIM DO TESTE MANUAL ===")
+        
+        # Teste manual de envio de sinal
+        print("=== TESTE MANUAL DE ENVIO DE SINAL ===")
+        print("Verificando se deve enviar um sinal de teste agora...")
+        
+        # Verificar hora atual e enviar sinal manualmente se estiver no minuto 13
+        agora = bot2_obter_hora_brasilia()
+        print(f"Hora atual: {agora.strftime('%H:%M:%S')}")
+        
+        # Forçar um envio de sinal para teste
+        print("Forçando envio de sinal para teste...")
+        enviar_sinal_manual()
+        
+        print("=== FIM DO TESTE MANUAL DE SINAL ===")
+
+        # Iniciar os bots
+        iniciar_ambos_bots()
+    except Exception as e:
+        print(f"Erro ao iniciar bots: {str(e)}")
+        traceback.print_exc()
+
+# Função para enviar sinal manualmente (para testes)
+def enviar_sinal_manual():
+    """Função para enviar um sinal manualmente para testes."""
+    try:
+        BOT2_LOGGER.info("Enviando sinal manualmente para teste...")
+        resultado = bot2_send_message()
+        
+        if resultado:
+            BOT2_LOGGER.info("Sinal manual enviado com sucesso!")
+            return True
+        else:
+            BOT2_LOGGER.error("Falha ao enviar sinal manual.")
+            return False
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao enviar sinal manual: {str(e)}")
+        traceback.print_exc()
+        return False
+
+# Função para teste direto de GIF
+def enviar_gif_teste_direto():
+    """Função simplificada para testar o envio direto do GIF."""
+    try:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        
+        # URL direta da imagem a ser usada
+        gif_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal/pt/180398513446716419%20(7).webp"
+        
+        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO TESTE DIRETO DE GIF...")
+        BOT2_LOGGER.info(f"[{horario_atual}] Usando URL: {gif_url}")
+        
+        # Lista de canais de teste
+        canais_teste = []
+        
+        # Verificar estrutura de canais
+        BOT2_LOGGER.info(f"Estrutura de canais: {BOT2_CANAIS_CONFIG}")
+        
+        # Se a estrutura for por idioma
+        for idioma, chats in BOT2_CANAIS_CONFIG.items():
+            if chats:
+                for chat_id in chats:
+                    canais_teste.append(chat_id)
+                    BOT2_LOGGER.info(f"Adicionado canal {chat_id} do idioma {idioma} para teste")
+        
+        # Se não houver canais na estrutura por idioma, tentar usar BOT2_CHAT_IDS
+        if not canais_teste and BOT2_CHAT_IDS:
+            canais_teste = BOT2_CHAT_IDS
+            BOT2_LOGGER.info(f"Usando lista alternativa de canais: {BOT2_CHAT_IDS}")
+        
+        # Última tentativa: usar os IDs de canal diretamente
+        if not canais_teste:
+            canais_teste = ["-1002424874613", "-1002453956387", "-1002446547846"]
+            BOT2_LOGGER.info(f"Usando IDs de canal hardcoded como última opção")
+        
+        if not canais_teste:
+            BOT2_LOGGER.error("Não há canais configurados para teste.")
+            return False
+        
+        BOT2_LOGGER.info(f"Tentando enviar para os seguintes canais: {canais_teste}")
+        
+        # Tentar enviar para cada canal
+        sucesso = False
+        for chat_id in canais_teste:
+            try:
+                BOT2_LOGGER.info(f"Tentando enviar GIF para canal {chat_id}...")
+                
+                # Tentar o método animation primeiro
+                try:
+                    bot2.send_animation(
+                        chat_id=chat_id,
+                        animation=gif_url,
+                        caption="GIF de Teste",
+                        parse_mode="HTML",
+                        width=208,
+                        height=84
+                    )
+                    BOT2_LOGGER.info(f"GIF de teste enviado com sucesso para o canal {chat_id}")
+                    sucesso = True
+                    break  # Se enviou com sucesso para um canal, podemos parar
+                except Exception as animation_error:
+                    BOT2_LOGGER.warning(f"Erro ao enviar com send_animation: {str(animation_error)}")
+                    
+                    # Tentar com método alternativo
+                    bot2.send_document(
+                        chat_id=chat_id,
+                        document=gif_url,
+                        caption="GIF de Teste (método alternativo)",
+                        parse_mode="HTML"
+                    )
+                    BOT2_LOGGER.info(f"GIF de teste enviado com método alternativo para o canal {chat_id}")
+                    sucesso = True
+                    break
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao enviar GIF para {chat_id}: {str(e)}")
+        
+        if sucesso:
+            BOT2_LOGGER.info("Teste direto de GIF concluído com sucesso!")
+        else:
+            BOT2_LOGGER.error("Falha em todos os canais ao tentar enviar o GIF de teste.")
+        
+        return sucesso
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro no teste direto de GIF: {str(e)}")
         traceback.print_exc()
         return False
