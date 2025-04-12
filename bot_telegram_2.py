@@ -1308,9 +1308,11 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
 
         # Configurar links baseados no idioma
         if idioma == "pt":
-            link_corretora = (
-                "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
-            )
+            # Não sobrescrever link_corretora se já estiver definido
+            if not link_corretora:
+                link_corretora = (
+                    "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
+                )
             link_video = "https://t.me/trendingbrazil/215"
             texto_corretora = "Clique para abrir a corretora"
             texto_video = "Clique aqui"
@@ -1319,9 +1321,11 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             texto_gale2 = "2º GALE TEMPO PARA"
             texto_gale3 = "3º GALE TEMPO PARA"
         elif idioma == "en":
-            link_corretora = (
-                "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
-            )
+            # Não sobrescrever link_corretora se já estiver definido
+            if not link_corretora:
+                link_corretora = (
+                    "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
+                )
             link_video = "https://t.me/trendingenglish/226"
             texto_corretora = "Click to open broker"
             texto_video = "Click here"
@@ -1330,9 +1334,11 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             texto_gale2 = "2nd GALE TIME UNTIL"
             texto_gale3 = "3rd GALE TIME UNTIL"
         else:  # espanhol
-            link_corretora = (
-                "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
-            )
+            # Não sobrescrever link_corretora se já estiver definido
+            if not link_corretora:
+                link_corretora = (
+                    "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+                )
             link_video = "https://t.me/trendingespanish/212"
             texto_corretora = "Haga clic para abrir el corredor"
             texto_video = "Haga clic aquí"
@@ -2045,32 +2051,21 @@ def iniciar_ambos_bots():
         
         # Loop principal para manter o programa em execução
         while True:
-            # Registrar todas as tarefas pendentes a cada 5 minutos (diagnóstico)
-            agora = bot2_obter_hora_brasilia()
-            
-            # Verificação adicional para enviar no minuto 13 de cada hora
-            if agora.minute == 13 and agora.second == 0:
-                BOT2_LOGGER.info(f"[{agora.strftime('%H:%M:%S')}] Chegou o horário programado! Enviando sinal agora...")
-                bot2_send_message()
-            
-            if agora.minute % 5 == 0 and agora.second == 0:
-                jobs = schedule.get_jobs()
-                BOT2_LOGGER.info(f"[{agora.strftime('%H:%M:%S')}] DIAGNÓSTICO: Verificando {len(jobs)} tarefas agendadas")
-                for i, job in enumerate(jobs):
-                    BOT2_LOGGER.info(f"[{agora.strftime('%H:%M:%S')}] DIAGNÓSTICO: Tarefa {i + 1}: {job} - Próxima execução: {job.next_run}")
-            
-            # Executar tarefas agendadas
-            schedule.run_pending()
-            
-            # Pequena pausa para evitar uso excessivo de CPU
-            time.sleep(1)
-            
-    except KeyboardInterrupt:
-        BOT2_LOGGER.info("Bots encerrados pelo usuário (Ctrl+C)")
+            try:
+                # Executar tarefas agendadas
+                schedule.run_pending()
+                
+                # Pausa para não sobrecarregar a CPU
+                time.sleep(1)
+            except KeyboardInterrupt:
+                print("\nPrograma encerrado manualmente.")
+                sys.exit(0)
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
+                traceback.print_exc()
     except Exception as e:
-        BOT2_LOGGER.error(f"Erro na execução dos bots: {str(e)}")
+        BOT2_LOGGER.error(f"Erro ao iniciar bots: {str(e)}")
         traceback.print_exc()
-        raise
 
 # Função para enviar sinal manualmente (para testes)
 def enviar_sinal_manual():
@@ -2630,7 +2625,9 @@ if __name__ == "__main__":
         
         # Forçar um envio de sinal para teste
         print("Forçando envio de sinal para teste...")
-        enviar_sinal_manual()
+        # Desabilitado para evitar duplicação de sinais
+        # enviar_sinal_manual()
+        print("Teste manual desabilitado para evitar sinais duplicados.")
         
         print("=== FIM DO TESTE MANUAL DE SINAL ===")
 
