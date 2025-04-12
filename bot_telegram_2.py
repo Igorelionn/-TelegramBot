@@ -971,6 +971,9 @@ URLS_GIFS_DIRETAS = {
 # Adicionar variável global para controlar mensagem de perda enviada por dia
 mensagem_perda_enviada_hoje = False
 
+# Variáveis para controle de sinais
+ultimo_sinal_enviado = None
+
 def adicionar_blitz(lista_ativos):
     for ativo in lista_ativos:
         if ativo in HORARIOS_PADRAO:
@@ -1824,22 +1827,44 @@ def bot2_enviar_gif_pos_sinal(signal=None):
 
 
 def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=False):
-    """Envia uma mensagem com sinal para todos os canais configurados."""
-    global bot2_contador_sinais
+    """
+    Função principal para envio de sinais do Bot 2.
+    Gera e envia um sinal aleatório para todos os canais configurados.
+    
+    Args:
+        ignorar_anti_duplicacao (bool, opcional): Se True, ignora a verificação de anti-duplicação
+        enviar_gif_imediatamente (bool, opcional): Se True, envia o GIF pós-sinal imediatamente
+    
+    Returns:
+        bool: True se o sinal foi enviado com sucesso, False caso contrário
+    """
+    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, ultimo_sinal_enviado
     
     try:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
         
-        # Gerar o sinal aleatório
-        sinal = bot2_gerar_sinal_aleatorio()
-        if not sinal:
-            BOT2_LOGGER.error(
-                f"[{horario_atual}] Não foi possível gerar um sinal válido. Tentando novamente mais tarde."
-            )
-            return
+        # Contar quantos sinais foram enviados
+        sinais_enviados = 0
+        
+        try:
+            # Gerar o sinal aleatório
+            sinal = bot2_gerar_sinal_aleatorio()
+            if not sinal:
+                BOT2_LOGGER.warning(
+                    f"[{horario_atual}] Não foi possível gerar um sinal válido. Tentando novamente mais tarde."
+                )
+                return False
+                
+            # Salvar o sinal para uso posterior
+            ultimo_sinal_enviado = sinal
             
+        except Exception as e:
+            BOT2_LOGGER.error(f"Erro ao gerar sinal aleatório: {str(e)}")
+            traceback.print_exc()
+            return False
+        
         # Em vez de desempacotar diretamente, obtenha os valores do dicionário
         ativo = sinal["ativo"]
         direcao = sinal["direcao"]
@@ -1953,34 +1978,34 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
 
 
 def bot2_iniciar_ciclo_sinais():
-    """
-    Agenda o envio de sinais do Bot 2 a cada hora no minuto 13.
-    """
-    global bot2_sinais_agendados
-
+    """Inicia o ciclo de envio de sinais do Bot 2."""
+    global BOT2_LOGGER, ATIVOS_CATEGORIAS, bot2, ultimo_sinal_enviado
+    
     try:
-        # Limpar agendamentos anteriores se houver
-        schedule.clear()
-
-        # Configurar para enviar apenas no minuto 13 de cada hora
+        BOT2_LOGGER.info("Iniciando ciclo de sinais do Bot 2")
+        
+        # Definir o minuto de envio dos sinais
         minuto_envio = 13
-
-        # Agendar a cada hora no minuto 13
-        schedule.every().hour.at(f":{minuto_envio:02d}").do(bot2_send_message).tag(
-            "bot2_sinais"
-        )
-        BOT2_LOGGER.info(
-            f"Sinal do Bot 2 agendado para minuto {minuto_envio} de cada hora"
-        )
+        
+        # Agendar o envio de sinais a cada hora no minuto 13
+        schedule.every().hour.at(f":{minuto_envio:02d}").do(bot2_send_message).tag("bot2_sinais")
+        
+        BOT2_LOGGER.info(f"Sinal do Bot 2 agendado para minuto {minuto_envio} de cada hora")
         BOT2_LOGGER.info(
             "Configuração atual: 1 sinal por hora, apenas ativos Digital, expiração de 5 minutos"
         )
-
-        # Contar quantos ativos da categoria Digital estão disponíveis
-        ativos_digital = len(ATIVOS_CATEGORIAS["Digital"])
-        BOT2_LOGGER.info(
-            f"Total de ativos da categoria Digital disponíveis: {ativos_digital}"
-        )
+        
+        # Criar um sinal de teste para uso com bot2_enviar_gif_pos_sinal
+        if not ultimo_sinal_enviado:
+            ultimo_sinal_enviado = {
+                "ativo": "EURUSD",
+                "direcao": "CALL",
+                "categoria": "Digital",
+                "tempo_expiracao_minutos": 5,
+                "expiracao_texto": "🕒 Expiração: 5 minutos"
+            }
+        
+        BOT2_LOGGER.info(f"Total de ativos da categoria Digital disponíveis: {len(ATIVOS_CATEGORIAS['Digital'])}")
 
         bot2_sinais_agendados = True
         BOT2_LOGGER.info("Ciclo de sinais do Bot 2 iniciado com sucesso")
@@ -2144,22 +2169,32 @@ if __name__ == "__main__":
         # Verificar URLs de GIFs no GitHub
         verificar_urls_gifs()
 
-        # TESTE: Enviar um GIF diretamente para testar
+        # Teste manual de envio de GIF
         print("=== TESTE MANUAL DE ENVIO DE GIF ===")
         print("Enviando um teste do GIF pós-sinal diretamente...")
-        # Inicializar os logs
+        
         BOT2_LOGGER.info("=== INICIANDO TESTE MANUAL DE ENVIO DE GIF ===")
-
-        # Testar o envio direto do GIF
+        
+        # Criar um sinal de teste para o GIF
+        if not ultimo_sinal_enviado:
+            ultimo_sinal_enviado = {
+                "ativo": "EURUSD",
+                "direcao": "CALL",
+                "categoria": "Digital",
+                "tempo_expiracao_minutos": 5,
+                "expiracao_texto": "🕒 Expiração: 5 minutos"
+            }
+        
+        # Testar a função de envio de GIF
         teste_result = bot2_enviar_gif_pos_sinal()
+        
         if teste_result:
-            print("SUCESSO: Teste de envio de GIF realizado com sucesso!")
-            BOT2_LOGGER.info(
-                "SUCESSO: Teste de envio de GIF realizado com sucesso!")
+            print("✅ SUCESSO: Teste de envio de GIF concluído com sucesso!")
+            BOT2_LOGGER.info("SUCESSO: Teste de envio de GIF concluído com sucesso!")
         else:
-            print("ERRO: Falha no teste de envio de GIF!")
+            print("❌ ERRO: Falha no teste de envio de GIF!")
             BOT2_LOGGER.error("ERRO: Falha no teste de envio de GIF!")
-
+            
         print("=== FIM DO TESTE MANUAL ===")
 
         # Iniciar os bots
