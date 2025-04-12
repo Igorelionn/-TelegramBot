@@ -1875,44 +1875,49 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
         hora_entrada = agora + timedelta(minutes=2)
         hora_formatada = hora_entrada.strftime("%H:%M")
         
-        # Enviar para cada canal
-        for chat_id in BOT2_CHAT_IDS:
-            config_canal = BOT2_CANAIS_CONFIG[chat_id]
-            idioma = config_canal["idioma"]
+        # Enviar o sinal para cada canal configurado
+        for idioma, chats in BOT2_CANAIS_CONFIG.items():
+            if not chats:  # Se não houver chats configurados para este idioma, pula
+                continue
             
-            mensagem_formatada = bot2_formatar_mensagem(
-                sinal, hora_formatada, idioma)
+            # Formatar a mensagem para o idioma específico
+            mensagem_formatada = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
+            
+            if not mensagem_formatada:
+                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao formatar mensagem para idioma {idioma}")
+                continue
+            
+            # URL base para a API do Telegram
             url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
             
-            # Registrar envio nos logs
             BOT2_LOGGER.info(
                 f"[{horario_atual}] Enviando sinal: Ativo={ativo}, Direção={direcao}, Categoria={categoria}, Tempo={tempo_expiracao_minutos}, Idioma={idioma}"
             )
             
-            try:
-                resposta = requests.post(
-                    url_base,
-                    json={
-                    "chat_id": chat_id,
-                    "text": mensagem_formatada,
-                    "parse_mode": "HTML",
-                        "disable_web_page_preview": True,
-                    },
-                    timeout=10,
-                )
-                
-                if resposta.status_code == 200:
-                    BOT2_LOGGER.info(
-                        f"[{horario_atual}] SUCESSO: SINAL ENVIADO COM SUCESSO para o canal {chat_id}"
+            # Enviar para cada chat do idioma
+            for chat_id in chats:
+                try:
+                    resposta = requests.post(
+                        url_base,
+                        json={
+                            "chat_id": chat_id,
+                            "text": mensagem_formatada,
+                            "parse_mode": "HTML"
+                        },
+                        timeout=10,
                     )
-                else:
-                    BOT2_LOGGER.error(
-                        f"[{horario_atual}] ERRO: Erro ao enviar mensagem para o canal {chat_id}: {resposta.text}"
-                    )
-            except Exception as msg_error:
-                BOT2_LOGGER.error(
-                    f"[{horario_atual}] ERRO: Exceção ao enviar mensagem para o canal {chat_id}: {str(msg_error)}"
-                )
+                    
+                    if resposta.status_code == 200:
+                        sinais_enviados += 1
+                        BOT2_LOGGER.info(
+                            f"[{horario_atual}] Sinal enviado com sucesso para o canal {chat_id} (idioma: {idioma})"
+                        )
+                    else:
+                        BOT2_LOGGER.error(
+                            f"[{horario_atual}] Erro ao enviar sinal para {chat_id}: {resposta.text}"
+                        )
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar para {chat_id}: {str(e)}")
         
         # Incrementa o contador global de sinais
         bot2_contador_sinais += 1
