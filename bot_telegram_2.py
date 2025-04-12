@@ -20,52 +20,45 @@ Todas as mensagens são enviadas para os canais configurados em português, ingl
 com os respectivos links personalizados para cada idioma.
 """
 
-# Importaes necessrias
-import traceback
-import socket
-import pytz
-from datetime import datetime, timedelta, time as dt_time
+import os
+import sys
+import time
 import json
 import random
-import time
-import schedule
-import requests
 import logging
-import sys
-import os
-from functools import lru_cache
+import traceback
+import requests
+import schedule
+import pytz
 import telebot
+from functools import lru_cache
+from datetime import datetime, timedelta
 
-# Definição da variável global assets
-assets = {}
+# Configuração básica de logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("bot_telegram.log", encoding="utf-8"),
+    ],
+)
 
-# Definição de outras variáveis globais
-ultimo_ativo = None
-ultimo_signal = None
+# Logger para o Bot 2
+BOT2_LOGGER = logging.getLogger("BOT2")
 
-# Configuração do logger específico para o Bot 2
-BOT2_LOGGER = logging.getLogger("bot2")
-BOT2_LOGGER.setLevel(logging.INFO)
-bot2_formatter = logging.Formatter(
-    "%(asctime)s - BOT2 - %(levelname)s - %(message)s")
+# Inicializar variáveis globais
+bot2_sinais_agendados = False
+bot2_contador_sinais = 0
+ultimo_sinal_enviado = None
 
-# Evitar duplicação de handlers
-if not BOT2_LOGGER.handlers:
-    bot2_file_handler = logging.FileHandler("bot_telegram_bot2_logs.log")
-    bot2_file_handler.setFormatter(bot2_formatter)
-    BOT2_LOGGER.addHandler(bot2_file_handler)
-
-    bot2_console_handler = logging.StreamHandler()
-    bot2_console_handler.setFormatter(bot2_formatter)
-    BOT2_LOGGER.addHandler(bot2_console_handler)
-
-# Credenciais Telegram
+# Token do Bot Telegram
 BOT2_TOKEN = "7997585882:AAFDyG-BYskj1gyAbh17X5jd6DDClXdluww"
 
 # Inicialização do bot
 bot2 = telebot.TeleBot(BOT2_TOKEN)
 
-# Configuração dos canais para cada idioma
+# Canais de envio configurados por idioma
 BOT2_CANAIS_CONFIG = {
     "-1002424874613": {  # Canal para mensagens em português
         "idioma": "pt",
@@ -86,8 +79,39 @@ BOT2_CANAIS_CONFIG = {
     },
 }
 
-# Lista de IDs dos canais para facilitar iterao
+# Lista de IDs dos canais
 BOT2_CHAT_IDS = list(BOT2_CANAIS_CONFIG.keys())
+
+# URLs dos GIFs
+URLS_GIFS_DIRETAS = {
+    "pos_sinal_padrao": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
+    "gif_especial_pt": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
+    "promo_pt": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
+    "promo_en": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
+    "promo_es": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
+}
+
+# Configurações do bot
+CONFIG_JSON = {
+    "modo_operacional": True,
+    "sinais_habilitados": True,
+    "segundos_espera_gif_pos_sinal": 60,
+    "link_corretora": "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack=",
+    "bot2_canais": {
+        "pt": ["-1002424874613"],
+        "en": ["-1002453956387"],
+        "es": ["-1002446547846"]
+    }
+}
+
+# Limite máximo de sinais por hora
+BOT2_LIMITE_SINAIS_POR_HORA = 1
+
+# Definição da variável global assets
+assets = {}
+
+# Definição de outras variáveis globais
+ultimo_ativo = None
 
 # Base URL do GitHub para os arquivos
 GITHUB_BASE_URL = "https://raw.githubusercontent.com/igoredson/signalbotrender/main/"
@@ -118,58 +142,55 @@ URLS_GIFS_DIRETAS = {
 # ID para compatibilidade com cdigo existente
 BOT2_CHAT_ID_CORRETO = BOT2_CHAT_IDS[0]  # Usar o primeiro canal como padro
 
-# Limite de sinais por hora
-BOT2_LIMITE_SINAIS_POR_HORA = 1
-
-# Categorias de ativos
+# Definição das categorias de ativos e seus horários de funcionamento
 ATIVOS_CATEGORIAS = {
-    "Binary": [],
-    "Blitz": [],
     "Digital": [
-        "Gold/Silver (OTC)",
-        "Worldcoin (OTC)",
-        "USD/THB (OTC)",
-        "ETH/USD (OTC)",
-        "CHF/JPY (OTC)",
-        "Pepe (OTC)",
-        "GBP/AUD (OTC)",
-        "GBP/CHF",
-        "GBP/CAD (OTC)",
-        "EUR/JPY (OTC)",
-        "AUD/CHF",
-        "GER 30 (OTC)",
-        "AUD/CHF (OTC)",
-        "EUR/AUD",
-        "USD/CAD (OTC)",
-        "BTC/USD",
-        "Amazon/Ebay (OTC)",
-        "Coca-Cola Company (OTC)",
-        "AIG (OTC)",
-        "Amazon/Alibaba (OTC)",
-        "Bitcoin Cash (OTC)",
-        "AUD/USD",
-        "DASH (OTC)",
-        "BTC/USD (OTC)",
-        "SP 35 (OTC)",
-        "TRUMP Coin (OTC)",
-        "US 100 (OTC)",
-        "EUR/CAD (OTC)",
-        "HK 33 (OTC)",
-        "Alphabet/Microsoft (OTC)",
-        "1000Sats (OTC)",
-        "USD/ZAR (OTC)",
-        "Litecoin (OTC)",
-        "Hamster Kombat (OTC)",
-        "USD Currency Index (OTC)",
-        "AUS 200 (OTC)",
-        "USD/CAD",
-        "USD/JPY",
-        "MELANIA Coin (OTC)",
-        "JP 225 (OTC)",
-        "AUD/CAD (OTC)",
-        "AUD/JPY (OTC)",
-        "US 500 (OTC)",
+        "EUR/USD", "GBP/USD", "AUD/USD", "USD/JPY", "USD/CHF", "USD/CAD", "EUR/JPY", 
+        "EUR/GBP", "AUD/JPY", "GBP/JPY", "CHF/JPY", "CAD/JPY", "NZD/USD", "EUR/AUD", 
+        "EUR/CAD", "EUR/CHF", "AUD/CAD", "AUD/CHF", "GBP/CAD", "GBP/CHF", "EUR/NZD", 
+        "USD/MXN", "USD/ZAR", "USD/TRY", "USD/NOK", "USD/SEK", "USD/DKK", "USD/HKD", 
+        "USD/SGD", "USD/PLN", "USD/CZK", "USD/HUF", "USD/ILS", "EUR/CZK", "EUR/DKK", 
+        "EUR/HUF", "EUR/NOK", "EUR/PLN", "EUR/SEK", "EUR/TRY", "EUR/ZAR", "GBP/AUD",
+        "GBP/NZD", "AUD/NZD"
     ],
+    "OTC": [
+        "OTC EUR/USD", "OTC GBP/USD", "OTC AUD/USD", "OTC USD/JPY", "OTC EUR/JPY", 
+        "OTC GBP/JPY", "OTC EUR/GBP", "OTC USD/CHF", "OTC EUR/CHF", "OTC AUD/CAD"
+    ],
+    "Crypto": [
+        "BTC/USD", "ETH/USD", "LTC/USD", "XRP/USD", "EOS/USD", "BTC/ETH"
+    ]
+}
+
+# Horários de funcionamento das categorias de ativos por dia da semana
+HORARIOS_CATEGORIAS = {
+    "Digital": {
+        "Monday": [("00:00", "23:59")],   # Segunda-feira: 24 horas
+        "Tuesday": [("00:00", "23:59")],  # Terça-feira: 24 horas
+        "Wednesday": [("00:00", "23:59")],# Quarta-feira: 24 horas
+        "Thursday": [("00:00", "23:59")], # Quinta-feira: 24 horas
+        "Friday": [("00:00", "22:00")],   # Sexta-feira: até 22h (UTC)
+        "Saturday": [],                   # Sábado: fechado
+        "Sunday": [("21:00", "23:59")]    # Domingo: a partir das 21h
+    },
+    "OTC": {
+        "Monday": [],                    # Segunda-feira: fechado
+        "Tuesday": [],                   # Terça-feira: fechado
+        "Wednesday": [],                 # Quarta-feira: fechado
+        "Thursday": [],                  # Quinta-feira: fechado
+        "Friday": [],                    # Sexta-feira: fechado
+        "Saturday": [("00:00", "23:59")],# Sábado: 24 horas
+        "Sunday": [("00:00", "21:00")]   # Domingo: até 21h (UTC)
+    },
+    "Crypto": {
+        "Monday": [("00:00", "23:59")],   # Segunda-feira: 24 horas
+        "Tuesday": [("00:00", "23:59")],  # Terça-feira: 24 horas
+        "Wednesday": [("00:00", "23:59")],# Quarta-feira: 24 horas
+        "Thursday": [("00:00", "23:59")], # Quinta-feira: 24 horas
+        "Friday": [("00:00", "23:59")],   # Sexta-feira: 24 horas
+        "Saturday": [("00:00", "23:59")], # Sábado: 24 horas
+        "Sunday": [("00:00", "23:59")]    # Domingo: 24 horas
+    }
 }
 
 # Configurações de horários específicos para cada ativo
@@ -1014,12 +1035,59 @@ def adicionar_blitz(lista_ativos):
 @lru_cache(maxsize=128)
 def parse_time_range(time_str):
     """
-    Converte uma string de intervalo de tempo (e.g. "09:30-16:00") para um par de time objects.
+    Analisa uma string de intervalo de tempo no formato 'HH:MM-HH:MM' e 
+    retorna um objeto que permite verificar se um horário está dentro desse intervalo.
+    
+    Args:
+        time_str (str): String de intervalo de tempo no formato 'HH:MM-HH:MM'.
+    
+    Returns:
+        TimeRange: Um objeto que pode ser usado para verificar se um horário está dentro do intervalo.
     """
-    start_str, end_str = time_str.split("-")
-    start_time = datetime.strptime(start_str, "%H:%M").time()
-    end_time = datetime.strptime(end_str, "%H:%M").time()
-    return start_time, end_time
+    class TimeRange:
+        def __init__(self, start, end):
+            self.start = start
+            self.end = end
+        
+        def is_time_within_range(self, time_to_check):
+            """
+            Verifica se um horário está dentro do intervalo.
+            
+            Args:
+                time_to_check (str): Horário a ser verificado no formato 'HH:MM'.
+            
+            Returns:
+                bool: True se o horário estiver dentro do intervalo, False caso contrário.
+            """
+            # Se o horário a verificar for um objeto datetime, converter para string
+            if hasattr(time_to_check, 'strftime'):
+                time_to_check = time_to_check.strftime("%H:%M")
+                
+            # Lidar com intervalos que atravessam a meia-noite
+            if self.start <= self.end:
+                return self.start <= time_to_check <= self.end
+            else:
+                return time_to_check >= self.start or time_to_check <= self.end
+    
+    try:
+        # Verificar se a string está no formato esperado
+        if not isinstance(time_str, str) or '-' not in time_str:
+            raise ValueError(f"Formato de intervalo de tempo inválido: {time_str}")
+            
+        start_time, end_time = time_str.split('-')
+        
+        # Remover espaços em branco
+        start_time = start_time.strip()
+        end_time = end_time.strip()
+        
+        # Verificar se os horários têm o formato HH:MM
+        for t in [start_time, end_time]:
+            if len(t) != 5 or t[2] != ':' or not (t[0:2].isdigit() and t[3:5].isdigit()):
+                raise ValueError(f"Formato de horário inválido: {t}")
+        
+        return TimeRange(start_time, end_time)
+    except Exception as e:
+        raise ValueError(f"Erro ao analisar intervalo de tempo '{time_str}': {str(e)}")
 
 
 # Funo para verificar disponibilidade de ativos
@@ -1027,47 +1095,58 @@ def parse_time_range(time_str):
 
 def is_asset_available(asset, current_time=None, current_day=None):
     """
-    Verifica se um ativo está disponível para negociação em um determinado horário.
+    Verifica se um ativo está disponível no horário atual.
 
     Args:
-        asset (str): O nome do ativo a ser verificado.
-        current_time (datetime, optional): O horário atual. Se None, usará o horário atual do sistema.
-        current_day (str, optional): O dia atual. Se None, será determinado a partir do horário atual.
+        asset (str): O nome do ativo a ser verificado
+        current_time (datetime ou str, opcional): Horário atual (padrão: hora atual)
+        current_day (str, opcional): Dia atual (padrão: dia atual)
 
     Returns:
-        bool: True se o ativo estiver disponível, False caso contrário.
+        bool: True se o ativo estiver disponível, False caso contrário
     """
-    # Se o horário atual não foi fornecido, usar o horário de Brasília
-    if current_time is None:
-        current_time = bot2_obter_hora_brasilia()
-
-    # Determinar o dia da semana atual
-    if current_day is None:
-        # segunda-feira, terça-feira, etc.
-        current_day = current_time.strftime("%A")
-
-    # Transformar o horário atual em um formato de string para comparação
-    current_time_str = current_time.strftime("%H:%M")
-
-    # Se o ativo tiver um horário personalizado, verificar nesse horário
-    asset_key = asset.replace(" ", "_").replace("/", "_")
-    if asset_key in HORARIOS_PADRAO:
-        day_ranges = HORARIOS_PADRAO[asset_key].get(current_day, [])
-        if not day_ranges:
-            return False  # Se não há horários definidos para este dia, o ativo não está disponível
-
-        # Verificar se o horário atual está dentro de algum dos intervalos
-        # definidos
-        for time_range in day_ranges:
-            start_time, end_time = time_range.split("-")
-            if start_time <= current_time_str <= end_time:
+    try:
+        # Se não for fornecido o horário atual, usar o horário atual de Brasília
+        if current_time is None:
+            current_time = bot2_obter_hora_brasilia()
+            current_time_str = current_time.strftime("%H:%M")
+        elif isinstance(current_time, str):
+            current_time_str = current_time  # Já é uma string no formato HH:MM
+        else:
+            current_time_str = current_time.strftime("%H:%M")
+            
+        # Se não for fornecido o dia atual, usar o dia atual
+        if current_day is None:
+            current_day = bot2_obter_hora_brasilia().strftime("%A")
+            
+        # Verificar se o ativo está na lista de ativos disponíveis
+        categoria = None
+        for cat, ativos in ATIVOS_CATEGORIAS.items():
+            if asset in ativos:
+                categoria = cat
+                break
+                
+        if categoria is None:
+            BOT2_LOGGER.warning(f"Ativo {asset} não está registrado em nenhuma categoria.")
+            return False
+            
+        # Obter o horário de funcionamento da categoria
+        horario_range = HORARIOS_CATEGORIAS.get(categoria, {}).get(current_day)
+        if not horario_range:
+            BOT2_LOGGER.warning(f"Categoria {categoria} não tem horário definido para {current_day}.")
+            return False
+            
+        # Verificar se o horário atual está dentro do range de funcionamento
+        for start_time, end_time in horario_range:
+            if parse_time_range(f"{start_time}-{end_time}").is_time_within_range(current_time_str):
                 return True
-
-        return False  # Se não está em nenhum intervalo, não está disponível
-
-    # Se o ativo não tem um horário específico definido, ele está sempre
-    # disponível
-    return True
+                
+        BOT2_LOGGER.warning(f"Ativo {asset} (categoria {categoria}) não está disponível em {current_day} às {current_time_str}.")
+        return False
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao verificar disponibilidade do ativo {asset}: {str(e)}")
+        return False
 
 
 def bot2_verificar_horario_ativo(ativo, categoria):
@@ -1101,42 +1180,36 @@ def bot2_obter_hora_brasilia():
 
 
 def bot2_verificar_disponibilidade():
-    """
-    Verifica quais ativos estão disponíveis no momento da verificação.
-    Retorna uma lista de ativos da categoria Digital disponíveis.
-    """
-    ativos_disponiveis = []
-
-    # Obter hora atual no fuso horário de Brasília
-    agora = bot2_obter_hora_brasilia()
-    dia_atual = agora.strftime("%A")
-    hora_atual = agora.strftime("%H:%M")
-
-    BOT2_LOGGER.info(
-        f"Verificando disponibilidade para o dia {dia_atual} às {hora_atual}"
-    )
-
-    # Filtrar apenas ativos da categoria Digital
-    ativos_digital = [ativo for ativo in ATIVOS_CATEGORIAS["Digital"]]
-
-    if not ativos_digital:
-        BOT2_LOGGER.warning("Nenhum ativo na categoria Digital encontrado!")
-        return []
-
-    BOT2_LOGGER.info(
-        f"Total de ativos na categoria Digital: {len(ativos_digital)}"
-    )
-
-    # Verificar disponibilidade de cada ativo
-    for ativo in ativos_digital:
-        if is_asset_available(ativo, hora_atual, dia_atual):
-            ativos_disponiveis.append(ativo)
-
-    BOT2_LOGGER.info(
-        f"Ativos disponíveis no momento ({len(ativos_disponiveis)}): {ativos_disponiveis}"
-    )
-
-    return ativos_disponiveis
+    """Verifica quais ativos estão disponíveis no momento para envio de sinais."""
+    try:
+        # Obter o horário atual de Brasília
+        hora_atual = bot2_obter_hora_brasilia()
+        hora_str = hora_atual.strftime("%H:%M")
+        dia_atual = hora_atual.strftime("%A")
+        
+        BOT2_LOGGER.info(f"Verificando disponibilidade para o dia {dia_atual} às {hora_str}")
+        
+        # Contar quantos ativos da categoria Digital estão disponíveis
+        total_ativos = len(ATIVOS_CATEGORIAS["Digital"])
+        BOT2_LOGGER.info(f"Total de ativos na categoria Digital: {total_ativos}")
+        
+        # Verificar quantos ativos da categoria Digital estão disponíveis
+        ativos_disponiveis = []
+        for ativo in ATIVOS_CATEGORIAS["Digital"]:
+            if is_asset_available(ativo, hora_atual, dia_atual):
+                ativos_disponiveis.append(ativo)
+        
+        # Se não houver ativos disponíveis, retornar False
+        if not ativos_disponiveis:
+            BOT2_LOGGER.warning(f"Não há ativos disponíveis no momento ({hora_str}).")
+            return False
+        
+        # Caso contrário, retornar a lista de ativos disponíveis
+        BOT2_LOGGER.info(f"Ativos disponíveis ({len(ativos_disponiveis)}): {', '.join(ativos_disponiveis)}")
+        return ativos_disponiveis
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao verificar disponibilidade de ativos: {str(e)}")
+        return False
 
 
 def bot2_gerar_sinal_aleatorio():
