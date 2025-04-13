@@ -1645,6 +1645,12 @@ def bot2_enviar_gif_pos_sinal(signal=None):
         horario_atual = agora.strftime("%H:%M:%S")
         data_atual = agora.strftime("%Y-%m-%d")
         
+        BOT2_LOGGER.info(f"[{horario_atual}] Iniciando função bot2_enviar_gif_pos_sinal")
+        
+        # Limpar o agendamento após execução para garantir que não seja executado novamente
+        schedule.clear("gif_pos_sinal")
+        BOT2_LOGGER.info(f"[{horario_atual}] Agendamento de GIF pós-sinal removido para evitar repetição")
+        
         # Criar uma variável estática para controlar se a mensagem já foi enviada hoje
         if not hasattr(bot2_enviar_gif_pos_sinal, "mensagem_perda_enviada_hoje"):
             bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje = ""
@@ -1709,7 +1715,7 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                                 "chat_id": chat_id,
                                 "text": texto_perda,
                                 "parse_mode": "HTML",
-                                "disable_web_page_preview": False,
+                                "disable_web_page_preview": True,
                             },
                             timeout=10,
                         )
@@ -1902,7 +1908,8 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                         json={
                             "chat_id": chat_id,
                             "text": mensagem_formatada,
-                            "parse_mode": "HTML"
+                            "parse_mode": "HTML",
+                            "disable_web_page_preview": True,
                         },
                         timeout=10,
                     )
@@ -1929,11 +1936,19 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
         else:
             # Agendar o envio do GIF pós-sinal para 7 minutos após o envio do sinal
             BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF pós-sinal para 7 minutos após o sinal...")
+            
             # Limpar agendamentos anteriores de GIFs pós-sinal
             schedule.clear("gif_pos_sinal")
-            # Agendar o novo GIF pós-sinal
-            schedule.every(7).minutes.do(bot2_enviar_gif_pos_sinal, sinal).tag("gif_pos_sinal")
-            BOT2_LOGGER.info(f"[{horario_atual}] GIF pós-sinal agendado com sucesso!")
+            
+            # Calcular o horário exato para o GIF (7 minutos após o sinal)
+            hora_gif = agora + timedelta(minutes=7)
+            hora_gif_str = hora_gif.strftime("%H:%M")
+            
+            # Agendar o GIF para uma hora específica (ao invés de a cada 7 minutos)
+            # Isso garante que execute apenas uma vez
+            schedule.every().day.at(hora_gif_str).do(bot2_enviar_gif_pos_sinal, sinal).tag("gif_pos_sinal")
+            
+            BOT2_LOGGER.info(f"[{horario_atual}] GIF pós-sinal agendado para {hora_gif_str} (uma única vez)")
 
         return True
 
@@ -2354,7 +2369,7 @@ def bot2_enviar_mensagem_cadastro():
                             "chat_id": chat_id,
                             "text": texto_cadastro,
                             "parse_mode": "HTML",
-                            "disable_web_page_preview": False,
+                            "disable_web_page_preview": True,
                         },
                         timeout=10,
                     )
@@ -2377,8 +2392,9 @@ def bot2_enviar_mensagem_cadastro():
             BOT2_LOGGER.info(f"[{horario_atual}] Total de {mensagens_enviadas} mensagens de cadastro enviadas com sucesso")
             
             # Agendar envio da mensagem de abertura da corretora em 9 minutos
-            schedule.every(9).minutes.do(bot2_enviar_gif_promo, idioma="pt").tag("gif_promo")
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendado envio do GIF promo em 9 minutos")
+            # Desativar o agendamento automático de GIFs promocionais para evitar conflitos
+            # schedule.every(9).minutes.do(bot2_enviar_gif_promo, idioma="pt").tag("gif_promo")
+            BOT2_LOGGER.info("Agendamento automático de GIFs promocionais desativado para evitar conflitos com GIFs pós-sinal")
             
             return True
         else:
@@ -2429,7 +2445,7 @@ def bot2_enviar_mensagem_abertura_corretora():
                             "chat_id": chat_id,
                             "text": texto_abertura,
                             "parse_mode": "HTML",
-                            "disable_web_page_preview": False,
+                            "disable_web_page_preview": True,
                         },
                         timeout=10,
                     )
