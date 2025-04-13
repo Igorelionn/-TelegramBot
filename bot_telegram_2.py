@@ -24,6 +24,7 @@ import sys
 import os
 from functools import lru_cache
 import telebot
+import threading
 
 # Definição da variável global assets
 assets = {}
@@ -1647,9 +1648,9 @@ def bot2_enviar_gif_pos_sinal(signal=None):
         
         BOT2_LOGGER.info(f"[{horario_atual}] Iniciando função bot2_enviar_gif_pos_sinal")
         
-        # Limpar o agendamento após execução para garantir que não seja executado novamente
-        schedule.clear("gif_pos_sinal")
-        BOT2_LOGGER.info(f"[{horario_atual}] Agendamento de GIF pós-sinal removido para evitar repetição")
+        # Não precisamos mais limpar o agendamento, pois estamos usando threads
+        # schedule.clear("gif_pos_sinal")
+        # BOT2_LOGGER.info(f"[{horario_atual}] Agendamento de GIF pós-sinal removido para evitar repetição")
         
         # Criar uma variável estática para controlar se a mensagem já foi enviada hoje
         if not hasattr(bot2_enviar_gif_pos_sinal, "mensagem_perda_enviada_hoje"):
@@ -1934,22 +1935,22 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
             BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal imediatamente...")
             bot2_enviar_gif_pos_sinal(sinal)
         else:
-            # Agendar o envio do GIF pós-sinal para 7 minutos após o envio do sinal
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF pós-sinal para 7 minutos após o sinal...")
+            # Criar uma thread separada para aguardar 7 minutos e enviar o GIF pós-sinal
+            BOT2_LOGGER.info(f"[{horario_atual}] Configurando thread para enviar GIF pós-sinal em 7 minutos...")
             
-            # Limpar agendamentos anteriores de GIFs pós-sinal
-            schedule.clear("gif_pos_sinal")
+            def enviar_gif_apos_delay():
+                # Aguardar 7 minutos (420 segundos)
+                time.sleep(420)
+                BOT2_LOGGER.info("Tempo de espera concluído. Enviando GIF pós-sinal agora...")
+                bot2_enviar_gif_pos_sinal(sinal)
             
-            # Calcular o horário exato para o GIF (7 minutos após o sinal)
-            hora_gif = agora + timedelta(minutes=7)
-            hora_gif_str = hora_gif.strftime("%H:%M")
+            # Iniciar thread para não bloquear o programa principal
+            gif_thread = threading.Thread(target=enviar_gif_apos_delay)
+            gif_thread.daemon = True  # Thread será encerrada quando o programa principal terminar
+            gif_thread.start()
             
-            # Agendar o GIF para uma hora específica (ao invés de a cada 7 minutos)
-            # Isso garante que execute apenas uma vez
-            schedule.every().day.at(hora_gif_str).do(bot2_enviar_gif_pos_sinal, sinal).tag("gif_pos_sinal")
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] GIF pós-sinal agendado para {hora_gif_str} (uma única vez)")
-
+            BOT2_LOGGER.info(f"[{horario_atual}] Thread de envio de GIF pós-sinal iniciada. O GIF será enviado em 7 minutos.")
+        
         return True
 
     except Exception as e:
