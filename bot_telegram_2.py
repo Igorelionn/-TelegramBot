@@ -1930,6 +1930,26 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
         # Incrementa o contador global de sinais
         bot2_contador_sinais += 1
 
+        # Incrementar o contador de sinais
+        BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado. Total de sinais: {bot2_contador_sinais}")
+        
+        # Verificar se é múltiplo de 3 para enviar GIF especial
+        if bot2_contador_sinais % 3 == 0:
+            BOT2_LOGGER.info(f"[{horario_atual}] Sinal é múltiplo de 3 (sinal #{bot2_contador_sinais}). Enviando GIF especial...")
+            # Criar uma thread separada para enviar o GIF especial após o GIF pós-sinal
+            
+            def enviar_gif_especial_apos_delay():
+                # Aguardar 8 minutos (480 segundos) - após o GIF pós-sinal
+                time.sleep(480)
+                BOT2_LOGGER.info("Tempo de espera para GIF especial concluído. Enviando GIF especial agora...")
+                bot2_enviar_gif_especial()
+            
+            # Iniciar thread para enviar GIF especial
+            gif_especial_thread = threading.Thread(target=enviar_gif_especial_apos_delay)
+            gif_especial_thread.daemon = True
+            gif_especial_thread.start()
+            BOT2_LOGGER.info(f"[{horario_atual}] Thread para envio de GIF especial iniciada. Será enviado em 8 minutos.")
+        
         # Verificar se deve enviar o GIF imediatamente
         if enviar_gif_imediatamente:
             BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal imediatamente...")
