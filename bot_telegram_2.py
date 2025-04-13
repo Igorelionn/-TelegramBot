@@ -1656,9 +1656,13 @@ def bot2_enviar_gif_pos_sinal(signal=None):
         if not hasattr(bot2_enviar_gif_pos_sinal, "mensagem_perda_enviada_hoje"):
             bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje = ""
         
-        # Para testes, forçamos o envio do GIF definindo a mensagem como já enviada hoje
-        bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje = data_atual
+        # Verificar se a mensagem de perda já foi enviada hoje
+        # Apenas enviar a mensagem de perda uma vez por dia, independente do tipo de sinal
         enviar_mensagem_perda = bot2_enviar_gif_pos_sinal.mensagem_perda_enviada_hoje != data_atual
+        
+        # Para testes, você pode forçar o comportamento desejado
+        # Defina como True para sempre mostrar o GIF, False para mostrar mensagem de perda
+        # enviar_mensagem_perda = False  # Descomente para testes
         
         if enviar_mensagem_perda:
             BOT2_LOGGER.info(f"[{horario_atual}] Enviando mensagem de gerenciamento de banca em vez de GIF pós-sinal")
@@ -1939,16 +1943,47 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
             # Criar uma thread separada para enviar o GIF especial após o GIF pós-sinal
             
             def enviar_gif_especial_apos_delay():
-                # Aguardar 8 minutos (480 segundos) - após o GIF pós-sinal
-                time.sleep(480)
+                # Aguardar 30 minutos (1800 segundos) - tempo total após o sinal
+                BOT2_LOGGER.info("Aguardando 30 minutos após o sinal para enviar GIF especial...")
+                time.sleep(1800)
+                
+                # Enviar GIF especial
                 BOT2_LOGGER.info("Tempo de espera para GIF especial concluído. Enviando GIF especial agora...")
                 bot2_enviar_gif_especial()
+                
+                # Aguardar 1 minuto (60 segundos) após o GIF especial
+                BOT2_LOGGER.info("Aguardando 1 minuto após o GIF especial para enviar mensagem de participação...")
+                time.sleep(60)
+                
+                # Enviar mensagem de participação
+                BOT2_LOGGER.info("Enviando mensagem de participação da sessão...")
+                enviar_mensagem_participacao()
+                
+                # Aguardar 9 minutos (540 segundos) após mensagem de participação
+                BOT2_LOGGER.info("Aguardando 9 minutos para enviar GIF promocional...")
+                time.sleep(540)
+                
+                # Enviar GIF promo para cada idioma
+                BOT2_LOGGER.info("Enviando GIF promocional para todos os idiomas...")
+                bot2_enviar_gif_promo(idioma="pt")
+                time.sleep(2)  # Pequeno delay entre mensagens para diferentes idiomas
+                bot2_enviar_gif_promo(idioma="en")
+                time.sleep(2)
+                bot2_enviar_gif_promo(idioma="es")
+                
+                # Aguardar 1 minuto (60 segundos) após o GIF promo
+                BOT2_LOGGER.info("Aguardando 1 minuto após GIF promocional para enviar mensagem de abertura da corretora...")
+                time.sleep(60)
+                
+                # Enviar mensagem final de abertura da corretora
+                BOT2_LOGGER.info("Enviando mensagem final de abertura da corretora...")
+                bot2_enviar_mensagem_abertura_corretora()
             
             # Iniciar thread para enviar GIF especial
             gif_especial_thread = threading.Thread(target=enviar_gif_especial_apos_delay)
             gif_especial_thread.daemon = True
             gif_especial_thread.start()
-            BOT2_LOGGER.info(f"[{horario_atual}] Thread para envio de GIF especial iniciada. Será enviado em 8 minutos.")
+            BOT2_LOGGER.info(f"[{horario_atual}] Thread para sequência especial de múltiplo de 3 iniciada.")
         
         # Verificar se deve enviar o GIF imediatamente
         if enviar_gif_imediatamente:
@@ -2430,31 +2465,48 @@ def bot2_enviar_mensagem_cadastro():
 
 def bot2_enviar_mensagem_abertura_corretora():
     """Envia uma mensagem informando sobre a abertura da corretora para todos os canais configurados."""
+
     global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA
-    
+
     try:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] Iniciando envio da mensagem de abertura da corretora")
-        
-        # Contar quantas mensagens foram enviadas com sucesso
-        mensagens_enviadas = 0
-        
+
+        # Contar quantas mensagens foram enviadas
+        envios_com_sucesso = 0
+
         # Para cada idioma configurado, envia a mensagem formatada
         for idioma, chats in BOT2_CANAIS_CONFIG.items():
             if not chats:  # Se não houver chats configurados para este idioma, pula
                 continue
-            
+
+            # Obter configuração para o idioma
             config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
             link_corretora = config_idioma.get("link_corretora", "")
-            
+
             if idioma == "pt":
-                texto_abertura = f"⏰ CORRETORA ABERTA ⏰\n\nA corretora já está aberta para operações! 🎯\n\nLembre-se de seguir corretamente seu gerenciamento para obter os melhores resultados.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">ACESSAR CORRETORA</font></a> 📈"
+                texto_abertura = (
+                    "👉🏼Abram a corretora Pessoal\n\n"
+                    "⚠️FIQUEM ATENTOS⚠️\n\n"
+                    "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+                    f"➡️ <a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">CLICANDO AQUI</font></a>"
+                )
             elif idioma == "en":
-                texto_abertura = f"⏰ BROKER OPEN ⏰\n\nThe broker is now open for trading! 🎯\n\nRemember to correctly follow your management to achieve the best results.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">ACCESS BROKER</font></a> 📈"
+                texto_abertura = (
+                    "👉🏼Open the broker everyone\n\n"
+                    "⚠️STAY ALERT⚠️\n\n"
+                    "🔥Register on XXBROKER right now🔥\n\n"
+                    f"➡️ <a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">CLICK HERE</font></a>"
+                )
             else:  # es
-                texto_abertura = f"⏰ CORREDOR ABIERTO ⏰\n\n¡El corredor ya está abierto para operaciones! 🎯\n\nRecuerde seguir correctamente su gestión para obtener los mejores resultados.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">ACCEDER AL CORREDOR</font></a> 📈"
-            
+                texto_abertura = (
+                    "👉🏼Abran el corredor todos\n\n"
+                    "⚠️ESTÉN ATENTOS⚠️\n\n"
+                    "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
+                    f"➡️ <a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">HAGA CLIC AQUÍ</font></a>"
+                )
+
             for chat_id in chats:
                 try:
                     # URL base para a API do Telegram
@@ -2470,28 +2522,24 @@ def bot2_enviar_mensagem_abertura_corretora():
                         },
                         timeout=10,
                     )
-                    
+
                     if resposta.status_code == 200:
                         BOT2_LOGGER.info(
-                            f"[{horario_atual}] Mensagem de abertura da corretora enviada com sucesso para {chat_id} (idioma: {idioma})"
+                            f"[{horario_atual}] Mensagem de abertura enviada com sucesso para {chat_id} (idioma: {idioma})"
                         )
-                        mensagens_enviadas += 1
+                        envios_com_sucesso += 1
                     else:
                         BOT2_LOGGER.error(
                             f"[{horario_atual}] Erro ao enviar mensagem de abertura para {chat_id}: {resposta.text}"
                         )
                 except Exception as e:
-                    BOT2_LOGGER.error(
-                        f"[{horario_atual}] Exceção ao enviar mensagem de abertura para {chat_id}: {str(e)}"
-                    )
-        
-        if mensagens_enviadas > 0:
-            BOT2_LOGGER.info(f"[{horario_atual}] Total de {mensagens_enviadas} mensagens de abertura enviadas com sucesso")
-            return True
-        else:
-            BOT2_LOGGER.warning(f"[{horario_atual}] Nenhuma mensagem de abertura foi enviada")
-            return False
-    
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem de abertura: {str(e)}")
+                    traceback.print_exc()
+
+        BOT2_LOGGER.info(
+            f"[{horario_atual}] Total de mensagens de abertura enviadas com sucesso: {envios_com_sucesso}"
+        )
+        return envios_com_sucesso > 0
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao enviar mensagem de abertura: {str(e)}")
         traceback.print_exc()
@@ -2657,3 +2705,110 @@ def enviar_gif_teste_direto():
     """Função mantida como stub para compatibilidade com código existente"""
     BOT2_LOGGER.warning("Função enviar_gif_teste_direto() desativada")
     return False
+
+def enviar_mensagem_participacao():
+    """
+    Envia a mensagem de participação da sessão para todos os canais configurados.
+    Esta mensagem é enviada 1 minuto após o GIF especial para sinais múltiplos de 3.
+    """
+    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA
+
+    try:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[{horario_atual}] Iniciando envio da mensagem de participação da sessão")
+
+        # Contar quantas mensagens foram enviadas
+        envios_com_sucesso = 0
+
+        # Para cada idioma configurado, envia a mensagem formatada
+        for idioma, chats in BOT2_CANAIS_CONFIG.items():
+            if not chats:  # Se não houver chats configurados para este idioma, pula
+                continue
+
+            # Obter configuração para o idioma
+            config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
+            link_corretora = config_idioma.get("link_corretora", "")
+            link_video = ""
+
+            # Configurar links com base no idioma
+            if idioma == "pt":
+                link_video = VIDEO_TELEGRAM_URL
+                texto_participacao = (
+                    "⚠️⚠️PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠️⚠️\n\n"
+                    "1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
+                    "Você vai poder testar todos nossas\n"
+                    "operações com risco ZERO!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">CRIE SUA CONTA AQUI E GANHE R$10.000</font></a>\n\n"
+                    "—————————————————————\n\n"
+                    "2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_video}\" title=\"\"><font color=\"blue\">CLIQUE AQUI E ASSISTA O VÍDEO</font></a>"
+                )
+            elif idioma == "en":
+                link_video = VIDEO_TELEGRAM_EN_URL
+                texto_participacao = (
+                    "⚠️⚠️TO PARTICIPATE IN THIS SESSION, FOLLOW THE STEPS BELOW⚠️⚠️\n\n"
+                    "1st ✅ —> Create your broker account at the link below and GET $10,000 FOR FREE to start operating with us without having to risk your money.\n\n"
+                    "You will be able to test all our\n"
+                    "operations with ZERO risk!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">CREATE YOUR ACCOUNT HERE AND GET $10,000</font></a>\n\n"
+                    "—————————————————————\n\n"
+                    "2nd ✅ —> Watch the video below and learn how to deposit and how to join us in our operations!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_video}\" title=\"\"><font color=\"blue\">CLICK HERE AND WATCH THE VIDEO</font></a>"
+                )
+            else:  # es
+                link_video = VIDEO_TELEGRAM_ES_URL
+                texto_participacao = (
+                    "⚠️⚠️PARA PARTICIPAR EN ESTA SESIÓN, SIGA LOS PASOS A CONTINUACIÓN⚠️⚠️\n\n"
+                    "1º ✅ —> Cree su cuenta de corredor en el enlace a continuación y OBTENGA $10,000 GRATIS para comenzar a operar con nosotros sin tener que arriesgar su dinero.\n\n"
+                    "Podrás probar todas nuestras\n"
+                    "operaciones con riesgo CERO!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">CREE SU CUENTA AQUÍ Y OBTENGA $10,000</font></a>\n\n"
+                    "—————————————————————\n\n"
+                    "2º ✅ —> ¡Mire el video a continuación y aprenda cómo depositar y cómo unirse a nosotros en nuestras operaciones!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_video}\" title=\"\"><font color=\"blue\">HAGA CLIC AQUÍ Y VEA EL VIDEO</font></a>"
+                )
+
+            for chat_id in chats:
+                try:
+                    # URL base para a API do Telegram
+                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                    
+                    resposta = requests.post(
+                        url_base,
+                        json={
+                            "chat_id": chat_id,
+                            "text": texto_participacao,
+                            "parse_mode": "HTML",
+                            "disable_web_page_preview": True,
+                        },
+                        timeout=10,
+                    )
+
+                    if resposta.status_code == 200:
+                        BOT2_LOGGER.info(
+                            f"[{horario_atual}] Mensagem de participação enviada com sucesso para {chat_id} (idioma: {idioma})"
+                        )
+                        envios_com_sucesso += 1
+                    else:
+                        BOT2_LOGGER.error(
+                            f"[{horario_atual}] Erro ao enviar mensagem de participação para {chat_id}: {resposta.text}"
+                        )
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem de participação: {str(e)}")
+                    traceback.print_exc()
+
+        BOT2_LOGGER.info(
+            f"[{horario_atual}] Total de mensagens de participação enviadas com sucesso: {envios_com_sucesso}"
+        )
+        return envios_com_sucesso > 0
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao enviar mensagem de participação: {str(e)}")
+        traceback.print_exc()
+        return False
