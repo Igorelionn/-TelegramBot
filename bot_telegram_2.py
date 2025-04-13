@@ -2232,9 +2232,9 @@ def bot2_enviar_gif_especial():
         if gif_enviado_com_sucesso:
             BOT2_LOGGER.info(f"[{horario_atual}] GIF especial enviado com sucesso para sinais múltiplos de 3")
             
-            # Agendar o envio da mensagem de cadastro para 1 minuto depois
-            schedule.every(1).minutes.do(bot2_enviar_mensagem_cadastro).tag("cadastro_especial")
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendado envio da mensagem de cadastro em 1 minuto após GIF especial")
+            # Remover o agendamento da mensagem de cadastro para evitar spam
+            # schedule.every(1).minutes.do(bot2_enviar_mensagem_cadastro).tag("cadastro_especial")
+            # BOT2_LOGGER.info(f"[{horario_atual}] Agendado envio da mensagem de cadastro em 1 minuto")
             
             return True
         else:
