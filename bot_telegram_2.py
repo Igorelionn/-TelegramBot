@@ -1705,11 +1705,11 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                         link_corretora = config_idioma.get("link_corretora", "")
                 
                         if idioma == "pt":
-                            texto_perda = f"⚠️ GERENCIAMENTO DE BANCA ⚠️\n\nSinal anterior não alcançou o resultado esperado!\nLembre-se de seguir seu gerenciamento para recuperar na próxima entrada.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">Continue operando</font></a> 📈"
+                            texto_perda = f"⚠️ GERENCIAMENTO DE BANCA ⚠️\n\nSinal anterior não alcançou o resultado esperado!\nLembre-se de seguir seu gerenciamento para recuperar na próxima entrada.\n\n<a href=\"{link_corretora}\" title=\"\"><b>Continue operando</b></a> 📈"
                         elif idioma == "en":
-                            texto_perda = f"⚠️ BANKROLL MANAGEMENT ⚠️\n\nPrevious signal did not reach the expected outcome!\nRemember to follow your management to recover in the next entry.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">Keep trading</font></a> 📈"
+                            texto_perda = f"⚠️ BANKROLL MANAGEMENT ⚠️\n\nPrevious signal did not reach the expected outcome!\nRemember to follow your management to recover in the next entry.\n\n<a href=\"{link_corretora}\" title=\"\"><b>Keep trading</b></a> 📈"
                         else:  # es
-                            texto_perda = f"⚠️ GESTIÓN DE BANCA ⚠️\n\nLa señal anterior no alcanzó el resultado esperado!\nRecuerde seguir su gestión para recuperarse en la próxima entrada.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">Sigue operando</font></a> 📈"
+                            texto_perda = f"⚠️ GESTIÓN DE BANCA ⚠️\n\nLa señal anterior no alcanzó el resultado esperado!\nRecuerde seguir su gestión para recuperarse en la próxima entrada.\n\n<a href=\"{link_corretora}\" title=\"\"><b>Sigue operando</b></a> 📈"
                 
                         # URL base para a API do Telegram
                         url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
@@ -2408,11 +2408,11 @@ def bot2_enviar_mensagem_cadastro():
             link_corretora = config_idioma.get("link_corretora", "")
             
             if idioma == "pt":
-                texto_cadastro = f"🔴 ATENÇÃO 🔴\n\nATUALIZAÇÃO DE CADASTRO NECESSÁRIA!\n\nPara continuar recebendo os sinais, clique no link abaixo e atualize seus dados de cadastro.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">ATUALIZAR CADASTRO</font></a> 🔹"
+                texto_cadastro = f"🔴 ATENÇÃO 🔴\n\nATUALIZAÇÃO DE CADASTRO NECESSÁRIA!\n\nPara continuar recebendo os sinais, clique no link abaixo e atualize seus dados de cadastro.\n\n<a href=\"{link_corretora}\" title=\"\"><b>ATUALIZAR CADASTRO</b></a> 🔹"
             elif idioma == "en":
-                texto_cadastro = f"🔴 ATTENTION 🔴\n\nREGISTRATION UPDATE REQUIRED!\n\nTo continue receiving signals, click the link below and update your registration data.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">UPDATE REGISTRATION</font></a> 🔹"
+                texto_cadastro = f"🔴 ATTENTION 🔴\n\nREGISTRATION UPDATE REQUIRED!\n\nTo continue receiving signals, click the link below and update your registration data.\n\n<a href=\"{link_corretora}\" title=\"\"><b>UPDATE REGISTRATION</b></a> 🔹"
             else:  # es
-                texto_cadastro = f"🔴 ATENCIÓN 🔴\n\n¡ACTUALIZACIÓN DE REGISTRO NECESARIA!\n\nPara seguir recibiendo las señales, haga clic en el enlace a continuación y actualice sus datos de registro.\n\n<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">ACTUALIZAR REGISTRO</font></a> 🔹"
+                texto_cadastro = f"🔴 ATENCIÓN 🔴\n\n¡ACTUALIZACIÓN DE REGISTRO NECESARIA!\n\nPara seguir recibiendo las señales, haga clic en el enlace a continuación y actualice sus datos de registro.\n\n<a href=\"{link_corretora}\" title=\"\"><b>ACTUALIZAR REGISTRO</b></a> 🔹"
             
             for chat_id in chats:
                 try:
@@ -2490,21 +2490,21 @@ def bot2_enviar_mensagem_abertura_corretora():
                     "👉🏼Abram a corretora Pessoal\n\n"
                     "⚠️FIQUEM ATENTOS⚠️\n\n"
                     "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-                    f"➡️ <a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">CLICANDO AQUI</font></a>"
+                    f"➡️ <a href=\"{link_corretora}\" title=\"\"><b>CLICANDO AQUI</b></a>"
                 )
             elif idioma == "en":
                 texto_abertura = (
                     "👉🏼Open the broker everyone\n\n"
                     "⚠️STAY ALERT⚠️\n\n"
                     "🔥Register on XXBROKER right now🔥\n\n"
-                    f"➡️ <a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">CLICK HERE</font></a>"
+                    f"➡️ <a href=\"{link_corretora}\" title=\"\"><b>CLICK HERE</b></a>"
                 )
             else:  # es
                 texto_abertura = (
                     "👉🏼Abran el corredor todos\n\n"
                     "⚠️ESTÉN ATENTOS⚠️\n\n"
                     "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-                    f"➡️ <a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">HAGA CLIC AQUÍ</font></a>"
+                    f"➡️ <a href=\"{link_corretora}\" title=\"\"><b>HAGA CLIC AQUÍ</b></a>"
                 )
 
             for chat_id in chats:
@@ -2740,11 +2740,11 @@ def enviar_mensagem_participacao():
                     "Você vai poder testar todos nossas\n"
                     "operações com risco ZERO!\n\n"
                     "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">CRIE SUA CONTA AQUI E GANHE R$10.000</font></a>\n\n"
+                    f"<a href=\"{link_corretora}\" title=\"\"><b>CRIE SUA CONTA AQUI E GANHE R$10.000</b></a>\n\n"
                     "—————————————————————\n\n"
                     "2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!\n\n"
                     "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_video}\" title=\"\"><font color=\"blue\">CLIQUE AQUI E ASSISTA O VÍDEO</font></a>"
+                    f"<a href=\"{link_video}\" title=\"\"><b>CLIQUE AQUI E ASSISTA O VÍDEO</b></a>"
                 )
             elif idioma == "en":
                 link_video = VIDEO_TELEGRAM_EN_URL
@@ -2754,11 +2754,11 @@ def enviar_mensagem_participacao():
                     "You will be able to test all our\n"
                     "operations with ZERO risk!\n\n"
                     "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">CREATE YOUR ACCOUNT HERE AND GET $10,000</font></a>\n\n"
+                    f"<a href=\"{link_corretora}\" title=\"\"><b>CREATE YOUR ACCOUNT HERE AND GET $10,000</b></a>\n\n"
                     "—————————————————————\n\n"
                     "2nd ✅ —> Watch the video below and learn how to deposit and how to join us in our operations!\n\n"
                     "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_video}\" title=\"\"><font color=\"blue\">CLICK HERE AND WATCH THE VIDEO</font></a>"
+                    f"<a href=\"{link_video}\" title=\"\"><b>CLICK HERE AND WATCH THE VIDEO</b></a>"
                 )
             else:  # es
                 link_video = VIDEO_TELEGRAM_ES_URL
@@ -2768,11 +2768,11 @@ def enviar_mensagem_participacao():
                     "Podrás probar todas nuestras\n"
                     "operaciones con riesgo CERO!\n\n"
                     "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_corretora}\" title=\"\"><font color=\"blue\">CREE SU CUENTA AQUÍ Y OBTENGA $10,000</font></a>\n\n"
+                    f"<a href=\"{link_corretora}\" title=\"\"><b>CREE SU CUENTA AQUÍ Y OBTENGA $10,000</b></a>\n\n"
                     "—————————————————————\n\n"
                     "2º ✅ —> ¡Mire el video a continuación y aprenda cómo depositar y cómo unirse a nosotros en nuestras operaciones!\n\n"
                     "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_video}\" title=\"\"><font color=\"blue\">HAGA CLIC AQUÍ Y VEA EL VIDEO</font></a>"
+                    f"<a href=\"{link_video}\" title=\"\"><b>HAGA CLIC AQUÍ Y VEA EL VIDEO</b></a>"
                 )
 
             for chat_id in chats:
