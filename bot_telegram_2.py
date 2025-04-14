@@ -1939,11 +1939,14 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
 
             def enviar_sequencia_sem_gif_especial():
                 try:
+                    # Limpar quaisquer agendamentos pendentes (por segurança)
+                    schedule.clear("abertura_corretora")
+                    
                     # Esperar 30 minutos após o sinal
                     BOT2_LOGGER.info("Aguardando 30 minutos após o sinal para enviar mensagem de participação...")
                     time.sleep(1800)
                     
-                    # Enviar mensagem de participação direto (sem GIF especial)
+                    # Enviar mensagem de participação diretamente (sem GIF especial)
                     BOT2_LOGGER.info("Enviando mensagem de participação da sessão...")
                     try:
                         resultado_participacao = enviar_mensagem_participacao()
@@ -1978,6 +1981,9 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                         bot2_enviar_mensagem_abertura_corretora()
                     except Exception as abertura_error:
                         BOT2_LOGGER.error(f"Erro ao enviar mensagem de abertura da corretora: {str(abertura_error)}")
+                    
+                    # Limpar novamente quaisquer agendamentos pendentes (por segurança)
+                    schedule.clear("abertura_corretora")
                     
                     BOT2_LOGGER.info("Sequência completa de envio para sinais múltiplos de 3 concluída!")
                 except Exception as e:
@@ -2362,9 +2368,23 @@ def bot2_enviar_gif_promo(idioma="pt"):
         if gif_enviado_com_sucesso:
             BOT2_LOGGER.info(f"[{horario_atual}] GIF promocional enviado com sucesso para idioma {idioma}")
             
-            # Agendar o envio da mensagem de abertura da corretora para 1 minuto depois
-            schedule.every(1).minutes.do(bot2_enviar_mensagem_abertura_corretora).tag("abertura_corretora")
-            BOT2_LOGGER.info(f"[{horario_atual}] Agendado envio da mensagem de abertura da corretora em 1 minuto")
+            # Em vez de agendar, vamos criar uma thread que espera 1 minuto e envia a mensagem
+            def enviar_mensagem_abertura_apos_delay():
+                try:
+                    BOT2_LOGGER.info(f"[{horario_atual}] Aguardando 1 minuto para enviar mensagem de abertura da corretora...")
+                    time.sleep(60)  # Esperar 1 minuto
+                    
+                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando mensagem de abertura da corretora após espera...")
+                    bot2_enviar_mensagem_abertura_corretora()
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem de abertura: {str(e)}")
+                    traceback.print_exc()
+            
+            # Iniciar thread para envio da mensagem de abertura após 1 minuto
+            abertura_thread = threading.Thread(target=enviar_mensagem_abertura_apos_delay)
+            abertura_thread.daemon = True
+            abertura_thread.start()
+            BOT2_LOGGER.info(f"[{horario_atual}] Thread para envio da mensagem de abertura iniciada (1 minuto de espera)")
             
             return True
         else:
@@ -2461,6 +2481,9 @@ def bot2_enviar_mensagem_abertura_corretora():
     global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA
 
     try:
+        # Limpar quaisquer agendamentos pendentes para evitar repetições
+        schedule.clear("abertura_corretora")
+        
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] Iniciando envio da mensagem de abertura da corretora")
@@ -2531,6 +2554,10 @@ def bot2_enviar_mensagem_abertura_corretora():
         BOT2_LOGGER.info(
             f"[{horario_atual}] Total de mensagens de abertura enviadas com sucesso: {envios_com_sucesso}"
         )
+        
+        # Limpar novamente quaisquer agendamentos pendentes (por segurança)
+        schedule.clear("abertura_corretora")
+        
         return envios_com_sucesso > 0
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao enviar mensagem de abertura: {str(e)}")
