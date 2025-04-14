@@ -1905,6 +1905,34 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                 except Exception as e:
                     BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar para {chat_id}: {str(e)}")
 
+        # Agendar o envio do GIF pós-sinal 7 minutos após o sinal
+        if enviar_gif_imediatamente:
+            # Se solicitado, enviar o GIF imediatamente (para testes)
+            BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal imediatamente (modo de teste)")
+            bot2_enviar_gif_pos_sinal(sinal)
+        else:
+            # Agendar o envio do GIF pós-sinal para 7 minutos após o envio do sinal
+            BOT2_LOGGER.info(f"[{horario_atual}] Agendando envio do GIF pós-sinal para 7 minutos após o sinal")
+            
+            def enviar_gif_pos_sinal_apos_delay():
+                try:
+                    # Aguardar 7 minutos
+                    BOT2_LOGGER.info(f"[{horario_atual}] Aguardando 7 minutos para enviar GIF pós-sinal...")
+                    time.sleep(420)  # 7 minutos = 420 segundos
+                    
+                    # Enviar o GIF pós-sinal
+                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal após 7 minutos...")
+                    bot2_enviar_gif_pos_sinal(sinal)
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar GIF pós-sinal: {str(e)}")
+                    traceback.print_exc()
+            
+            # Iniciar thread para envio do GIF pós-sinal
+            gif_pos_sinal_thread = threading.Thread(target=enviar_gif_pos_sinal_apos_delay)
+            gif_pos_sinal_thread.daemon = True
+            gif_pos_sinal_thread.start()
+            BOT2_LOGGER.info(f"[{horario_atual}] Thread para envio do GIF pós-sinal iniciada")
+
         # Verificar se é múltiplo de 3 para enviar a sequência especial (sem GIF especial)
         if bot2_contador_sinais % 3 == 0:
             BOT2_LOGGER.info(f"[{horario_atual}] Sinal é múltiplo de 3 (sinal #{bot2_contador_sinais}). Iniciando sequência especial...")
@@ -2961,13 +2989,73 @@ def testar_sequencia_multiplo_tres():
         traceback.print_exc()
         return False
 
-# Função para executar apenas o teste do contador (sem iniciar o bot completo)
+def testar_gif_pos_sinal():
+    """
+    Testa o envio do GIF pós-sinal com tempo reduzido para verificação.
+    """
+    global BOT2_LOGGER
+    
+    try:
+        BOT2_LOGGER.info("Iniciando teste de envio de GIF pós-sinal")
+        
+        # Gerar um sinal para teste
+        sinal = bot2_gerar_sinal_aleatorio()
+        if not sinal:
+            BOT2_LOGGER.error("Falha ao gerar sinal aleatório para teste")
+            return False
+        
+        BOT2_LOGGER.info(f"Sinal gerado para teste: Ativo={sinal['ativo']}, Direção={sinal['direcao']}")
+        
+        # Enviando o sinal de teste
+        BOT2_LOGGER.info("Enviando sinal de teste...")
+        resultado = bot2_send_message(ignorar_anti_duplicacao=True, enviar_gif_imediatamente=False)
+        
+        if resultado:
+            BOT2_LOGGER.info("Sinal de teste enviado com sucesso")
+            BOT2_LOGGER.info("Aguardando 20 segundos em vez de 7 minutos para verificar o GIF pós-sinal...")
+            
+            # Definir uma versão modificada da função com tempo reduzido
+            def enviar_gif_rapido():
+                try:
+                    # Aguardar apenas 20 segundos em vez de 7 minutos
+                    time.sleep(20)
+                    BOT2_LOGGER.info("Enviando GIF pós-sinal após tempo reduzido (20 segundos)...")
+                    bot2_enviar_gif_pos_sinal(sinal)
+                    BOT2_LOGGER.info("Teste de GIF pós-sinal concluído")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"Erro durante o teste de GIF pós-sinal: {str(e)}")
+                    traceback.print_exc()
+            
+            # Iniciar thread para teste rápido
+            thread_teste = threading.Thread(target=enviar_gif_rapido)
+            thread_teste.daemon = True
+            thread_teste.start()
+            BOT2_LOGGER.info("Thread de teste de GIF pós-sinal iniciada")
+            
+            # Aguardar conclusão da thread de teste
+            thread_teste.join(60)  # Aguardar até 1 minuto
+            
+            if thread_teste.is_alive():
+                BOT2_LOGGER.warning("Thread de teste ainda está em execução após 1 minuto")
+            
+            return True
+        else:
+            BOT2_LOGGER.error("Falha ao enviar sinal de teste")
+            return False
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro durante o teste de envio de GIF pós-sinal: {str(e)}")
+        traceback.print_exc()
+        return False
+
+# Função para executar apenas o teste do gif pós-sinal (sem iniciar o bot completo)
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "testar_contador":
             testar_contador_sinais()
         elif sys.argv[1] == "testar_multiplo":
             testar_sequencia_multiplo_tres()
+        elif sys.argv[1] == "testar_gif":
+            testar_gif_pos_sinal()
     else:
         # Inicialização normal do bot
         iniciar_ambos_bots()
