@@ -102,10 +102,11 @@ ALTERNATIVE_GIFS = {}
 
 # URLs diretas para GIFs do Giphy
 URLS_GIFS_DIRETAS = {
-    "promo_pt": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
-    "promo_en": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
-    "promo_es": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYnVhamd3bm01OXZyNmYxYTdteDljNDFrMGZybWx1dXJkbmo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PDTiu190mvjkifkbG5/giphy.gif",
-    "pos_sinal_padrao": "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal/pt/180398513446716419%20(7).webp",
+    "gif_especial_pt": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXVrdGtmbnJ5cXltd2cyYndzemcya3M0YjZoZWZuejk3cjdoeDM3NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "promo_pt": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXVrdGtmbnJ5cXltd2cyYndzemcya3M0YjZoZWZuejk3cjdoeDM3NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "promo_en": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXVrdGtmbnJ5cXltd2cyYndzemcya3M0YjZoZWZuejk3cjdoeDM3NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "promo_es": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXVrdGtmbnJ5cXltd2cyYndzemcya3M0YjZoZWZuejk3cjdoeDM3NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif",
     "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWo4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
 }
 
@@ -1839,117 +1840,85 @@ def bot2_enviar_gif_pos_sinal(signal=None):
 
 def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=False):
     """
-    Função principal para envio de sinais do Bot 2.
-    Gera e envia um sinal aleatório para todos os canais configurados.
-    
+    Envia um sinal aleatório para todos os canais configurados.
+
     Args:
-        ignorar_anti_duplicacao (bool, opcional): Se True, ignora a verificação de anti-duplicação
-        enviar_gif_imediatamente (bool, opcional): Se True, envia o GIF pós-sinal imediatamente
-    
+        ignorar_anti_duplicacao (bool): Se True, ignora a verificação de anti-duplicação
+        enviar_gif_imediatamente (bool): Se True, envia o GIF pós-sinal imediatamente após o sinal
+
     Returns:
         bool: True se o sinal foi enviado com sucesso, False caso contrário
     """
     global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, ultimo_sinal_enviado, bot2_contador_sinais
-    
+
     try:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] INICIANDO ENVIO DO SINAL...")
-        
-        # Contar quantos sinais foram enviados
-        sinais_enviados = 0
-        
-        try:
-            # Gerar o sinal aleatório
-            sinal = bot2_gerar_sinal_aleatorio()
-            if not sinal:
-                BOT2_LOGGER.warning(
-                    f"[{horario_atual}] Não foi possível gerar um sinal válido. Tentando novamente mais tarde."
-                )
-                return False
-                
-            # Salvar o sinal para uso posterior
-            ultimo_sinal_enviado = sinal
-            
-        except Exception as e:
-            BOT2_LOGGER.error(f"Erro ao gerar sinal aleatório: {str(e)}")
-            traceback.print_exc()
-            return False
-        
-        # Em vez de desempacotar diretamente, obtenha os valores do dicionário
-        ativo = sinal["ativo"]
-        direcao = sinal["direcao"]
-        tempo_expiracao_minutos = sinal["tempo_expiracao_minutos"]
-        categoria = sinal["categoria"]
 
-        # Calcular o horário de entrada (2 minutos após o envio do sinal)
-        hora_entrada = agora + timedelta(minutes=2)
-        hora_formatada = hora_entrada.strftime("%H:%M")
-        
-        # Enviar o sinal para cada canal configurado
+        # Gerar um sinal aleatório
+        sinal = bot2_gerar_sinal_aleatorio()
+        if not sinal:
+            BOT2_LOGGER.error("Falha ao gerar sinal aleatório")
+            return False
+
+        # Verificar anti-duplicação se necessário
+        if not ignorar_anti_duplicacao and sinal == ultimo_sinal_enviado:
+            BOT2_LOGGER.warning("Sinal duplicado detectado. Gerando novo sinal...")
+            return bot2_send_message(ignorar_anti_duplicacao, enviar_gif_imediatamente)
+
+        # Registrar o sinal atual como último enviado
+        ultimo_sinal_enviado = sinal
+
+        # Enviar o sinal para cada idioma configurado
         for idioma, chats in BOT2_CANAIS_CONFIG.items():
             if not chats:  # Se não houver chats configurados para este idioma, pula
                 continue
-            
-            # Formatar a mensagem para o idioma específico
-            mensagem_formatada = bot2_formatar_mensagem(sinal, hora_formatada, idioma)
-            
-            if not mensagem_formatada:
-                BOT2_LOGGER.error(f"[{horario_atual}] Erro ao formatar mensagem para idioma {idioma}")
-                continue
-            
-            # URL base para a API do Telegram
-            url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-            
-            BOT2_LOGGER.info(
-                f"[{horario_atual}] Enviando sinal: Ativo={ativo}, Direção={direcao}, Categoria={categoria}, Tempo={tempo_expiracao_minutos}, Idioma={idioma}"
-            )
-            
-            # Enviar para cada chat do idioma
+
+            # Formatar a mensagem de acordo com o idioma
+            mensagem = bot2_formatar_mensagem(sinal, horario_atual, idioma)
+
             for chat_id in chats:
                 try:
+                    # URL base para a API do Telegram
+                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+
                     resposta = requests.post(
                         url_base,
                         json={
                             "chat_id": chat_id,
-                            "text": mensagem_formatada,
+                            "text": mensagem,
                             "parse_mode": "HTML",
                             "disable_web_page_preview": True,
                         },
                         timeout=10,
                     )
-                    
+
                     if resposta.status_code == 200:
-                        sinais_enviados += 1
-                        BOT2_LOGGER.info(
-                            f"[{horario_atual}] Sinal enviado com sucesso para o canal {chat_id} (idioma: {idioma})"
-                        )
+                        BOT2_LOGGER.info(f"[{horario_atual}] Sinal enviado com sucesso para {chat_id}")
                     else:
-                        BOT2_LOGGER.error(
-                            f"[{horario_atual}] Erro ao enviar sinal para {chat_id}: {resposta.text}"
-                        )
+                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar para {chat_id}: {resposta.text}")
+
                 except Exception as e:
                     BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar para {chat_id}: {str(e)}")
-        
+
         # Incrementa o contador global de sinais
         bot2_contador_sinais += 1
 
         # Incrementar o contador de sinais
         BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado. Total de sinais: {bot2_contador_sinais}")
-        
+
         # Verificar se é múltiplo de 3 para enviar GIF especial
         if bot2_contador_sinais % 3 == 0:
-            BOT2_LOGGER.info(f"[{horario_atual}] Sinal é múltiplo de 3 (sinal #{bot2_contador_sinais}). Enviando GIF especial...")
-            # Criar uma thread separada para enviar o GIF especial após o GIF pós-sinal
-            
+            BOT2_LOGGER.info(f"[{horario_atual}] Sinal é múltiplo de 3 (sinal #{bot2_contador_sinais}). Iniciando sequência especial...")
+
             def enviar_gif_especial_apos_delay():
                 try:
-                    # Aguardar 30 minutos (1800 segundos) - tempo total após o sinal
+                    # Aguardar 30 minutos (1800 segundos) após o sinal
                     BOT2_LOGGER.info("Aguardando 30 minutos após o sinal para enviar GIF especial...")
                     time.sleep(1800)
 
                     # Enviar GIF especial
-                    BOT2_LOGGER.info("Tempo de espera para GIF especial concluído. Enviando GIF especial agora...")
+                    BOT2_LOGGER.info("Tempo de espera concluído. Enviando GIF especial agora...")
                     try:
                         resultado_gif = bot2_enviar_gif_especial()
                         BOT2_LOGGER.info(f"Resultado do envio do GIF especial: {'Sucesso' if resultado_gif else 'Falha'}")
@@ -2002,33 +1971,12 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                     BOT2_LOGGER.error(f"Erro durante a sequência de sinais múltiplos de 3: {str(e)}")
                     traceback.print_exc()
 
-            # Iniciar thread para enviar GIF especial
+            # Iniciar thread para sequência especial
             gif_especial_thread = threading.Thread(target=enviar_gif_especial_apos_delay)
             gif_especial_thread.daemon = True
             gif_especial_thread.start()
             BOT2_LOGGER.info(f"[{horario_atual}] Thread para sequência especial de múltiplo de 3 iniciada.")
-        
-        # Verificar se deve enviar o GIF imediatamente
-        if enviar_gif_imediatamente:
-            BOT2_LOGGER.info(f"[{horario_atual}] Enviando GIF pós-sinal imediatamente...")
-            bot2_enviar_gif_pos_sinal(sinal)
-        else:
-            # Criar uma thread separada para aguardar 7 minutos e enviar o GIF pós-sinal
-            BOT2_LOGGER.info(f"[{horario_atual}] Configurando thread para enviar GIF pós-sinal em 7 minutos...")
-            
-            def enviar_gif_apos_delay():
-                # Aguardar 7 minutos (420 segundos)
-                time.sleep(420)
-                BOT2_LOGGER.info("Tempo de espera concluído. Enviando GIF pós-sinal agora...")
-                bot2_enviar_gif_pos_sinal(sinal)
-            
-            # Iniciar thread para não bloquear o programa principal
-            gif_thread = threading.Thread(target=enviar_gif_apos_delay)
-            gif_thread.daemon = True  # Thread será encerrada quando o programa principal terminar
-            gif_thread.start()
-            
-            BOT2_LOGGER.info(f"[{horario_atual}] Thread de envio de GIF pós-sinal iniciada. O GIF será enviado em 7 minutos.")
-        
+
         return True
 
     except Exception as e:
