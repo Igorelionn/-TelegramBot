@@ -103,11 +103,10 @@ ALTERNATIVE_GIFS = {}
 # URLs diretas para GIFs do Giphy
 URLS_GIFS_DIRETAS = {
     "gif_especial_pt": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXVrdGtmbnJ5cXltd2cyYndzemcya3M0YjZoZWZuejk3cjdoeDM3NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
-    "promo_pt": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXVrdGtmbnJ5cXltd2cyYndzemcya3M0YjZoZWZuejk3cjdoeDM3NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
-    "promo_en": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXVrdGtmbnJ5cXltd2cyYndzemcya3M0YjZoZWZuejk3cjdoeDM3NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
-    "promo_es": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXVrdGtmbnJ5cXltd2cyYndzemcya3M0YjZoZWZuejk3cjdoeDM3NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
-    "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif",
-    "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWo4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
+    "promo_pt": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGVsbHYzZmNsMThuNjMycmZoMWt2NTN5MmNoaHg4NmhscHg0dmJyeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "promo_en": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGVsbHYzZmNsMThuNjMycmZoMWt2NTN5MmNoaHg4NmhscHg0dmJyeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "promo_es": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGVsbHYzZmNsMThuNjMycmZoMWt2NTN5MmNoaHg4NmhscHg0dmJyeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif"
 }
 
 # ID para compatibilidade com cdigo existente
@@ -1258,7 +1257,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
             fuso_horario = CONFIGS_IDIOMA[idioma].get("fuso_horario", "America/Sao_Paulo")
         
         # Hora de entrada convertida para datetime no fuso horário de Brasília
-        hora_entrada = datetime.strptime(hora_formatada, "%H:%M")
+        hora_entrada = datetime.strptime(hora_formatada, "%H:%M:%S")
         hora_entrada_br = bot2_obter_hora_brasilia().replace(
             hour=hora_entrada.hour, minute=hora_entrada.minute, second=0, microsecond=0
         )
@@ -1869,6 +1868,11 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
         # Registrar o sinal atual como último enviado
         ultimo_sinal_enviado = sinal
 
+        # Incrementa o contador global de sinais ANTES de enviar o sinal
+        # Isso garante que o valor do contador esteja correto durante o processamento do sinal
+        bot2_contador_sinais += 1
+        BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado. Total de sinais: {bot2_contador_sinais}")
+
         # Enviar o sinal para cada idioma configurado
         for idioma, chats in BOT2_CANAIS_CONFIG.items():
             if not chats:  # Se não houver chats configurados para este idioma, pula
@@ -1901,36 +1905,17 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                 except Exception as e:
                     BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar para {chat_id}: {str(e)}")
 
-        # Incrementa o contador global de sinais
-        bot2_contador_sinais += 1
-
-        # Incrementar o contador de sinais
-        BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado. Total de sinais: {bot2_contador_sinais}")
-
-        # Verificar se é múltiplo de 3 para enviar GIF especial
+        # Verificar se é múltiplo de 3 para enviar a sequência especial (sem GIF especial)
         if bot2_contador_sinais % 3 == 0:
             BOT2_LOGGER.info(f"[{horario_atual}] Sinal é múltiplo de 3 (sinal #{bot2_contador_sinais}). Iniciando sequência especial...")
 
-            def enviar_gif_especial_apos_delay():
+            def enviar_sequencia_sem_gif_especial():
                 try:
-                    # Aguardar 30 minutos (1800 segundos) após o sinal
-                    BOT2_LOGGER.info("Aguardando 30 minutos após o sinal para enviar GIF especial...")
+                    # Esperar 30 minutos após o sinal
+                    BOT2_LOGGER.info("Aguardando 30 minutos após o sinal para enviar mensagem de participação...")
                     time.sleep(1800)
-
-                    # Enviar GIF especial
-                    BOT2_LOGGER.info("Tempo de espera concluído. Enviando GIF especial agora...")
-                    try:
-                        resultado_gif = bot2_enviar_gif_especial()
-                        BOT2_LOGGER.info(f"Resultado do envio do GIF especial: {'Sucesso' if resultado_gif else 'Falha'}")
-                    except Exception as gif_error:
-                        BOT2_LOGGER.error(f"Erro ao enviar GIF especial: {str(gif_error)}")
-                        BOT2_LOGGER.info("Continuando a sequência mesmo com erro no GIF especial")
-
-                    # Aguardar 1 minuto (60 segundos) após o GIF especial
-                    BOT2_LOGGER.info("Aguardando 1 minuto após o GIF especial para enviar mensagem de participação...")
-                    time.sleep(60)
-
-                    # Enviar mensagem de participação
+                    
+                    # Enviar mensagem de participação direto (sem GIF especial)
                     BOT2_LOGGER.info("Enviando mensagem de participação da sessão...")
                     try:
                         resultado_participacao = enviar_mensagem_participacao()
@@ -1939,7 +1924,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                         BOT2_LOGGER.error(f"Erro ao enviar mensagem de participação: {str(part_error)}")
                         BOT2_LOGGER.info("Continuando a sequência mesmo com erro na mensagem de participação")
 
-                    # Aguardar 9 minutos (540 segundos) após mensagem de participação
+                    # Aguardar 9 minutos após mensagem de participação
                     BOT2_LOGGER.info("Aguardando 9 minutos para enviar GIF promocional...")
                     time.sleep(540)
 
@@ -1955,7 +1940,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                         BOT2_LOGGER.error(f"Erro ao enviar GIF promocional: {str(promo_error)}")
                         BOT2_LOGGER.info("Continuando a sequência mesmo com erro no GIF promocional")
 
-                    # Aguardar 1 minuto (60 segundos) após o GIF promo
+                    # Aguardar 1 minuto após o GIF promo
                     BOT2_LOGGER.info("Aguardando 1 minuto após GIF promocional para enviar mensagem de abertura da corretora...")
                     time.sleep(60)
 
@@ -1971,11 +1956,11 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                     BOT2_LOGGER.error(f"Erro durante a sequência de sinais múltiplos de 3: {str(e)}")
                     traceback.print_exc()
 
-            # Iniciar thread para sequência especial
-            gif_especial_thread = threading.Thread(target=enviar_gif_especial_apos_delay)
-            gif_especial_thread.daemon = True
-            gif_especial_thread.start()
-            BOT2_LOGGER.info(f"[{horario_atual}] Thread para sequência especial de múltiplo de 3 iniciada.")
+            # Iniciar thread para sequência especial (sem GIF especial)
+            sequencia_thread = threading.Thread(target=enviar_sequencia_sem_gif_especial)
+            sequencia_thread.daemon = True
+            sequencia_thread.start()
+            BOT2_LOGGER.info(f"[{horario_atual}] Thread para sequência especial de múltiplo de 3 iniciada (sem GIF especial).")
 
         return True
 
@@ -2042,6 +2027,11 @@ def iniciar_ambos_bots():
     global bot2_sinais_agendados, BOT2_LOGGER
     
     try:
+        # Verificar configurações antes de iniciar
+        if not verificar_configuracoes_bot():
+            BOT2_LOGGER.error("Falha na verificação de configurações. Corriga os erros antes de iniciar o bot.")
+            return False
+            
         # Iniciar o Bot 2
         if not bot2_sinais_agendados:
             bot2_iniciar_ciclo_sinais()  # Agendar sinais para o Bot 2
@@ -2066,9 +2056,12 @@ def iniciar_ambos_bots():
             except Exception as e:
                 BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
                 traceback.print_exc()
+        
+        return True
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao iniciar bots: {str(e)}")
         traceback.print_exc()
+        return False
 
 # Função para enviar sinal manualmente (para testes)
 def enviar_sinal_manual():
@@ -2516,6 +2509,59 @@ def bot2_enviar_mensagem_abertura_corretora():
         traceback.print_exc()
         return False
 
+def verificar_configuracoes_bot():
+    """
+    Verifica se as configurações do bot estão corretas antes de iniciar.
+    
+    Returns:
+        bool: True se as configurações estão corretas, False caso contrário
+    """
+    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, ATIVOS_CATEGORIAS
+    
+    try:
+        BOT2_LOGGER.info("Verificando configurações do bot...")
+        
+        # Verificar se o token está configurado
+        if not BOT2_TOKEN or len(BOT2_TOKEN) < 10:
+            BOT2_LOGGER.error("Token do bot não configurado ou inválido")
+            return False
+        
+        # Verificar canais configurados
+        if not BOT2_CANAIS_CONFIG:
+            BOT2_LOGGER.error("Nenhum canal configurado para envio de sinais")
+            return False
+        
+        # Contar o número total de canais
+        total_canais = sum(len(chats) for chats in BOT2_CANAIS_CONFIG.values())
+        if total_canais == 0:
+            BOT2_LOGGER.error("Nenhum canal configurado para envio de sinais")
+            return False
+        
+        # Verificar se existem ativos configurados
+        if not ATIVOS_CATEGORIAS or "Digital" not in ATIVOS_CATEGORIAS:
+            BOT2_LOGGER.error("Categoria 'Digital' não configurada ou sem ativos")
+            return False
+        
+        if not ATIVOS_CATEGORIAS["Digital"]:
+            BOT2_LOGGER.error("Nenhum ativo configurado na categoria 'Digital'")
+            return False
+        
+        # Exibir resumo das configurações
+        BOT2_LOGGER.info(f"Token do bot configurado: {BOT2_TOKEN[:5]}...{BOT2_TOKEN[-5:]}")
+        BOT2_LOGGER.info(f"Total de canais configurados: {total_canais}")
+        
+        for idioma, chats in BOT2_CANAIS_CONFIG.items():
+            BOT2_LOGGER.info(f"Canais para idioma '{idioma}': {len(chats)}")
+        
+        BOT2_LOGGER.info(f"Total de ativos na categoria 'Digital': {len(ATIVOS_CATEGORIAS['Digital'])}")
+        BOT2_LOGGER.info("Todas as configurações estão corretas!")
+        
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao verificar configurações: {str(e)}")
+        traceback.print_exc()
+        return False
+
 # Executar se este arquivo for o script principal
 if __name__ == "__main__":
     try:
@@ -2783,3 +2829,145 @@ def enviar_mensagem_participacao():
         BOT2_LOGGER.error(f"Erro ao enviar mensagem de participação: {str(e)}")
         traceback.print_exc()
         return False
+
+def testar_contador_sinais():
+    """
+    Função para testar o contador de sinais e a lógica de múltiplos de 3.
+    Envia vários sinais em sequência e exibe o valor do contador.
+    """
+    global bot2_contador_sinais, BOT2_LOGGER
+    
+    try:
+        BOT2_LOGGER.info("Iniciando teste do contador de sinais")
+        BOT2_LOGGER.info(f"Valor atual do contador: {bot2_contador_sinais}")
+        
+        # Resetar o contador para iniciar o teste
+        bot2_contador_sinais = 0
+        BOT2_LOGGER.info(f"Contador resetado para: {bot2_contador_sinais}")
+        
+        # Simular o envio de 3 sinais em sequência
+        for i in range(1, 4):
+            BOT2_LOGGER.info(f"Enviando sinal de teste #{i}")
+            resultado = bot2_send_message(ignorar_anti_duplicacao=True)
+            
+            if resultado:
+                BOT2_LOGGER.info(f"Sinal #{i} enviado com sucesso")
+                BOT2_LOGGER.info(f"Valor atual do contador após envio: {bot2_contador_sinais}")
+            else:
+                BOT2_LOGGER.error(f"Falha ao enviar sinal #{i}")
+            
+            # Pequena pausa entre os envios
+            time.sleep(5)
+        
+        BOT2_LOGGER.info(f"Teste de contador de sinais concluído. Valor final do contador: {bot2_contador_sinais}")
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro durante o teste do contador de sinais: {str(e)}")
+        traceback.print_exc()
+        return False
+
+def testar_sequencia_multiplo_tres():
+    """
+    Testa a sequência específica para múltiplos de 3, 
+    mas com tempos de espera reduzidos para facilitar o teste.
+    """
+    global bot2_contador_sinais, BOT2_LOGGER
+    
+    try:
+        BOT2_LOGGER.info("Iniciando teste da sequência de múltiplo de 3")
+        
+        # Garantir que o próximo sinal será múltiplo de 3
+        if bot2_contador_sinais % 3 != 2:  # Se não for 2, 5, 8, 11, etc.
+            # Ajustar o contador para o próximo valor que, ao incrementar, será múltiplo de 3
+            novo_valor = 3 * ((bot2_contador_sinais // 3) + 1) - 1
+            BOT2_LOGGER.info(f"Ajustando contador de {bot2_contador_sinais} para {novo_valor}")
+            bot2_contador_sinais = novo_valor
+        
+        BOT2_LOGGER.info(f"Valor atual do contador: {bot2_contador_sinais}")
+        BOT2_LOGGER.info("O próximo sinal será múltiplo de 3")
+        
+        # Enviando o sinal que será múltiplo de 3
+        resultado = bot2_send_message(ignorar_anti_duplicacao=True)
+        
+        if resultado:
+            BOT2_LOGGER.info(f"Sinal múltiplo de 3 enviado com sucesso. Contador atual: {bot2_contador_sinais}")
+            
+            # Definir uma versão modificada da função de sequência especial com tempos reduzidos
+            def enviar_sequencia_especial_rapida():
+                try:
+                    # Reduzir o tempo de espera para 10 segundos (em vez de 30 minutos)
+                    BOT2_LOGGER.info("Aguardando 10 segundos (simulando 30 minutos) para enviar mensagem de participação...")
+                    time.sleep(10)
+                    
+                    # Enviar mensagem de participação diretamente (sem GIF especial)
+                    BOT2_LOGGER.info("Enviando mensagem de participação...")
+                    try:
+                        resultado_participacao = enviar_mensagem_participacao()
+                        BOT2_LOGGER.info(f"Resultado do envio da mensagem de participação: {'Sucesso' if resultado_participacao else 'Falha'}")
+                    except Exception as part_error:
+                        BOT2_LOGGER.error(f"Erro ao enviar mensagem de participação: {str(part_error)}")
+                    
+                    # Reduzir o tempo de espera para 10 segundos (em vez de 9 minutos)
+                    BOT2_LOGGER.info("Aguardando 10 segundos (simulando 9 minutos) para enviar GIF promocional...")
+                    time.sleep(10)
+                    
+                    # Enviar GIF promo
+                    BOT2_LOGGER.info("Enviando GIF promocional...")
+                    try:
+                        # Registrar links que serão usados para cada idioma
+                        BOT2_LOGGER.info(f"Link do GIF para PT: {URLS_GIFS_DIRETAS.get('promo_pt', 'não configurado')}")
+                        BOT2_LOGGER.info(f"Link do GIF para EN: {URLS_GIFS_DIRETAS.get('promo_en', 'não configurado')}")
+                        BOT2_LOGGER.info(f"Link do GIF para ES: {URLS_GIFS_DIRETAS.get('promo_es', 'não configurado')}")
+                        
+                        # Enviar apenas para PT para teste
+                        bot2_enviar_gif_promo(idioma="pt")
+                    except Exception as promo_error:
+                        BOT2_LOGGER.error(f"Erro ao enviar GIF promocional: {str(promo_error)}")
+                    
+                    # Reduzir o tempo de espera para 10 segundos (em vez de 1 minuto)
+                    BOT2_LOGGER.info("Aguardando 10 segundos (simulando 1 minuto) para enviar mensagem de abertura...")
+                    time.sleep(10)
+                    
+                    # Enviar mensagem de abertura
+                    BOT2_LOGGER.info("Enviando mensagem de abertura da corretora...")
+                    try:
+                        bot2_enviar_mensagem_abertura_corretora()
+                    except Exception as abertura_error:
+                        BOT2_LOGGER.error(f"Erro ao enviar mensagem de abertura: {str(abertura_error)}")
+                    
+                    BOT2_LOGGER.info("Teste da sequência de múltiplo de 3 concluído com sucesso!")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"Erro durante o teste da sequência de múltiplo de 3: {str(e)}")
+                    traceback.print_exc()
+            
+            # Iniciar a thread para a sequência especial com tempos reduzidos
+            thread_teste = threading.Thread(target=enviar_sequencia_especial_rapida)
+            thread_teste.daemon = True
+            thread_teste.start()
+            BOT2_LOGGER.info("Thread de teste da sequência especial iniciada")
+            
+            # Aguardar a conclusão da thread (até 2 minutos)
+            thread_teste.join(120)
+            
+            if thread_teste.is_alive():
+                BOT2_LOGGER.warning("A thread de teste ainda está em execução após 2 minutos. Continuando...")
+            
+            return True
+        else:
+            BOT2_LOGGER.error("Falha ao enviar sinal múltiplo de 3")
+            return False
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro durante o teste da sequência de múltiplo de 3: {str(e)}")
+        traceback.print_exc()
+        return False
+
+# Função para executar apenas o teste do contador (sem iniciar o bot completo)
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "testar_contador":
+            testar_contador_sinais()
+        elif sys.argv[1] == "testar_multiplo":
+            testar_sequencia_multiplo_tres()
+    else:
+        # Inicialização normal do bot
+        iniciar_ambos_bots()
