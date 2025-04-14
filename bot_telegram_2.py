@@ -1943,42 +1943,65 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
             # Criar uma thread separada para enviar o GIF especial após o GIF pós-sinal
             
             def enviar_gif_especial_apos_delay():
-                # Aguardar 30 minutos (1800 segundos) - tempo total após o sinal
-                BOT2_LOGGER.info("Aguardando 30 minutos após o sinal para enviar GIF especial...")
-                time.sleep(1800)
-                
-                # Enviar GIF especial
-                BOT2_LOGGER.info("Tempo de espera para GIF especial concluído. Enviando GIF especial agora...")
-                bot2_enviar_gif_especial()
-                
-                # Aguardar 1 minuto (60 segundos) após o GIF especial
-                BOT2_LOGGER.info("Aguardando 1 minuto após o GIF especial para enviar mensagem de participação...")
-                time.sleep(60)
-                
-                # Enviar mensagem de participação
-                BOT2_LOGGER.info("Enviando mensagem de participação da sessão...")
-                enviar_mensagem_participacao()
-                
-                # Aguardar 9 minutos (540 segundos) após mensagem de participação
-                BOT2_LOGGER.info("Aguardando 9 minutos para enviar GIF promocional...")
-                time.sleep(540)
-                
-                # Enviar GIF promo para cada idioma
-                BOT2_LOGGER.info("Enviando GIF promocional para todos os idiomas...")
-                bot2_enviar_gif_promo(idioma="pt")
-                time.sleep(2)  # Pequeno delay entre mensagens para diferentes idiomas
-                bot2_enviar_gif_promo(idioma="en")
-                time.sleep(2)
-                bot2_enviar_gif_promo(idioma="es")
-                
-                # Aguardar 1 minuto (60 segundos) após o GIF promo
-                BOT2_LOGGER.info("Aguardando 1 minuto após GIF promocional para enviar mensagem de abertura da corretora...")
-                time.sleep(60)
-                
-                # Enviar mensagem final de abertura da corretora
-                BOT2_LOGGER.info("Enviando mensagem final de abertura da corretora...")
-                bot2_enviar_mensagem_abertura_corretora()
-            
+                try:
+                    # Aguardar 30 minutos (1800 segundos) - tempo total após o sinal
+                    BOT2_LOGGER.info("Aguardando 30 minutos após o sinal para enviar GIF especial...")
+                    time.sleep(1800)
+
+                    # Enviar GIF especial
+                    BOT2_LOGGER.info("Tempo de espera para GIF especial concluído. Enviando GIF especial agora...")
+                    try:
+                        resultado_gif = bot2_enviar_gif_especial()
+                        BOT2_LOGGER.info(f"Resultado do envio do GIF especial: {'Sucesso' if resultado_gif else 'Falha'}")
+                    except Exception as gif_error:
+                        BOT2_LOGGER.error(f"Erro ao enviar GIF especial: {str(gif_error)}")
+                        BOT2_LOGGER.info("Continuando a sequência mesmo com erro no GIF especial")
+
+                    # Aguardar 1 minuto (60 segundos) após o GIF especial
+                    BOT2_LOGGER.info("Aguardando 1 minuto após o GIF especial para enviar mensagem de participação...")
+                    time.sleep(60)
+
+                    # Enviar mensagem de participação
+                    BOT2_LOGGER.info("Enviando mensagem de participação da sessão...")
+                    try:
+                        resultado_participacao = enviar_mensagem_participacao()
+                        BOT2_LOGGER.info(f"Resultado do envio da mensagem de participação: {'Sucesso' if resultado_participacao else 'Falha'}")
+                    except Exception as part_error:
+                        BOT2_LOGGER.error(f"Erro ao enviar mensagem de participação: {str(part_error)}")
+                        BOT2_LOGGER.info("Continuando a sequência mesmo com erro na mensagem de participação")
+
+                    # Aguardar 9 minutos (540 segundos) após mensagem de participação
+                    BOT2_LOGGER.info("Aguardando 9 minutos para enviar GIF promocional...")
+                    time.sleep(540)
+
+                    # Enviar GIF promo para cada idioma
+                    BOT2_LOGGER.info("Enviando GIF promocional para todos os idiomas...")
+                    try:
+                        bot2_enviar_gif_promo(idioma="pt")
+                        time.sleep(2)  # Pequeno delay entre mensagens para diferentes idiomas
+                        bot2_enviar_gif_promo(idioma="en")
+                        time.sleep(2)
+                        bot2_enviar_gif_promo(idioma="es")
+                    except Exception as promo_error:
+                        BOT2_LOGGER.error(f"Erro ao enviar GIF promocional: {str(promo_error)}")
+                        BOT2_LOGGER.info("Continuando a sequência mesmo com erro no GIF promocional")
+
+                    # Aguardar 1 minuto (60 segundos) após o GIF promo
+                    BOT2_LOGGER.info("Aguardando 1 minuto após GIF promocional para enviar mensagem de abertura da corretora...")
+                    time.sleep(60)
+
+                    # Enviar mensagem final de abertura da corretora
+                    BOT2_LOGGER.info("Enviando mensagem final de abertura da corretora...")
+                    try:
+                        bot2_enviar_mensagem_abertura_corretora()
+                    except Exception as abertura_error:
+                        BOT2_LOGGER.error(f"Erro ao enviar mensagem de abertura da corretora: {str(abertura_error)}")
+                    
+                    BOT2_LOGGER.info("Sequência completa de envio para sinais múltiplos de 3 concluída!")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"Erro durante a sequência de sinais múltiplos de 3: {str(e)}")
+                    traceback.print_exc()
+
             # Iniciar thread para enviar GIF especial
             gif_especial_thread = threading.Thread(target=enviar_gif_especial_apos_delay)
             gif_especial_thread.daemon = True
