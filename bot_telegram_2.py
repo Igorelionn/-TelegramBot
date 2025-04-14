@@ -1258,8 +1258,10 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         
         # Hora de entrada convertida para datetime no fuso horário de Brasília
         hora_entrada = datetime.strptime(hora_formatada, "%H:%M:%S")
+        # Adicionar 2 minutos à hora de entrada
+        hora_entrada_ajustada = hora_entrada + timedelta(minutes=2)
         hora_entrada_br = bot2_obter_hora_brasilia().replace(
-            hour=hora_entrada.hour, minute=hora_entrada.minute, second=0, microsecond=0
+            hour=hora_entrada_ajustada.hour, minute=hora_entrada_ajustada.minute, second=0, microsecond=0
         )
         
         # Converter para o fuso horário do canal
