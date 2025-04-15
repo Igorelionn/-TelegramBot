@@ -102,11 +102,11 @@ ALTERNATIVE_GIFS = {}
 
 # URLs diretas para GIFs do Giphy
 URLS_GIFS_DIRETAS = {
-    "gif_especial_pt": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXVrdGtmbnJ5cXltd2cyYndzemcya3M0YjZoZWZuejk3cjdoeDM3NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
-    "promo_pt": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGVsbHYzZmNsMThuNjMycmZoMWt2NTN5MmNoaHg4NmhscHg0dmJyeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
-    "promo_en": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGVsbHYzZmNsMThuNjMycmZoMWt2NTN5MmNoaHg4NmhscHg0dmJyeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
-    "promo_es": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGVsbHYzZmNsMThuNjMycmZoMWt2NTN5MmNoaHg4NmhscHg0dmJyeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
-    "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif"
+    "promo_pt": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGhqMmNqOWFpbTQ2cjNxMzF1YncxcnAwdTFvN2o1NWRmc2dvYXZ6bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "promo_en": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGhqMmNqOWFpbTQ2cjNxMzF1YncxcnAwdTFvN2o1NWRmc2dvYXZ6bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "promo_es": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGhqMmNqOWFpbTQ2cjNxMzF1YncxcnAwdTFvN2o1NWRmc2dvYXZ6bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif",
+    "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWo4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
 }
 
 # ID para compatibilidade com cdigo existente
@@ -441,7 +441,7 @@ HORARIOS_PADRAO = {
     "EU_50_OTC": {  # Novo ativo com horrios especficos
         "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
         "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:10-12:05", "12:10-23:59"],
         "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
         "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
         "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
@@ -964,11 +964,11 @@ HORARIOS_PADRAO = {
 
 # URLs diretas para GIFs
 URLS_GIFS_DIRETAS = {
-    "promo_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnVvZ203ZXphMXc5N2dwMm1uaDk4Nmp4Z3A1OGkwZnd0a2JtdHo1bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1Q3HkjW2vvNTfAnPA4/giphy.gif",
-    "promo_en": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnJqZDV6OWJsd2xtOXpvMjduMDB3Nnc1dG8zZG40NzY5aGtsMHV0OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Btx7R7ul9qaeCt8eEk/giphy.gif",
-    "promo_es": "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGY5aG93cTV4NWg2dzM2anpmaWd5ajlqenkwcjd3bXVjdG0wYnlmYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5IG2JKmARkpsfMkp4z/giphy.gif",
+    "promo_pt": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGhqMmNqOWFpbTQ2cjNxMzF1YncxcnAwdTFvN2o1NWRmc2dvYXZ6bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "promo_en": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGhqMmNqOWFpbTQ2cjNxMzF1YncxcnAwdTFvN2o1NWRmc2dvYXZ6bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
+    "promo_es": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGhqMmNqOWFpbTQ2cjNxMzF1YncxcnAwdTFvN2o1NWRmc2dvYXZ6bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
     "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif",
-    "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWo4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
+    "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWk4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
 }
 
 # Adicionar variável global para controlar mensagem de perda enviada por dia
@@ -2483,11 +2483,25 @@ def bot2_enviar_mensagem_abertura_corretora():
     global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA
 
     try:
+        # Verificar se a mensagem já foi enviada recentemente (dentro de 10 minutos)
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        
+        # Criar uma variável estática para controlar o último envio
+        if not hasattr(bot2_enviar_mensagem_abertura_corretora, "ultimo_envio"):
+            bot2_enviar_mensagem_abertura_corretora.ultimo_envio = datetime(2000, 1, 1, tzinfo=pytz.timezone("America/Sao_Paulo"))
+            
+        # Verificar se faz menos de 10 minutos desde o último envio
+        intervalo_minimo = timedelta(minutes=10)
+        tempo_decorrido = agora - bot2_enviar_mensagem_abertura_corretora.ultimo_envio
+        
+        if tempo_decorrido < intervalo_minimo:
+            BOT2_LOGGER.warning(f"[{horario_atual}] Mensagem de abertura da corretora já foi enviada há {tempo_decorrido.total_seconds()/60:.1f} minutos. Ignorando novo envio.")
+            return True  # Retorna True para não interromper a sequência
+        
         # Limpar quaisquer agendamentos pendentes para evitar repetições
         schedule.clear("abertura_corretora")
         
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[{horario_atual}] Iniciando envio da mensagem de abertura da corretora")
 
         # Contar quantas mensagens foram enviadas
@@ -2556,6 +2570,9 @@ def bot2_enviar_mensagem_abertura_corretora():
         BOT2_LOGGER.info(
             f"[{horario_atual}] Total de mensagens de abertura enviadas com sucesso: {envios_com_sucesso}"
         )
+        
+        # Atualizar o timestamp do último envio
+        bot2_enviar_mensagem_abertura_corretora.ultimo_envio = agora
         
         # Limpar novamente quaisquer agendamentos pendentes (por segurança)
         schedule.clear("abertura_corretora")
