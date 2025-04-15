@@ -968,7 +968,7 @@ URLS_GIFS_DIRETAS = {
     "promo_en": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGhqMmNqOWFpbTQ2cjNxMzF1YncxcnAwdTFvN2o1NWRmc2dvYXZ6bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
     "promo_es": "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGhqMmNqOWFpbTQ2cjNxMzF1YncxcnAwdTFvN2o1NWRmc2dvYXZ6bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif",
     "pos_sinal_padrao": "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZjb3hyMDVqOHAyb2xvZTgxZzVpb2ZscWE3M2RzOHY5Z3VzZTc2YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eWbGux0IXOygZ7m2Of/giphy.gif",
-    "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWk4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
+    "gif_especial_pt": "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2tzdzB4bjNjaWo4bm9zdDR3d2g4bmQzeHRqcWx6MTQxYTA1cjRoeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2EknXAKA5ac8gKVxu/giphy.gif"
 }
 
 # Adicionar variável global para controlar mensagem de perda enviada por dia
@@ -1944,9 +1944,9 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                     # Limpar quaisquer agendamentos pendentes (por segurança)
                     schedule.clear("abertura_corretora")
                     
-                    # Esperar 30 minutos após o sinal
-                    BOT2_LOGGER.info("Aguardando 30 minutos após o sinal para enviar mensagem de participação...")
-                    time.sleep(1800)
+                    # Esperar 7 minutos após o sinal (pós GIF pós-sinal que é enviado automaticamente)
+                    BOT2_LOGGER.info("Aguardando 25 minutos após o GIF pós-sinal para enviar mensagem de participação...")
+                    time.sleep(1500)  # 25 minutos = 1500 segundos
                     
                     # Enviar mensagem de participação diretamente (sem GIF especial)
                     BOT2_LOGGER.info("Enviando mensagem de participação da sessão...")
