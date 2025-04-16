@@ -1840,54 +1840,54 @@ def bot2_enviar_gif_pos_sinal(signal=None):
 
 
 def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=False):
-    """
-    Envia um sinal aleatório para todos os canais configurados.
-
-    Args:
-        ignorar_anti_duplicacao (bool): Se True, ignora a verificação de anti-duplicação
-        enviar_gif_imediatamente (bool): Se True, envia o GIF pós-sinal imediatamente após o sinal
-
-    Returns:
-        bool: True se o sinal foi enviado com sucesso, False caso contrário
-    """
-    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, ultimo_sinal_enviado, bot2_contador_sinais
+    """Gera e envia um sinal de trading para os canais configurados."""
+    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA, ultimo_sinal_enviado, bot2_contador_sinais
 
     try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-
         # Gerar um sinal aleatório
         sinal = bot2_gerar_sinal_aleatorio()
         if not sinal:
-            BOT2_LOGGER.error("Falha ao gerar sinal aleatório")
+            BOT2_LOGGER.error("Não foi possível gerar um sinal aleatório.")
             return False
 
-        # Verificar anti-duplicação se necessário
-        if not ignorar_anti_duplicacao and sinal == ultimo_sinal_enviado:
-            BOT2_LOGGER.warning("Sinal duplicado detectado. Gerando novo sinal...")
-            return bot2_send_message(ignorar_anti_duplicacao, enviar_gif_imediatamente)
+        # Incrementar o contador de sinais (apenas se não estiver ignorando a anti-duplicação)
+        if not ignorar_anti_duplicacao:
+            bot2_contador_sinais += 1
+            agora = bot2_obter_hora_brasilia()
+            horario_atual = agora.strftime("%H:%M:%S")
+            BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado. Total de sinais: {bot2_contador_sinais}")
 
-        # Registrar o sinal atual como último enviado
         ultimo_sinal_enviado = sinal
 
-        # Incrementa o contador global de sinais ANTES de enviar o sinal
-        # Isso garante que o valor do contador esteja correto durante o processamento do sinal
-        bot2_contador_sinais += 1
-        BOT2_LOGGER.info(f"[{horario_atual}] Contador de sinais incrementado. Total de sinais: {bot2_contador_sinais}")
+        # Obtendo a hora atual de Brasília
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
 
-        # Enviar o sinal para cada idioma configurado
+        # Para cada idioma configurado, envia a mensagem formatada
         for idioma, chats in BOT2_CANAIS_CONFIG.items():
             if not chats:  # Se não houver chats configurados para este idioma, pula
                 continue
 
-            # Formatar a mensagem de acordo com o idioma
-            mensagem = bot2_formatar_mensagem(sinal, horario_atual, idioma)
+            # Obter a configuração para o idioma
+            config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
+            fuso_horario = config_idioma.get("fuso_horario")
+
+            # Formatar a mensagem conforme o idioma
+            BOT2_LOGGER.info(
+                f"Formatando mensagem com: ativo={sinal['ativo']}, direção={sinal['direcao']}, "
+                + f"categoria={sinal['categoria']}, tempo={sinal['tempo_expiracao_minutos']}, idioma={idioma}"
+            )
+
+            mensagem = bot2_formatar_mensagem(sinal, agora.strftime("%H:%M"), idioma)
+            if not mensagem:
+                BOT2_LOGGER.error(f"Erro ao formatar mensagem para idioma {idioma}")
+                continue
 
             for chat_id in chats:
                 try:
                     # URL base para a API do Telegram
                     url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-
+                    
                     resposta = requests.post(
                         url_base,
                         json={
@@ -1936,6 +1936,8 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
             BOT2_LOGGER.info(f"[{horario_atual}] Thread para envio do GIF pós-sinal iniciada")
 
         # Verificar se é múltiplo de 3 para enviar a sequência especial (sem GIF especial)
+        BOT2_LOGGER.info(f"[{horario_atual}] Verificando se o sinal #{bot2_contador_sinais} é múltiplo de 3: {bot2_contador_sinais % 3 == 0}")
+        
         if bot2_contador_sinais % 3 == 0:
             BOT2_LOGGER.info(f"[{horario_atual}] Sinal é múltiplo de 3 (sinal #{bot2_contador_sinais}). Iniciando sequência especial...")
 
@@ -1944,25 +1946,29 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                     # Limpar quaisquer agendamentos pendentes (por segurança)
                     schedule.clear("abertura_corretora")
                     
-                    # Esperar 7 minutos após o sinal (pós GIF pós-sinal que é enviado automaticamente)
-                    BOT2_LOGGER.info("Aguardando 25 minutos após o GIF pós-sinal para enviar mensagem de participação...")
+                    # Esperar 25 minutos após o GIF pós-sinal (que ocorre 7 minutos após o sinal)
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.info(f"[{tempo_atual}] Aguardando 25 minutos após o GIF pós-sinal para enviar mensagem de participação...")
                     time.sleep(1500)  # 25 minutos = 1500 segundos
                     
                     # Enviar mensagem de participação diretamente (sem GIF especial)
-                    BOT2_LOGGER.info("Enviando mensagem de participação da sessão...")
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.info(f"[{tempo_atual}] Enviando mensagem de participação da sessão...")
                     try:
                         resultado_participacao = enviar_mensagem_participacao()
-                        BOT2_LOGGER.info(f"Resultado do envio da mensagem de participação: {'Sucesso' if resultado_participacao else 'Falha'}")
+                        BOT2_LOGGER.info(f"[{tempo_atual}] Resultado do envio da mensagem de participação: {'Sucesso' if resultado_participacao else 'Falha'}")
                     except Exception as part_error:
-                        BOT2_LOGGER.error(f"Erro ao enviar mensagem de participação: {str(part_error)}")
-                        BOT2_LOGGER.info("Continuando a sequência mesmo com erro na mensagem de participação")
+                        BOT2_LOGGER.error(f"[{tempo_atual}] Erro ao enviar mensagem de participação: {str(part_error)}")
+                        BOT2_LOGGER.info(f"[{tempo_atual}] Continuando a sequência mesmo com erro na mensagem de participação")
 
                     # Aguardar 9 minutos após mensagem de participação
-                    BOT2_LOGGER.info("Aguardando 9 minutos para enviar GIF promocional...")
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.info(f"[{tempo_atual}] Aguardando 9 minutos para enviar GIF promocional...")
                     time.sleep(540)
 
                     # Enviar GIF promo para cada idioma
-                    BOT2_LOGGER.info("Enviando GIF promocional para todos os idiomas...")
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.info(f"[{tempo_atual}] Enviando GIF promocional para todos os idiomas...")
                     try:
                         bot2_enviar_gif_promo(idioma="pt")
                         time.sleep(2)  # Pequeno delay entre mensagens para diferentes idiomas
@@ -1970,26 +1976,32 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                         time.sleep(2)
                         bot2_enviar_gif_promo(idioma="es")
                     except Exception as promo_error:
-                        BOT2_LOGGER.error(f"Erro ao enviar GIF promocional: {str(promo_error)}")
-                        BOT2_LOGGER.info("Continuando a sequência mesmo com erro no GIF promocional")
+                        tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                        BOT2_LOGGER.error(f"[{tempo_atual}] Erro ao enviar GIF promocional: {str(promo_error)}")
+                        BOT2_LOGGER.info(f"[{tempo_atual}] Continuando a sequência mesmo com erro no GIF promocional")
 
                     # Aguardar 1 minuto após o GIF promo
-                    BOT2_LOGGER.info("Aguardando 1 minuto após GIF promocional para enviar mensagem de abertura da corretora...")
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.info(f"[{tempo_atual}] Aguardando 1 minuto após GIF promocional para enviar mensagem de abertura da corretora...")
                     time.sleep(60)
 
                     # Enviar mensagem final de abertura da corretora
-                    BOT2_LOGGER.info("Enviando mensagem final de abertura da corretora...")
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.info(f"[{tempo_atual}] Enviando mensagem final de abertura da corretora...")
                     try:
                         bot2_enviar_mensagem_abertura_corretora()
                     except Exception as abertura_error:
-                        BOT2_LOGGER.error(f"Erro ao enviar mensagem de abertura da corretora: {str(abertura_error)}")
+                        tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                        BOT2_LOGGER.error(f"[{tempo_atual}] Erro ao enviar mensagem de abertura da corretora: {str(abertura_error)}")
                     
                     # Limpar novamente quaisquer agendamentos pendentes (por segurança)
                     schedule.clear("abertura_corretora")
                     
-                    BOT2_LOGGER.info("Sequência completa de envio para sinais múltiplos de 3 concluída!")
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.info(f"[{tempo_atual}] Sequência completa de envio para sinais múltiplos de 3 concluída!")
                 except Exception as e:
-                    BOT2_LOGGER.error(f"Erro durante a sequência de sinais múltiplos de 3: {str(e)}")
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.error(f"[{tempo_atual}] Erro durante a sequência de sinais múltiplos de 3: {str(e)}")
                     traceback.print_exc()
 
             # Iniciar thread para sequência especial (sem GIF especial)
@@ -3093,7 +3105,103 @@ def testar_gif_pos_sinal():
         traceback.print_exc()
         return False
 
-# Função para executar apenas o teste do gif pós-sinal (sem iniciar o bot completo)
+def forcar_teste_multiplo_tres():
+    """
+    Função para testar a sequência específica para múltiplos de 3,
+    com tempos de espera reduzidos para facilitar o teste.
+    """
+    global bot2_contador_sinais, BOT2_LOGGER
+    
+    try:
+        # Definir o contador para que o próximo seja múltiplo de 3
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        
+        # Garantir que o próximo sinal seja múltiplo de 3
+        if bot2_contador_sinais % 3 != 0:
+            # Se não for múltiplo de 3, ajustar para que o próximo seja
+            novo_contador = ((bot2_contador_sinais // 3) + 1) * 3
+            BOT2_LOGGER.info(f"[{horario_atual}] TESTE: Ajustando contador de sinais de {bot2_contador_sinais} para {novo_contador}")
+            bot2_contador_sinais = novo_contador
+        
+        BOT2_LOGGER.info(f"[{horario_atual}] TESTE: Contador de sinais atual: {bot2_contador_sinais}")
+        BOT2_LOGGER.info(f"[{horario_atual}] TESTE: Iniciando sequência para múltiplos de 3...")
+        
+        def enviar_sequencia_especial_teste():
+            try:
+                tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                BOT2_LOGGER.info(f"[{tempo_atual}] TESTE: Iniciando sequência especial de teste...")
+                
+                # Limpar quaisquer agendamentos pendentes (por segurança)
+                schedule.clear("abertura_corretora")
+                
+                # Esperar apenas 10 segundos em vez de 25 minutos para teste
+                tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                BOT2_LOGGER.info(f"[{tempo_atual}] TESTE: Aguardando 10 segundos (simulando 25 minutos) para enviar mensagem de participação...")
+                time.sleep(10)  # 10 segundos para teste
+                
+                # Enviar mensagem de participação diretamente
+                tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                BOT2_LOGGER.info(f"[{tempo_atual}] TESTE: Enviando mensagem de participação da sessão...")
+                try:
+                    resultado_participacao = enviar_mensagem_participacao()
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.info(f"[{tempo_atual}] TESTE: Resultado do envio da mensagem de participação: {'Sucesso' if resultado_participacao else 'Falha'}")
+                except Exception as part_error:
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.error(f"[{tempo_atual}] TESTE: Erro ao enviar mensagem de participação: {str(part_error)}")
+                    BOT2_LOGGER.info(f"[{tempo_atual}] TESTE: Continuando a sequência mesmo com erro na mensagem de participação")
+                
+                # Aguardar 5 segundos em vez de 9 minutos para teste
+                tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                BOT2_LOGGER.info(f"[{tempo_atual}] TESTE: Aguardando 5 segundos (simulando 9 minutos) para enviar GIF promocional...")
+                time.sleep(5)  # 5 segundos para teste
+                
+                # Enviar GIF promo para cada idioma
+                tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                BOT2_LOGGER.info(f"[{tempo_atual}] TESTE: Enviando GIF promocional para idioma PT (teste)...")
+                try:
+                    bot2_enviar_gif_promo(idioma="pt")
+                    # Apenas um idioma para teste
+                except Exception as promo_error:
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.error(f"[{tempo_atual}] TESTE: Erro ao enviar GIF promocional: {str(promo_error)}")
+                
+                # Aguardar 5 segundos em vez de 1 minuto para teste
+                tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                BOT2_LOGGER.info(f"[{tempo_atual}] TESTE: Aguardando 5 segundos (simulando 1 minuto) para enviar mensagem de abertura da corretora...")
+                time.sleep(5)  # 5 segundos para teste
+                
+                # Enviar mensagem final de abertura da corretora
+                tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                BOT2_LOGGER.info(f"[{tempo_atual}] TESTE: Enviando mensagem final de abertura da corretora...")
+                try:
+                    bot2_enviar_mensagem_abertura_corretora()
+                except Exception as abertura_error:
+                    tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                    BOT2_LOGGER.error(f"[{tempo_atual}] TESTE: Erro ao enviar mensagem de abertura da corretora: {str(abertura_error)}")
+                
+                tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                BOT2_LOGGER.info(f"[{tempo_atual}] TESTE: Sequência de teste para múltiplos de 3 concluída!")
+                
+            except Exception as e:
+                tempo_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                BOT2_LOGGER.error(f"[{tempo_atual}] TESTE: Erro durante a sequência de teste: {str(e)}")
+                traceback.print_exc()
+        
+        # Iniciar thread para sequência especial de teste
+        sequencia_thread = threading.Thread(target=enviar_sequencia_especial_teste)
+        sequencia_thread.daemon = True
+        sequencia_thread.start()
+        BOT2_LOGGER.info(f"[{horario_atual}] TESTE: Thread para sequência de teste iniciada.")
+        
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao iniciar teste para múltiplos de 3: {str(e)}")
+        traceback.print_exc()
+        return False
+
+# Adicionar esta linha no bloco if __name__ == "__main__" para permitir execução via linha de comando
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "testar_contador":
@@ -3102,6 +3210,8 @@ if __name__ == "__main__":
             testar_sequencia_multiplo_tres()
         elif sys.argv[1] == "testar_gif":
             testar_gif_pos_sinal()
+        elif sys.argv[1] == "forcar_multiplo":
+            forcar_teste_multiplo_tres()
     else:
         # Inicialização normal do bot
         iniciar_ambos_bots()
