@@ -25,6 +25,7 @@ import os
 from functools import lru_cache
 import telebot
 import threading
+from datetime import time as datetime_time
 
 # Definição da variável global assets
 assets = {}
@@ -1273,7 +1274,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 hora_entrada = datetime.now().replace(microsecond=0)
 
         # Ajustar para o horário atual se hora_entrada for apenas um time, não um datetime
-        if isinstance(hora_entrada, time):
+        if isinstance(hora_entrada, datetime_time):
             agora = datetime.now()
             hora_entrada = datetime(
                 agora.year, agora.month, agora.day, 
