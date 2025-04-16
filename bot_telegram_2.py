@@ -1218,85 +1218,101 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
     Formata a mensagem de sinal para envio, conforme o idioma especificado.
     """
     global BOT2_LOGGER, CONFIGS_IDIOMA
-
+    
     try:
-        # Extrair informações do sinal
+        BOT2_LOGGER.info(
+            f"Formatando mensagem com: ativo={sinal['ativo']}, direção={sinal['direcao']}, "
+            + f"categoria={sinal['categoria']}, tempo={sinal['tempo_expiracao_minutos']}, idioma={idioma}"
+        )
+        
+        # Obter configuração para o idioma
+        config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
+        
+        # Obter informações do sinal
         ativo = sinal["ativo"]
         direcao = sinal["direcao"]
         categoria = sinal["categoria"]
         tempo_expiracao_minutos = sinal["tempo_expiracao_minutos"]
         
-        BOT2_LOGGER.info(
-            f"Formatando mensagem com: ativo={ativo}, direção={direcao}, categoria={categoria}, tempo={tempo_expiracao_minutos}, idioma={idioma}"
-        )
-
-        # Configuração do fuso horário para esse idioma
-        config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])  # Usa PT como padrão se o idioma não existir
+        # Definir o fuso horário de acordo com o idioma
         fuso_horario = config_idioma.get("fuso_horario", "America/Sao_Paulo")
+        
+        # Obter link da corretora específico para o idioma
         link_corretora = config_idioma.get("link_corretora", "")
+        
+        # Tratar nome do ativo para exibição
+        nome_ativo_exibicao = ativo.replace("_", " ").replace("OTC", "(OTC)")
+        
+        # Determinar emoji baseado na direção
+        emoji = "🟩" if direcao.upper() == "CALL" else "🟥"
+        
+        # Definir texto da direção para cada idioma
+        if direcao.upper() == "CALL":
+            action_pt = "COMPRA"
+            action_en = "BUY"
+            action_es = "COMPRA"
+        else:
+            action_pt = "VENDA"
+            action_en = "SELL"
+            action_es = "VENTA"
+        
+        # Ajustar o formato da hora dependendo do que foi recebido
+        if len(hora_formatada) <= 5:  # Formato HH:MM
+            hora_formatada = hora_formatada + ":00"  # Adicionar segundos como 00
+            
+        # Converter a hora de entrada para o formato correto
+        try:
+            hora_entrada = datetime.strptime(hora_formatada, "%H:%M:%S")
+        except ValueError:
+            try:
+                # Tentar formato alternativo se o primeiro falhar
+                hora_entrada = datetime.strptime(hora_formatada, "%H:%M")
+            except ValueError:
+                BOT2_LOGGER.error(f"Formato de hora inválido: {hora_formatada}. Usando hora atual.")
+                # Usar a hora atual como fallback
+                hora_entrada = datetime.now().replace(microsecond=0)
 
-        # Formatação do nome do ativo para exibição
-        nome_ativo_exibicao = (
-            ativo.replace("Digital_", "") if ativo.startswith(
-                "Digital_") else ativo
-        )
-        if "(OTC)" in nome_ativo_exibicao and not " (OTC)" in nome_ativo_exibicao:
-            nome_ativo_exibicao = nome_ativo_exibicao.replace("(OTC)", " (OTC)")
-
-        # Configura ações e emojis conforme a direção
-        action_pt = "PUT" if direcao == "sell" else "CALL"
-        action_en = "PUT" if direcao == "sell" else "CALL"
-        action_es = "PUT" if direcao == "sell" else "CALL"
-        emoji = "🟥" if direcao == "sell" else "🟩"
-
-        # Encontrar o fuso horário adequado para o idioma
-        fuso_horario = "America/Sao_Paulo"  # Padrão (Brasil)
+        # Ajustar para o horário atual se hora_entrada for apenas um time, não um datetime
+        if isinstance(hora_entrada, time):
+            agora = datetime.now()
+            hora_entrada = datetime(
+                agora.year, agora.month, agora.day, 
+                hora_entrada.hour, hora_entrada.minute, hora_entrada.second
+            )
         
-        # Usar configuração de idioma diretamente
-        if idioma in CONFIGS_IDIOMA:
-            fuso_horario = CONFIGS_IDIOMA[idioma].get("fuso_horario", "America/Sao_Paulo")
+        # Calcular as horas de expiração e gales
+        hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
+        hora_gale1 = hora_expiracao + timedelta(minutes=5)
+        hora_gale2 = hora_gale1 + timedelta(minutes=5)
+        hora_gale3 = hora_gale2 + timedelta(minutes=5)
         
-        # Hora de entrada convertida para datetime no fuso horário de Brasília
-        hora_entrada = datetime.strptime(hora_formatada, "%H:%M:%S")
-        # Adicionar 2 minutos à hora de entrada
-        hora_entrada_ajustada = hora_entrada + timedelta(minutes=2)
-        hora_entrada_br = bot2_obter_hora_brasilia().replace(
-            hour=hora_entrada_ajustada.hour, minute=hora_entrada_ajustada.minute, second=0, microsecond=0
-        )
+        # Formatar as horas para exibição sem os segundos
+        hora_entrada_formatada = hora_entrada.strftime("%H:%M")
+        hora_expiracao_formatada = hora_expiracao.strftime("%H:%M")
+        hora_gale1_formatada = hora_gale1.strftime("%H:%M")
+        hora_gale2_formatada = hora_gale2.strftime("%H:%M")
+        hora_gale3_formatada = hora_gale3.strftime("%H:%M")
         
-        # Converter para o fuso horário do canal
-        hora_entrada_local = bot2_converter_fuso_horario(
-            hora_entrada_br, fuso_horario)
+        # Converter as horas para o fuso horário específico do idioma
+        if fuso_horario != "America/Sao_Paulo":
+            # Converter para o fuso horário do idioma
+            hora_entrada_formatada = bot2_converter_fuso_horario(
+                hora_entrada, fuso_horario
+            ).strftime("%H:%M")
+            hora_expiracao_formatada = bot2_converter_fuso_horario(
+                hora_expiracao, fuso_horario
+            ).strftime("%H:%M")
+            hora_gale1_formatada = bot2_converter_fuso_horario(
+                hora_gale1, fuso_horario
+            ).strftime("%H:%M")
+            hora_gale2_formatada = bot2_converter_fuso_horario(
+                hora_gale2, fuso_horario
+            ).strftime("%H:%M")
+            hora_gale3_formatada = bot2_converter_fuso_horario(
+                hora_gale3, fuso_horario
+            ).strftime("%H:%M")
         
-        # Calcular horário de expiração no fuso horário de Brasília
-        hora_expiracao_br = hora_entrada_br + \
-            timedelta(minutes=tempo_expiracao_minutos)
-        
-        # Converter expiração para o fuso horário do canal
-        hora_expiracao_local = bot2_converter_fuso_horario(
-            hora_expiracao_br, fuso_horario)
-        
-        # Calcular horários de gale (reentrada) no fuso horário de Brasília
-        # 1° GALE é o horário de expiração + 5 minutos
-        hora_gale1_br = hora_expiracao_br + timedelta(minutes=5)
-        # 2° GALE é o 1° GALE + 5 minutos
-        hora_gale2_br = hora_gale1_br + timedelta(minutes=5)
-        # 3° GALE é o 2° GALE + 5 minutos
-        hora_gale3_br = hora_gale2_br + timedelta(minutes=5)
-        
-        # Converter gales para o fuso horário do canal
-        hora_gale1_local = bot2_converter_fuso_horario(hora_gale1_br, fuso_horario)
-        hora_gale2_local = bot2_converter_fuso_horario(hora_gale2_br, fuso_horario)
-        hora_gale3_local = bot2_converter_fuso_horario(hora_gale3_br, fuso_horario)
-        
-        # Formatar os horários para exibição (no fuso horário local)
-        hora_entrada_formatada = hora_entrada_local.strftime("%H:%M")
-        hora_expiracao_formatada = hora_expiracao_local.strftime("%H:%M")
-        hora_gale1_formatada = hora_gale1_local.strftime("%H:%M")
-        hora_gale2_formatada = hora_gale2_local.strftime("%H:%M")
-        hora_gale3_formatada = hora_gale3_local.strftime("%H:%M")
-        
-        # Registrar a conversão de fuso horário
+        # Registrar os horários convertidos para o log
         BOT2_LOGGER.info(
             f"Horários convertidos para fuso {fuso_horario}: Entrada={hora_entrada_formatada}, "
             + f"Expiração={hora_expiracao_formatada}, Gale1={hora_gale1_formatada}, "
@@ -1878,6 +1894,7 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                 + f"categoria={sinal['categoria']}, tempo={sinal['tempo_expiracao_minutos']}, idioma={idioma}"
             )
 
+            # Usar apenas hora e minuto para evitar problemas de formato
             mensagem = bot2_formatar_mensagem(sinal, agora.strftime("%H:%M"), idioma)
             if not mensagem:
                 BOT2_LOGGER.error(f"Erro ao formatar mensagem para idioma {idioma}")
