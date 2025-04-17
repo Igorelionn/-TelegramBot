@@ -1242,7 +1242,12 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         link_corretora = config_idioma.get("link_corretora", "")
         
         # Tratar nome do ativo para exibição
-        nome_ativo_exibicao = ativo.replace("_", " ").replace("OTC", "(OTC)")
+        nome_ativo_exibicao = ativo.replace("_", " ")
+        # Ajustar a parte OTC para não ter parênteses duplicados
+        if "OTC" in nome_ativo_exibicao:
+            nome_ativo_exibicao = nome_ativo_exibicao.replace("OTC", "(OTC)")
+            # Garantir que não temos parênteses duplicados
+            nome_ativo_exibicao = nome_ativo_exibicao.replace("((OTC))", "(OTC)")
         
         # Determinar emoji baseado na direção
         emoji = "🟩" if direcao.upper() == "CALL" else "🟥"
