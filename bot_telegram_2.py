@@ -2672,17 +2672,17 @@ def enviar_mensagem_participacao():
         # Verificar se as constantes de vídeo estão definidas
         if not 'VIDEO_TELEGRAM_URL' in globals() or not VIDEO_TELEGRAM_URL:
             BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ URL do vídeo em português não está definida!")
-            VIDEO_TELEGRAM_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
+            VIDEO_TELEGRAM_URL = "https://t.me/trendingbrazil/215"
             BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo PT: {VIDEO_TELEGRAM_URL}")
         
         if not 'VIDEO_TELEGRAM_EN_URL' in globals() or not VIDEO_TELEGRAM_EN_URL:
             BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ URL do vídeo em inglês não está definida!")
-            VIDEO_TELEGRAM_EN_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
+            VIDEO_TELEGRAM_EN_URL = "https://t.me/trendingenglish/226"
             BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo EN: {VIDEO_TELEGRAM_EN_URL}")
             
         if not 'VIDEO_TELEGRAM_ES_URL' in globals() or not VIDEO_TELEGRAM_ES_URL:
             BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ URL do vídeo em espanhol não está definida!")
-            VIDEO_TELEGRAM_ES_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
+            VIDEO_TELEGRAM_ES_URL = "https://t.me/trendingespanish/212"
             BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo ES: {VIDEO_TELEGRAM_ES_URL}")
 
         # Para cada idioma configurado, envia a mensagem formatada
@@ -2691,19 +2691,21 @@ def enviar_mensagem_participacao():
                 BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Nenhum chat configurado para idioma {idioma}, pulando")
                 continue
 
-            # Obter configuração para o idioma
-            config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
-            
-            link_corretora = config_idioma.get("link_corretora", "")
-            if not link_corretora:
-                BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ Link da corretora não encontrado para idioma {idioma}, usando link padrão")
-                link_corretora = "https://corretora.example.com"
-            
-            link_video = ""
-
-            # Configurar links com base no idioma
+            # Links específicos por idioma
             if idioma == "pt":
-                link_video = VIDEO_TELEGRAM_URL
+                link_corretora = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
+                link_video = "https://t.me/trendingbrazil/215"
+            elif idioma == "en":
+                link_corretora = "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
+                link_video = "https://t.me/trendingenglish/226"
+            else:  # es
+                link_corretora = "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+                link_video = "https://t.me/trendingespanish/212"
+            
+            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔗 Links configurados: Corretora={link_corretora}, Vídeo={link_video}")
+
+            # Configurar texto com base no idioma
+            if idioma == "pt":
                 texto_participacao = (
                     "⚠️⚠️PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠️⚠️\n\n"
                     "1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
@@ -2717,7 +2719,6 @@ def enviar_mensagem_participacao():
                     f"<a href=\"{link_video}\" title=\"\"><b>CLIQUE AQUI E ASSISTA O VÍDEO</b></a>"
                 )
             elif idioma == "en":
-                link_video = VIDEO_TELEGRAM_EN_URL
                 texto_participacao = (
                     "⚠️⚠️TO PARTICIPATE IN THIS SESSION, FOLLOW THE STEPS BELOW⚠️⚠️\n\n"
                     "1st ✅ —> Create your broker account at the link below and GET $10,000 FOR FREE to start operating with us without having to risk your money.\n\n"
@@ -2731,7 +2732,6 @@ def enviar_mensagem_participacao():
                     f"<a href=\"{link_video}\" title=\"\"><b>CLICK HERE AND WATCH THE VIDEO</b></a>"
                 )
             else:  # es
-                link_video = VIDEO_TELEGRAM_ES_URL
                 texto_participacao = (
                     "⚠️⚠️PARA PARTICIPAR EN ESTA SESIÓN, SIGA LOS PASOS A CONTINUACIÓN⚠️⚠️\n\n"
                     "1º ✅ —> Cree su cuenta de corredor en el enlace a continuación y OBTENGA $10,000 GRATIS para comenzar a operar con nosotros sin tener que arriesgar su dinero.\n\n"
@@ -2745,7 +2745,6 @@ def enviar_mensagem_participacao():
                     f"<a href=\"{link_video}\" title=\"\"><b>HAGA CLIC AQUÍ Y VEA EL VIDEO</b></a>"
                 )
 
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔗 Links configurados: Corretora={link_corretora}, Vídeo={link_video}")
             BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 📤 Enviando para {len(chats)} chat(s) no idioma {idioma}")
 
             for chat_id in chats:
@@ -2834,9 +2833,13 @@ def bot2_enviar_mensagem_abertura_corretora():
             if not chats:  # Se não houver chats configurados para este idioma, pula
                 continue
 
-            # Obter configuração para o idioma
-            config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
-            link_corretora = config_idioma.get("link_corretora", "")
+            # Links específicos por idioma
+            if idioma == "pt":
+                link_corretora = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
+            elif idioma == "en":
+                link_corretora = "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
+            else:  # es
+                link_corretora = "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
 
             if idioma == "pt":
                 texto_abertura = (
