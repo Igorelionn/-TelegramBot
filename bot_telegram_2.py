@@ -1281,8 +1281,12 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
                 hora_entrada.hour, hora_entrada.minute, hora_entrada.second
             )
         
-        # Calcular as horas de expiração e gales
-        hora_expiracao = hora_entrada + timedelta(minutes=tempo_expiracao_minutos)
+        # MODIFICAÇÃO: Ajustar o horário para 2 minutos à frente para ser exibido ao lado de COMPRA/VENDA
+        hora_exibicao = hora_entrada + timedelta(minutes=2)
+        hora_exibicao_formatada = hora_exibicao.strftime("%H:%M")
+        
+        # Calcular as horas de expiração e gales com base na hora_exibicao
+        hora_expiracao = hora_exibicao + timedelta(minutes=tempo_expiracao_minutos)
         hora_gale1 = hora_expiracao + timedelta(minutes=5)
         hora_gale2 = hora_gale1 + timedelta(minutes=5)
         hora_gale3 = hora_gale2 + timedelta(minutes=5)
@@ -1297,6 +1301,9 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         # Converter as horas para o fuso horário específico do idioma
         if fuso_horario != "America/Sao_Paulo":
             # Converter para o fuso horário do idioma
+            hora_exibicao_formatada = bot2_converter_fuso_horario(
+                hora_exibicao, fuso_horario
+            ).strftime("%H:%M")
             hora_entrada_formatada = bot2_converter_fuso_horario(
                 hora_entrada, fuso_horario
             ).strftime("%H:%M")
@@ -1315,7 +1322,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         
         # Registrar os horários convertidos para o log
         BOT2_LOGGER.info(
-            f"Horários convertidos para fuso {fuso_horario}: Entrada={hora_entrada_formatada}, "
+            f"Horários convertidos para fuso {fuso_horario}: Exibição={hora_exibicao_formatada}, Entrada={hora_entrada_formatada}, "
             + f"Expiração={hora_expiracao_formatada}, Gale1={hora_gale1_formatada}, "
             + f"Gale2={hora_gale2_formatada}, Gale3={hora_gale3_formatada}"
         )
@@ -1378,7 +1385,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         # Mensagem em PT
         mensagem_pt = (
             f"💰{tempo_expiracao_minutos} {texto_minutos_pt} de expiração\n"
-            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_pt} {emoji} {categoria_exibicao}\n\n"
+            f"{nome_ativo_exibicao};{hora_exibicao_formatada};{action_pt} {emoji} {categoria_exibicao}\n\n"
                 f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
                 f"{texto_gale1} {hora_gale1_formatada}\n"
                 f"{texto_gale2} {hora_gale2_formatada}\n"
@@ -1390,7 +1397,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         # Mensagem em EN
         mensagem_en = (
             f"💰{tempo_expiracao_minutos} {texto_minutos_en} expiration\n"
-            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_en} {emoji} {categoria_exibicao}\n\n"
+            f"{nome_ativo_exibicao};{hora_exibicao_formatada};{action_en} {emoji} {categoria_exibicao}\n\n"
                 f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
                 f"{texto_gale1} {hora_gale1_formatada}\n"
                 f"{texto_gale2} {hora_gale2_formatada}\n"
@@ -1402,7 +1409,7 @@ def bot2_formatar_mensagem(sinal, hora_formatada, idioma):
         # Mensagem em ES
         mensagem_es = (
             f"💰{tempo_expiracao_minutos} {texto_minutos_es} de expiración\n"
-            f"{nome_ativo_exibicao};{hora_entrada_formatada};{action_es} {emoji} {categoria_exibicao}\n\n"
+            f"{nome_ativo_exibicao};{hora_exibicao_formatada};{action_es} {emoji} {categoria_exibicao}\n\n"
                 f"🕐{texto_tempo} {hora_expiracao_formatada}\n\n"
                 f"{texto_gale1} {hora_gale1_formatada}\n"
                 f"{texto_gale2} {hora_gale2_formatada}\n"
