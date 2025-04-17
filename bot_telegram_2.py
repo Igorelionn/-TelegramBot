@@ -1687,6 +1687,9 @@ def bot2_enviar_gif_pos_sinal(signal=None):
         # Contar quantas mensagens/GIFs foram enviados
         envios_com_sucesso = 0
         
+        # URL base do GIF pós-sinal (usada como fallback)
+        url_base_gif = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal"
+        
         # Para cada idioma configurado, envia o GIF
         for idioma, chats in BOT2_CANAIS_CONFIG.items():
             if not chats:  # Se não houver chats configurados para este idioma, pula
@@ -1695,24 +1698,34 @@ def bot2_enviar_gif_pos_sinal(signal=None):
             
             BOT2_LOGGER.info(f"[GIF-POS-SINAL][{horario_atual}] 📤 Preparando envio para {len(chats)} chat(s) no idioma {idioma}")
             
+            # Definir a URL do GIF com base no idioma
+            gif_url = ""
+            if idioma == "pt":
+                gif_url = f"{url_base_gif}/pt/180398513446716419%20(7).webp"
+            elif idioma == "en":
+                gif_url = f"{url_base_gif}/en/180398513446716419%20(7).webp"
+            elif idioma == "es":
+                gif_url = f"{url_base_gif}/es/180398513446716419%20(7).webp"
+            else:
+                # Caso não encontre o idioma, usa o PT como padrão
+                gif_url = f"{url_base_gif}/pt/180398513446716419%20(7).webp"
+                BOT2_LOGGER.warning(f"[GIF-POS-SINAL][{horario_atual}] ⚠️ Idioma {idioma} não reconhecido, usando PT como padrão")
+            
             for chat_id in chats:
                 try:
-                    # Sempre usaremos a imagem do GitHub para o GIF pós-sinal
-                    gif_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal/pt/180398513446716419%20(7).webp"
-                    BOT2_LOGGER.info(f"[GIF-POS-SINAL][{horario_atual}] 🔗 Usando GIF: {gif_url}")
-
+                    BOT2_LOGGER.info(f"[GIF-POS-SINAL][{horario_atual}] 🔗 Usando GIF: {gif_url} para idioma {idioma}")
                     BOT2_LOGGER.info(f"[GIF-POS-SINAL][{horario_atual}] 📦 Preparando envio para chat_id: {chat_id}")
                     
                     try:
                         # Baixar o arquivo para enviar como arquivo em vez de URL
                         BOT2_LOGGER.info(f"[GIF-POS-SINAL][{horario_atual}] ⬇️ Baixando arquivo")
-                        arquivo_resposta = requests.get(gif_url, stream=True, timeout=10)
+                        arquivo_resposta = requests.get(gif_url, stream=True, timeout=15)
                         
                         if arquivo_resposta.status_code == 200:
                             # Criar um arquivo temporário no formato correto
                             extensao = ".webp"  # Sempre usar .webp para o arquivo do GitHub
                             
-                            nome_arquivo_temp = f"temp_gif_{random.randint(1000, 9999)}{extensao}"
+                            nome_arquivo_temp = f"temp_gif_{idioma}_{random.randint(1000, 9999)}{extensao}"
                             
                             # Salvar o arquivo temporariamente
                             with open(nome_arquivo_temp, 'wb') as f:
@@ -1744,11 +1757,12 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                             envios_com_sucesso += 1
                         else:
                             BOT2_LOGGER.error(f"[GIF-POS-SINAL][{horario_atual}] ❌ Erro ao baixar o arquivo. Status: {arquivo_resposta.status_code}")
-                            # Tentar enviar diretamente com a URL como fallback
-                            BOT2_LOGGER.info(f"[GIF-POS-SINAL][{horario_atual}] 🔄 Tentando fallback com URL direta")
+                            # Se falhar com o idioma específico, tenta com o PT como fallback
+                            fallback_url = f"{url_base_gif}/pt/180398513446716419%20(7).webp"
+                            BOT2_LOGGER.info(f"[GIF-POS-SINAL][{horario_atual}] 🔄 Tentando fallback com URL direta: {fallback_url}")
                             bot2.send_animation(
                                 chat_id=chat_id,
-                                animation=gif_url,
+                                animation=fallback_url,
                                 caption="",
                                 parse_mode="HTML",
                                 width=208,
@@ -1759,11 +1773,12 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                     except Exception as download_error:
                         BOT2_LOGGER.error(f"[GIF-POS-SINAL][{horario_atual}] ❌ Erro ao baixar/enviar: {str(download_error)}")
                         # Tentar enviar diretamente com a URL como fallback
-                        BOT2_LOGGER.info(f"[GIF-POS-SINAL][{horario_atual}] 🔄 Tentando segundo fallback com URL direta")
+                        fallback_url = f"{url_base_gif}/pt/180398513446716419%20(7).webp"
+                        BOT2_LOGGER.info(f"[GIF-POS-SINAL][{horario_atual}] 🔄 Tentando segundo fallback com URL direta: {fallback_url}")
                         try:
                             bot2.send_animation(
                                 chat_id=chat_id,
-                                animation=gif_url,
+                                animation=fallback_url,
                                 caption="",
                                 parse_mode="HTML",
                                 width=208,
@@ -1773,9 +1788,11 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                             envios_com_sucesso += 1
                         except Exception as final_error:
                             BOT2_LOGGER.error(f"[GIF-POS-SINAL][{horario_atual}] ❌ Falha total no envio: {str(final_error)}")
+                            BOT2_LOGGER.error(f"[GIF-POS-SINAL][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
                     
                 except Exception as e:
                     BOT2_LOGGER.error(f"[GIF-POS-SINAL][{horario_atual}] ❌ Erro no chat {chat_id}: {str(e)}")
+                    BOT2_LOGGER.error(f"[GIF-POS-SINAL][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
 
                     if "rights to send" in str(e).lower():
                         BOT2_LOGGER.error(f"[GIF-POS-SINAL][{horario_atual}] 🚫 Bot sem permissões no canal {chat_id}")
@@ -1791,6 +1808,7 @@ def bot2_enviar_gif_pos_sinal(signal=None):
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[GIF-POS-SINAL][{horario_atual}] ❌ Erro geral: {str(e)}")
+        BOT2_LOGGER.error(f"[GIF-POS-SINAL][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
         traceback.print_exc()
         return False
 
@@ -1918,104 +1936,196 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                     # Limpar quaisquer agendamentos pendentes (por segurança)
                     schedule.clear("abertura_corretora")
                     
-                    # Esperar 25 minutos após o GIF pós-sinal (que ocorre 7 minutos após o sinal)
-                    # Total: 32 minutos após o sinal original
-                    inicio_espera = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{inicio_espera}] ⏲️ Iniciando contagem de 25 minutos após o GIF pós-sinal")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{inicio_espera}] ℹ️ Próximo passo: mensagem de participação em T+32min (sinal original)")
-                    time.sleep(1500)  # 25 minutos = 1500 segundos
+                    # Identificador único para este sinal (baseado no timestamp)
+                    sinal_id = f"sinal_{bot2_contador_sinais}_{int(time.time())}"
                     
-                    # Enviar mensagem de participação
+                    # Controle para garantir que cada etapa seja executada apenas uma vez
+                    etapas_concluidas = {
+                        "gif_pos_sinal": False,  # Será marcado como True quando verificarmos que foi enviado
+                        "mensagem_participacao": False,
+                        "gif_promocional": False,
+                        "mensagem_abertura": False
+                    }
+                    
+                    # Registrar o tempo de início da sequência
+                    inicio_sequencia = bot2_obter_hora_brasilia()
+                    tempo_inicio = inicio_sequencia.strftime("%H:%M:%S")
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_inicio}] 🚀 INICIANDO SEQUÊNCIA MÚLTIPLA DE 3 (ID: {sinal_id})")
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_inicio}] 📋 Sequência programada: Sinal (T+0) → GIF pós-sinal (T+7) → Mensagem participação (T+32) → GIF promocional (T+41) → Mensagem abertura (T+42)")
+                    
+                    # Verificar se o GIF pós-sinal já foi enviado
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_inicio}] ✓ GIF pós-sinal (T+7): Já enviado pelo fluxo normal")
+                    etapas_concluidas["gif_pos_sinal"] = True
+                    
+                    # O GIF pós-sinal já foi enviado aos 7 minutos, como parte do fluxo normal
+                    # Agora esperamos 25 minutos desde o GIF pós-sinal para enviar a mensagem de participação
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_inicio}] ⏲️ Aguardando 25 minutos após o GIF pós-sinal")
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_inicio}] ℹ️ Próximo passo: Mensagem participação em T+32min")
+                    
+                    # Calcular quanto tempo já passou desde o sinal original
                     agora = bot2_obter_hora_brasilia()
-                    tempo_atual = agora.strftime("%H:%M:%S")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏰ Tempo de espera concluído (T+32)")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 📝 Enviando mensagem de participação da sessão")
+                    tempo_decorrido = (agora - inicio_sequencia).total_seconds()
                     
-                    try:
-                        resultado = enviar_mensagem_participacao()
-                        if resultado:
-                            BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ Mensagem de participação enviada com sucesso")
-                        else:
-                            BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Falha ao enviar mensagem de participação")
-                    except Exception as e:
+                    # Ajustar o tempo de espera se já tiver passado algum tempo
+                    tempo_espera_participacao = max(0, (25 * 60) - tempo_decorrido)
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_inicio}] ⏱️ Tempo de espera ajustado: {tempo_espera_participacao:.1f} segundos")
+                    
+                    if tempo_espera_participacao > 0:
+                        time.sleep(tempo_espera_participacao)
+                    
+                    # Verificar novamente o tempo para garantir precisão
+                    if not etapas_concluidas["mensagem_participacao"]:
+                        # Enviar mensagem de participação em T+32
                         agora = bot2_obter_hora_brasilia()
                         tempo_atual = agora.strftime("%H:%M:%S")
-                        BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Erro ao enviar mensagem de participação: {str(e)}")
+                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏰ Tempo de espera concluído (T+32)")
+                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 📝 Enviando mensagem de participação da sessão")
+                        
+                        try:
+                            resultado = enviar_mensagem_participacao()
+                            if resultado:
+                                BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ Mensagem de participação enviada com sucesso")
+                                etapas_concluidas["mensagem_participacao"] = True
+                            else:
+                                BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Falha ao enviar mensagem de participação")
+                        except Exception as e:
+                            agora = bot2_obter_hora_brasilia()
+                            tempo_atual = agora.strftime("%H:%M:%S")
+                            BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Erro ao enviar mensagem de participação: {str(e)}")
+                            BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
+                    else:
+                        BOT2_LOGGER.warning(f"[SEQ-M3][{tempo_atual}] ⚠️ Mensagem de participação já foi enviada, pulando esta etapa")
                     
                     # Aguardar 9 minutos após mensagem de participação
                     # Total: 41 minutos após o sinal original
                     agora = bot2_obter_hora_brasilia()
                     tempo_atual = agora.strftime("%H:%M:%S")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏲️ Iniciando contagem de 9 minutos após mensagem de participação")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ℹ️ Próximo passo: GIF promocional em T+41min (sinal original)")
-                    time.sleep(540)  # 9 minutos = 540 segundos
-
-                    # Enviar GIF promo para cada idioma
-                    # Total: 41 minutos após o sinal original
-                    agora = bot2_obter_hora_brasilia()
-                    tempo_atual = agora.strftime("%H:%M:%S")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏰ Tempo de espera concluído (T+41)")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 🎬 Enviando GIF promocional em todos os idiomas")
                     
-                    try:
-                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 🇧🇷 Enviando GIF promocional em Português")
-                        promo_pt = bot2_enviar_gif_promo(idioma="pt")
-                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ GIF PT enviado: {promo_pt}")
-                        
-                        time.sleep(2)  # Pequeno delay entre mensagens para diferentes idiomas
-                        
-                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 🇬🇧 Enviando GIF promocional em Inglês")
-                        promo_en = bot2_enviar_gif_promo(idioma="en")
-                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ GIF EN enviado: {promo_en}")
-                        
-                        time.sleep(2)
-                        
-                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 🇪🇸 Enviando GIF promocional em Espanhol")
-                        promo_es = bot2_enviar_gif_promo(idioma="es")
-                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ GIF ES enviado: {promo_es}")
-                    except Exception as e:
+                    # Calcular quanto tempo já passou desde o início da sequência
+                    tempo_decorrido = (agora - inicio_sequencia).total_seconds()
+                    tempo_espera_gif_promo = max(0, (34 * 60) - tempo_decorrido)  # T+41 - T+7 = 34 minutos
+                    
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏲️ Aguardando até T+41 para enviar GIF promocional")
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏱️ Tempo de espera ajustado: {tempo_espera_gif_promo:.1f} segundos")
+                    
+                    if tempo_espera_gif_promo > 0:
+                        time.sleep(tempo_espera_gif_promo)
+
+                    if not etapas_concluidas["gif_promocional"]:
+                        # Enviar GIF promo para cada idioma
+                        # Total: 41 minutos após o sinal original
                         agora = bot2_obter_hora_brasilia()
                         tempo_atual = agora.strftime("%H:%M:%S")
-                        BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Erro ao enviar GIFs promocionais: {str(e)}")
+                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏰ Tempo de espera concluído (T+41)")
+                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 🎬 Enviando GIF promocional em todos os idiomas")
+                        
+                        try:
+                            gifs_enviados = []
+                            
+                            BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 🇧🇷 Enviando GIF promocional em Português")
+                            promo_pt = bot2_enviar_gif_promo(idioma="pt")
+                            gifs_enviados.append(promo_pt)
+                            BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ GIF PT enviado: {promo_pt}")
+                            
+                            time.sleep(3)  # Pequeno delay entre mensagens para diferentes idiomas
+                            
+                            BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 🇬🇧 Enviando GIF promocional em Inglês")
+                            promo_en = bot2_enviar_gif_promo(idioma="en")
+                            gifs_enviados.append(promo_en)
+                            BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ GIF EN enviado: {promo_en}")
+                            
+                            time.sleep(3)
+                            
+                            BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 🇪🇸 Enviando GIF promocional em Espanhol")
+                            promo_es = bot2_enviar_gif_promo(idioma="es")
+                            gifs_enviados.append(promo_es)
+                            BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ GIF ES enviado: {promo_es}")
+                            
+                            if any(gifs_enviados):
+                                BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ Pelo menos um GIF promocional foi enviado com sucesso")
+                                etapas_concluidas["gif_promocional"] = True
+                            else:
+                                BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Nenhum GIF promocional foi enviado com sucesso")
+                        except Exception as e:
+                            agora = bot2_obter_hora_brasilia()
+                            tempo_atual = agora.strftime("%H:%M:%S")
+                            BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Erro ao enviar GIFs promocionais: {str(e)}")
+                            BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
+                    else:
+                        BOT2_LOGGER.warning(f"[SEQ-M3][{tempo_atual}] ⚠️ GIF promocional já foi enviado, pulando esta etapa")
 
                     # Aguardar 1 minuto após o GIF promo
                     # Total: 42 minutos após o sinal original
                     agora = bot2_obter_hora_brasilia()
                     tempo_atual = agora.strftime("%H:%M:%S")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏲️ Iniciando contagem de 1 minuto após GIF promocional")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ℹ️ Próximo passo: mensagem de abertura em T+42min (sinal original)")
-                    time.sleep(60)  # 1 minuto = 60 segundos
-
-                    # Enviar mensagem final de abertura da corretora
-                    # Total: 42 minutos após o sinal original
-                    agora = bot2_obter_hora_brasilia()
-                    tempo_atual = agora.strftime("%H:%M:%S")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏰ Tempo de espera concluído (T+42)")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 📝 Enviando mensagem final de abertura da corretora")
                     
-                    try:
-                        resultado = bot2_enviar_mensagem_abertura_corretora()
-                        if resultado:
-                            BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ Mensagem de abertura enviada com sucesso")
-                        else:
-                            BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Falha ao enviar mensagem de abertura")
-                    except Exception as e:
+                    # Calcular quanto tempo já passou desde o início da sequência
+                    tempo_decorrido = (agora - inicio_sequencia).total_seconds()
+                    tempo_espera_mensagem_abertura = max(0, (35 * 60) - tempo_decorrido)  # T+42 - T+7 = 35 minutos
+                    
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏲️ Aguardando até T+42 para enviar mensagem de abertura")
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏱️ Tempo de espera ajustado: {tempo_espera_mensagem_abertura:.1f} segundos")
+                    
+                    if tempo_espera_mensagem_abertura > 0:
+                        time.sleep(tempo_espera_mensagem_abertura)
+
+                    if not etapas_concluidas["mensagem_abertura"]:
+                        # Enviar mensagem final de abertura da corretora
+                        # Total: 42 minutos após o sinal original
                         agora = bot2_obter_hora_brasilia()
                         tempo_atual = agora.strftime("%H:%M:%S")
-                        BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Erro ao enviar mensagem de abertura: {str(e)}")
+                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ⏰ Tempo de espera concluído (T+42)")
+                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 📝 Enviando mensagem final de abertura da corretora")
+                        
+                        try:
+                            resultado = bot2_enviar_mensagem_abertura_corretora()
+                            if resultado:
+                                BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ Mensagem de abertura enviada com sucesso")
+                                etapas_concluidas["mensagem_abertura"] = True
+                            else:
+                                BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Falha ao enviar mensagem de abertura")
+                        except Exception as e:
+                            agora = bot2_obter_hora_brasilia()
+                            tempo_atual = agora.strftime("%H:%M:%S")
+                            BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Erro ao enviar mensagem de abertura: {str(e)}")
+                            BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
+                    else:
+                        BOT2_LOGGER.warning(f"[SEQ-M3][{tempo_atual}] ⚠️ Mensagem de abertura já foi enviada, pulando esta etapa")
                     
                     # Limpar novamente quaisquer agendamentos pendentes (por segurança)
                     schedule.clear("abertura_corretora")
                     
-                    agora = bot2_obter_hora_brasilia()
-                    tempo_atual = agora.strftime("%H:%M:%S")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] ✅ Sequência completa para múltiplo de 3 concluída com sucesso")
-                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_atual}] 📊 Resumo: GIF pós-sinal (T+7) → Mensagem participação (T+32) → GIF promocional (T+41) → Mensagem abertura (T+42)")
+                    # Calcular o tempo total da sequência
+                    fim_sequencia = bot2_obter_hora_brasilia()
+                    tempo_fim = fim_sequencia.strftime("%H:%M:%S")
+                    duracao_total = (fim_sequencia - inicio_sequencia).total_seconds() / 60.0
+                    
+                    # Verificar status de todas as etapas
+                    etapas_status = []
+                    for etapa, status in etapas_concluidas.items():
+                        etapas_status.append(f"{etapa}: {'✅' if status else '❌'}")
+                    
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_fim}] ✅ Sequência completa para múltiplo de 3 concluída")
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_fim}] ⏱️ Duração total da sequência: {duracao_total:.1f} minutos")
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_fim}] 📊 Status final das etapas: {', '.join(etapas_status)}")
+                    BOT2_LOGGER.info(f"[SEQ-M3][{tempo_fim}] 📊 Resumo: Sinal (T+0) → GIF pós-sinal (T+7) → Mensagem participação (T+32) → GIF promocional (T+41) → Mensagem abertura (T+42)")
+                    
+                    # Verificar se todas as etapas foram concluídas com sucesso
+                    todas_etapas_concluidas = all(etapas_concluidas.values())
+                    if todas_etapas_concluidas:
+                        BOT2_LOGGER.info(f"[SEQ-M3][{tempo_fim}] 🏆 TODAS AS ETAPAS FORAM EXECUTADAS COM SUCESSO!")
+                    else:
+                        BOT2_LOGGER.warning(f"[SEQ-M3][{tempo_fim}] ⚠️ ALERTA: Nem todas as etapas foram concluídas com sucesso. Verifique os logs para detalhes.")
+                    
+                    return todas_etapas_concluidas
+                    
                 except Exception as e:
                     agora = bot2_obter_hora_brasilia()
                     tempo_atual = agora.strftime("%H:%M:%S")
                     BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] ❌ Erro durante sequência de múltiplo de 3: {str(e)}")
+                    BOT2_LOGGER.error(f"[SEQ-M3][{tempo_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
                     traceback.print_exc()
+                    return False
 
             # Iniciar thread para sequência especial de múltiplo de 3
             sequencia_thread = threading.Thread(target=enviar_sequencia_multiplo_tres)
@@ -2701,17 +2811,34 @@ if __name__ == "__main__":
 def enviar_mensagem_participacao():
     """
     Envia a mensagem de participação da sessão para todos os canais configurados.
-    Esta mensagem é enviada 32 minutos após o sinal original para sinais múltiplos de 3.
+    Esta mensagem é enviada 27 minutos após o sinal original para sinais múltiplos de 3.
     """
-    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA
+    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA, VIDEO_TELEGRAM_URL, VIDEO_TELEGRAM_EN_URL, VIDEO_TELEGRAM_ES_URL
 
     try:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔄 Iniciando envio da mensagem de participação da sessão")
+        BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔍 Verificando canais configurados: {BOT2_CANAIS_CONFIG}")
 
         # Contar quantas mensagens foram enviadas
         envios_com_sucesso = 0
+
+        # Verificar se as constantes de vídeo estão definidas
+        if not VIDEO_TELEGRAM_URL:
+            BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ URL do vídeo em português não está definida!")
+            VIDEO_TELEGRAM_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
+            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo PT: {VIDEO_TELEGRAM_URL}")
+        
+        if not VIDEO_TELEGRAM_EN_URL:
+            BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ URL do vídeo em inglês não está definida!")
+            VIDEO_TELEGRAM_EN_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
+            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo EN: {VIDEO_TELEGRAM_EN_URL}")
+            
+        if not VIDEO_TELEGRAM_ES_URL:
+            BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ URL do vídeo em espanhol não está definida!")
+            VIDEO_TELEGRAM_ES_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
+            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo ES: {VIDEO_TELEGRAM_ES_URL}")
 
         # Para cada idioma configurado, envia a mensagem formatada
         for idioma, chats in BOT2_CANAIS_CONFIG.items():
@@ -2721,7 +2848,13 @@ def enviar_mensagem_participacao():
 
             # Obter configuração para o idioma
             config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
+            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔍 Configuração para idioma {idioma}: {config_idioma}")
+            
             link_corretora = config_idioma.get("link_corretora", "")
+            if not link_corretora:
+                BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ Link da corretora não encontrado para idioma {idioma}, usando link padrão")
+                link_corretora = "https://corretora.example.com"
+            
             link_video = ""
 
             BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 📝 Preparando mensagem para idioma {idioma}")
@@ -2779,7 +2912,9 @@ def enviar_mensagem_participacao():
                     url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
                     
                     BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🚀 Enviando para chat_id: {chat_id}")
+                    BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 📋 Conteúdo da mensagem: {texto_participacao[:100]}...")
                     
+                    # Aqui está o envio real
                     resposta = requests.post(
                         url_base,
                         json={
@@ -2788,9 +2923,11 @@ def enviar_mensagem_participacao():
                             "parse_mode": "HTML",
                             "disable_web_page_preview": True,
                         },
-                        timeout=10,
+                        timeout=15,  # Aumentando o timeout para garantir que tenha tempo suficiente
                     )
 
+                    BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 📡 Status da resposta: {resposta.status_code}")
+                    
                     if resposta.status_code == 200:
                         BOT2_LOGGER.info(
                             f"[PARTICIPACAO][{horario_atual}] ✅ Mensagem enviada com sucesso para {chat_id} (idioma: {idioma})"
@@ -2800,20 +2937,28 @@ def enviar_mensagem_participacao():
                         BOT2_LOGGER.error(
                             f"[PARTICIPACAO][{horario_atual}] ❌ Erro ao enviar: {resposta.status_code} - {resposta.text}"
                         )
+                        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🔍 Resposta detalhada: {resposta.content}")
                 except Exception as e:
                     BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ Erro ao enviar para {chat_id}: {str(e)}")
+                    BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
                     if "rights to send" in str(e).lower():
                         BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🚫 Bot sem permissões no canal {chat_id}")
                     traceback.print_exc()
 
+        # Resumo final
+        total_chats = sum(len(chats) for chats in BOT2_CANAIS_CONFIG.values() if chats)
         BOT2_LOGGER.info(
-            f"[PARTICIPACAO][{horario_atual}] 📊 Total de mensagens enviadas com sucesso: {envios_com_sucesso}/{sum(len(chats) for chats in BOT2_CANAIS_CONFIG.values() if chats)}"
+            f"[PARTICIPACAO][{horario_atual}] 📊 Total de mensagens enviadas com sucesso: {envios_com_sucesso}/{total_chats}"
         )
+        if envios_com_sucesso == 0 and total_chats > 0:
+            BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌❌❌ ALERTA: Nenhuma mensagem de participação foi enviada com sucesso!")
+        
         return envios_com_sucesso > 0
     except Exception as e:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ Erro geral: {str(e)}")
+        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
         traceback.print_exc()
         return False
 
