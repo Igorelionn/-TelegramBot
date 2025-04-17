@@ -158,7 +158,6 @@ ATIVOS_CATEGORIAS = {
         "USD Currency Index (OTC)",
         "AUS 200 (OTC)",
         "USD/CAD",
-        "USD/JPY",
         "MELANIA Coin (OTC)",
         "JP 225 (OTC)",
         "AUD/CAD (OTC)",
@@ -691,6 +690,17 @@ HORARIOS_PADRAO = {
         "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
         "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
     },
+    "USD/CAD": {
+        "Monday": ["03:00-15:00"],
+        "Tuesday": ["03:00-15:00", "21:00-23:59"],
+        "Wednesday": ["00:00-15:00"],
+        "Thursday": ["03:00-15:00"],
+        "Friday": ["03:00-15:00"],
+        "Saturday": [],
+        "Sunday": [],
+    },
+    "MELANIA_Coin_OTC": {  # J existe, mantendo a mesma configurao
+    },
     "Gold/Silver_OTC": {
         "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
         "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
@@ -897,33 +907,6 @@ HORARIOS_PADRAO = {
         "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
         "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
         "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
-    },
-    "USD/CAD": {
-        "Monday": ["03:00-15:00"],
-        "Tuesday": ["03:00-15:00", "21:00-23:59"],
-        "Wednesday": ["00:00-15:00"],
-        "Thursday": ["03:00-15:00"],
-        "Friday": ["03:00-15:00"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "USD/JPY": {
-        "Monday": ["00:00-14:00", "23:00-23:59"],
-        "Tuesday": ["00:00-14:00", "23:00-23:59"],
-        "Wednesday": ["00:00-14:00", "23:00-23:59"],
-        "Thursday": ["00:00-14:00", "23:00-23:59"],
-        "Friday": ["00:00-14:00"],
-        "Saturday": [],
-        "Sunday": ["23:00-23:59"],
-    },
-    "MELANIA_Coin_OTC": {  # J existe, mantendo a mesma configurao
-        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
-        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
     },
     "JP_225_OTC": {
         "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
@@ -2662,9 +2645,156 @@ def bot2_enviar_mensagem_cadastro():
         else:
             BOT2_LOGGER.warning(f"[{horario_atual}] Nenhuma mensagem de cadastro foi enviada")
             return False
-    
     except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao enviar mensagem de cadastro: {str(e)}")
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ Erro geral: {str(e)}")
+        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
+        traceback.print_exc()
+        return False
+
+
+def enviar_mensagem_participacao():
+    """
+    Envia a mensagem de participação da sessão para todos os canais configurados.
+    Esta mensagem é enviada 27 minutos após o sinal original para sinais múltiplos de 3.
+    """
+    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA, VIDEO_TELEGRAM_URL, VIDEO_TELEGRAM_EN_URL, VIDEO_TELEGRAM_ES_URL
+
+    try:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔄 Iniciando envio da mensagem de participação da sessão")
+
+        # Contar quantas mensagens foram enviadas
+        envios_com_sucesso = 0
+
+        # Verificar se as constantes de vídeo estão definidas
+        if not 'VIDEO_TELEGRAM_URL' in globals() or not VIDEO_TELEGRAM_URL:
+            BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ URL do vídeo em português não está definida!")
+            VIDEO_TELEGRAM_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
+            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo PT: {VIDEO_TELEGRAM_URL}")
+        
+        if not 'VIDEO_TELEGRAM_EN_URL' in globals() or not VIDEO_TELEGRAM_EN_URL:
+            BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ URL do vídeo em inglês não está definida!")
+            VIDEO_TELEGRAM_EN_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
+            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo EN: {VIDEO_TELEGRAM_EN_URL}")
+            
+        if not 'VIDEO_TELEGRAM_ES_URL' in globals() or not VIDEO_TELEGRAM_ES_URL:
+            BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ URL do vídeo em espanhol não está definida!")
+            VIDEO_TELEGRAM_ES_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
+            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo ES: {VIDEO_TELEGRAM_ES_URL}")
+
+        # Para cada idioma configurado, envia a mensagem formatada
+        for idioma, chats in BOT2_CANAIS_CONFIG.items():
+            if not chats:  # Se não houver chats configurados para este idioma, pula
+                BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Nenhum chat configurado para idioma {idioma}, pulando")
+                continue
+
+            # Obter configuração para o idioma
+            config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
+            
+            link_corretora = config_idioma.get("link_corretora", "")
+            if not link_corretora:
+                BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ Link da corretora não encontrado para idioma {idioma}, usando link padrão")
+                link_corretora = "https://corretora.example.com"
+            
+            link_video = ""
+
+            # Configurar links com base no idioma
+            if idioma == "pt":
+                link_video = VIDEO_TELEGRAM_URL
+                texto_participacao = (
+                    "⚠️⚠️PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠️⚠️\n\n"
+                    "1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
+                    "Você vai poder testar todos nossas\n"
+                    "operações com risco ZERO!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_corretora}\" title=\"\"><b>CRIE SUA CONTA AQUI E GANHE R$10.000</b></a>\n\n"
+                    "—————————————————————\n\n"
+                    "2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_video}\" title=\"\"><b>CLIQUE AQUI E ASSISTA O VÍDEO</b></a>"
+                )
+            elif idioma == "en":
+                link_video = VIDEO_TELEGRAM_EN_URL
+                texto_participacao = (
+                    "⚠️⚠️TO PARTICIPATE IN THIS SESSION, FOLLOW THE STEPS BELOW⚠️⚠️\n\n"
+                    "1st ✅ —> Create your broker account at the link below and GET $10,000 FOR FREE to start operating with us without having to risk your money.\n\n"
+                    "You will be able to test all our\n"
+                    "operations with ZERO risk!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_corretora}\" title=\"\"><b>CREATE YOUR ACCOUNT HERE AND GET $10,000</b></a>\n\n"
+                    "—————————————————————\n\n"
+                    "2nd ✅ —> Watch the video below and learn how to deposit and how to join us in our operations!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_video}\" title=\"\"><b>CLICK HERE AND WATCH THE VIDEO</b></a>"
+                )
+            else:  # es
+                link_video = VIDEO_TELEGRAM_ES_URL
+                texto_participacao = (
+                    "⚠️⚠️PARA PARTICIPAR EN ESTA SESIÓN, SIGA LOS PASOS A CONTINUACIÓN⚠️⚠️\n\n"
+                    "1º ✅ —> Cree su cuenta de corredor en el enlace a continuación y OBTENGA $10,000 GRATIS para comenzar a operar con nosotros sin tener que arriesgar su dinero.\n\n"
+                    "Podrás probar todas nuestras\n"
+                    "operaciones con riesgo CERO!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_corretora}\" title=\"\"><b>CREE SU CUENTA AQUÍ Y OBTENGA $10,000</b></a>\n\n"
+                    "—————————————————————\n\n"
+                    "2º ✅ —> ¡Mire el video a continuación y aprenda cómo depositar y cómo unirse a nosotros en nuestras operaciones!\n\n"
+                    "👇🏻👇🏻👇🏻👇🏻\n\n"
+                    f"<a href=\"{link_video}\" title=\"\"><b>HAGA CLIC AQUÍ Y VEA EL VIDEO</b></a>"
+                )
+
+            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔗 Links configurados: Corretora={link_corretora}, Vídeo={link_video}")
+            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 📤 Enviando para {len(chats)} chat(s) no idioma {idioma}")
+
+            for chat_id in chats:
+                try:
+                    # URL base para a API do Telegram
+                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                    
+                    BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🚀 Enviando para chat_id: {chat_id}")
+                    
+                    # Aqui está o envio real
+                    resposta = requests.post(
+                        url_base,
+                        json={
+                            "chat_id": chat_id,
+                            "text": texto_participacao,
+                            "parse_mode": "HTML",
+                            "disable_web_page_preview": True,
+                        },
+                        timeout=15,  # Aumentando o timeout para garantir que tenha tempo suficiente
+                    )
+                    
+                    if resposta.status_code == 200:
+                        BOT2_LOGGER.info(
+                            f"[PARTICIPACAO][{horario_atual}] ✅ Mensagem enviada com sucesso para {chat_id} (idioma: {idioma})"
+                        )
+                        envios_com_sucesso += 1
+                    else:
+                        BOT2_LOGGER.error(
+                            f"[PARTICIPACAO][{horario_atual}] ❌ Erro ao enviar: {resposta.status_code} - {resposta.text}"
+                        )
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ Erro ao enviar para {chat_id}: {str(e)}")
+                    if "rights to send" in str(e).lower():
+                        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🚫 Bot sem permissões no canal {chat_id}")
+                    traceback.print_exc()
+
+        # Resumo final
+        total_chats = sum(len(chats) for chats in BOT2_CANAIS_CONFIG.values() if chats)
+        BOT2_LOGGER.info(
+            f"[PARTICIPACAO][{horario_atual}] 📊 Total de mensagens enviadas com sucesso: {envios_com_sucesso}/{total_chats}"
+        )
+        if envios_com_sucesso == 0 and total_chats > 0:
+            BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌❌❌ ALERTA: Nenhuma mensagem de participação foi enviada com sucesso!")
+        
+        return envios_com_sucesso > 0
+    except Exception as e:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ Erro geral: {str(e)}")
         traceback.print_exc()
         return False
 
@@ -2775,6 +2905,7 @@ def bot2_enviar_mensagem_abertura_corretora():
         traceback.print_exc()
         return False
 
+
 def verificar_configuracoes_bot():
     """
     Verifica se as configurações do bot estão corretas antes de iniciar.
@@ -2825,323 +2956,5 @@ def verificar_configuracoes_bot():
         return True
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao verificar configurações: {str(e)}")
-        traceback.print_exc()
-        return False
-
-# Executar se este arquivo for o script principal
-if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        
-        if sys.argv[1] == "testar_contador":
-            BOT2_LOGGER.info(f"[MAIN][{horario_atual}] 🚀 Iniciando teste de contador de sinais")
-            testar_contador_sinais()
-        elif sys.argv[1] == "testar_multiplo":
-            BOT2_LOGGER.info(f"[MAIN][{horario_atual}] 🚀 Iniciando teste de sequência múltiplo de três")
-            testar_sequencia_multiplo_tres()
-        elif sys.argv[1] == "testar_gif":
-            BOT2_LOGGER.info(f"[MAIN][{horario_atual}] 🚀 Iniciando teste de GIF pós-sinal")
-            testar_gif_pos_sinal()
-        elif sys.argv[1] == "forcar_multiplo":
-            BOT2_LOGGER.info(f"[MAIN][{horario_atual}] 🚀 Iniciando teste forçado de múltiplo de três")
-            forcar_teste_multiplo_tres()
-        else:
-            BOT2_LOGGER.warning(f"[MAIN][{horario_atual}] ⚠️ Parâmetro desconhecido: {sys.argv[1]}")
-    else:
-        # Inicialização normal do bot
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        data_atual = agora.strftime("%Y-%m-%d")
-        
-        BOT2_LOGGER.info(f"[MAIN][{horario_atual}] 🚀 Iniciando ambos os bots em {data_atual}")
-        BOT2_LOGGER.info(f"[MAIN][{horario_atual}] 📋 Configurações carregadas")
-        BOT2_LOGGER.info(f"[MAIN][{horario_atual}] 🤖 Inicializando sistema de trading...")
-        
-        iniciar_ambos_bots()
-        
-        BOT2_LOGGER.info(f"[MAIN][{horario_atual}] ✅ Bots iniciados com sucesso")
-
-def enviar_mensagem_participacao():
-    """
-    Envia a mensagem de participação da sessão para todos os canais configurados.
-    Esta mensagem é enviada 27 minutos após o sinal original para sinais múltiplos de 3.
-    """
-    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA, VIDEO_TELEGRAM_URL, VIDEO_TELEGRAM_EN_URL, VIDEO_TELEGRAM_ES_URL
-
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔄 Iniciando envio da mensagem de participação da sessão")
-        BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔍 Verificando canais configurados: {BOT2_CANAIS_CONFIG}")
-
-        # Contar quantas mensagens foram enviadas
-        envios_com_sucesso = 0
-
-        # Verificar se as constantes de vídeo estão definidas
-        if not VIDEO_TELEGRAM_URL:
-            BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ URL do vídeo em português não está definida!")
-            VIDEO_TELEGRAM_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo PT: {VIDEO_TELEGRAM_URL}")
-        
-        if not VIDEO_TELEGRAM_EN_URL:
-            BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ URL do vídeo em inglês não está definida!")
-            VIDEO_TELEGRAM_EN_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo EN: {VIDEO_TELEGRAM_EN_URL}")
-            
-        if not VIDEO_TELEGRAM_ES_URL:
-            BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ URL do vídeo em espanhol não está definida!")
-            VIDEO_TELEGRAM_ES_URL = "https://telegra.ph/file/1c2b838e67f99f2abcc5d.mp4"
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo ES: {VIDEO_TELEGRAM_ES_URL}")
-
-        # Para cada idioma configurado, envia a mensagem formatada
-        for idioma, chats in BOT2_CANAIS_CONFIG.items():
-            if not chats:  # Se não houver chats configurados para este idioma, pula
-                BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Nenhum chat configurado para idioma {idioma}, pulando")
-                continue
-
-            # Obter configuração para o idioma
-            config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔍 Configuração para idioma {idioma}: {config_idioma}")
-            
-            link_corretora = config_idioma.get("link_corretora", "")
-            if not link_corretora:
-                BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ Link da corretora não encontrado para idioma {idioma}, usando link padrão")
-                link_corretora = "https://corretora.example.com"
-            
-            link_video = ""
-
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 📝 Preparando mensagem para idioma {idioma}")
-
-            # Configurar links com base no idioma
-            if idioma == "pt":
-                link_video = VIDEO_TELEGRAM_URL
-                texto_participacao = (
-                    "⚠️⚠️PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠️⚠️\n\n"
-                    "1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
-                    "Você vai poder testar todos nossas\n"
-                    "operações com risco ZERO!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_corretora}\" title=\"\"><b>CRIE SUA CONTA AQUI E GANHE R$10.000</b></a>\n\n"
-                    "—————————————————————\n\n"
-                    "2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_video}\" title=\"\"><b>CLIQUE AQUI E ASSISTA O VÍDEO</b></a>"
-                )
-            elif idioma == "en":
-                link_video = VIDEO_TELEGRAM_EN_URL
-                texto_participacao = (
-                    "⚠️⚠️TO PARTICIPATE IN THIS SESSION, FOLLOW THE STEPS BELOW⚠️⚠️\n\n"
-                    "1st ✅ —> Create your broker account at the link below and GET $10,000 FOR FREE to start operating with us without having to risk your money.\n\n"
-                    "You will be able to test all our\n"
-                    "operations with ZERO risk!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_corretora}\" title=\"\"><b>CREATE YOUR ACCOUNT HERE AND GET $10,000</b></a>\n\n"
-                    "—————————————————————\n\n"
-                    "2nd ✅ —> Watch the video below and learn how to deposit and how to join us in our operations!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_video}\" title=\"\"><b>CLICK HERE AND WATCH THE VIDEO</b></a>"
-                )
-            else:  # es
-                link_video = VIDEO_TELEGRAM_ES_URL
-                texto_participacao = (
-                    "⚠️⚠️PARA PARTICIPAR EN ESTA SESIÓN, SIGA LOS PASOS A CONTINUACIÓN⚠️⚠️\n\n"
-                    "1º ✅ —> Cree su cuenta de corredor en el enlace a continuación y OBTENGA $10,000 GRATIS para comenzar a operar con nosotros sin tener que arriesgar su dinero.\n\n"
-                    "Podrás probar todas nuestras\n"
-                    "operaciones con riesgo CERO!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_corretora}\" title=\"\"><b>CREE SU CUENTA AQUÍ Y OBTENGA $10,000</b></a>\n\n"
-                    "—————————————————————\n\n"
-                    "2º ✅ —> ¡Mire el video a continuación y aprenda cómo depositar y cómo unirse a nosotros en nuestras operaciones!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_video}\" title=\"\"><b>HAGA CLIC AQUÍ Y VEA EL VIDEO</b></a>"
-                )
-
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔗 Links configurados: Corretora={link_corretora}, Vídeo={link_video}")
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 📤 Enviando para {len(chats)} chat(s) no idioma {idioma}")
-
-            for chat_id in chats:
-                try:
-                    # URL base para a API do Telegram
-                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                    
-                    BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🚀 Enviando para chat_id: {chat_id}")
-                    BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 📋 Conteúdo da mensagem: {texto_participacao[:100]}...")
-                    
-                    # Aqui está o envio real
-                    resposta = requests.post(
-                        url_base,
-                        json={
-                            "chat_id": chat_id,
-                            "text": texto_participacao,
-                            "parse_mode": "HTML",
-                            "disable_web_page_preview": True,
-                        },
-                        timeout=15,  # Aumentando o timeout para garantir que tenha tempo suficiente
-                    )
-
-                    BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 📡 Status da resposta: {resposta.status_code}")
-                    
-                    if resposta.status_code == 200:
-                        BOT2_LOGGER.info(
-                            f"[PARTICIPACAO][{horario_atual}] ✅ Mensagem enviada com sucesso para {chat_id} (idioma: {idioma})"
-                        )
-                        envios_com_sucesso += 1
-                    else:
-                        BOT2_LOGGER.error(
-                            f"[PARTICIPACAO][{horario_atual}] ❌ Erro ao enviar: {resposta.status_code} - {resposta.text}"
-                        )
-                        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🔍 Resposta detalhada: {resposta.content}")
-                except Exception as e:
-                    BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ Erro ao enviar para {chat_id}: {str(e)}")
-                    BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
-                    if "rights to send" in str(e).lower():
-                        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🚫 Bot sem permissões no canal {chat_id}")
-                    traceback.print_exc()
-
-        # Resumo final
-        total_chats = sum(len(chats) for chats in BOT2_CANAIS_CONFIG.values() if chats)
-        BOT2_LOGGER.info(
-            f"[PARTICIPACAO][{horario_atual}] 📊 Total de mensagens enviadas com sucesso: {envios_com_sucesso}/{total_chats}"
-        )
-        if envios_com_sucesso == 0 and total_chats > 0:
-            BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌❌❌ ALERTA: Nenhuma mensagem de participação foi enviada com sucesso!")
-        
-        return envios_com_sucesso > 0
-    except Exception as e:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ Erro geral: {str(e)}")
-        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
-        traceback.print_exc()
-        return False
-
-
-def bot2_enviar_gif_promo(idioma="pt"):
-    """
-    Envia o GIF promocional para todos os canais do idioma especificado.
-    Esta mensagem é enviada 41 minutos após o sinal original para sinais múltiplos de 3.
-    """
-    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA, bot2, URLS_GIFS_DIRETAS
-    
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        
-        BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 🔄 Iniciando envio do GIF promocional para idioma {idioma}")
-        
-        # Verificar se há canais configurados para este idioma
-        chats = BOT2_CANAIS_CONFIG.get(idioma, [])
-        if not chats:
-            BOT2_LOGGER.warning(f"[GIF-PROMO][{horario_atual}] ⚠️ Nenhum chat configurado para idioma {idioma}")
-            return False
-        
-        # Definir a URL do GIF promocional conforme o idioma
-        if idioma == "pt":
-            gif_key = "promo_pt"
-        elif idioma == "en":
-            gif_key = "promo_en"
-        else:  # es
-            gif_key = "promo_es"
-        
-        gif_url = URLS_GIFS_DIRETAS.get(gif_key, "")
-        
-        if not gif_url:
-            BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ URL de GIF não configurada para {gif_key}")
-            return False
-        
-        BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 🔗 Usando URL: {gif_url}")
-        BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 📤 Enviando para {len(chats)} chat(s)")
-        
-        # Contar quantos GIFs foram enviados com sucesso
-        envios_com_sucesso = 0
-        
-        for chat_id in chats:
-            try:
-                BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 📦 Preparando envio para chat_id: {chat_id}")
-                
-                try:
-                    # Baixar o arquivo para enviar como arquivo em vez de URL
-                    BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] ⬇️ Baixando arquivo de {gif_url}")
-                    arquivo_resposta = requests.get(gif_url, stream=True, timeout=10)
-                    
-                    if arquivo_resposta.status_code == 200:
-                        # Determinar extensão baseada na URL
-                        if gif_url.lower().endswith(('.mp4', '.mov')):
-                            extensao = '.mp4'
-                        elif gif_url.lower().endswith(('.gif')):
-                            extensao = '.gif'
-                        else:
-                            extensao = '.webp'
-                        
-                        nome_arquivo_temp = f"temp_promo_{idioma}_{random.randint(1000, 9999)}{extensao}"
-                        
-                        # Salvar o arquivo temporariamente
-                        with open(nome_arquivo_temp, 'wb') as f:
-                            f.write(arquivo_resposta.content)
-                        
-                        BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 💾 Arquivo baixado como {nome_arquivo_temp}")
-                        
-                        # Abrir o arquivo e enviar como animação
-                        with open(nome_arquivo_temp, 'rb') as f_gif:
-                            # Enviar o GIF como animação diretamente do arquivo
-                            BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 🚀 Enviando arquivo como animação")
-                            bot2.send_animation(
-                                chat_id=chat_id,
-                                animation=f_gif,
-                                caption="",
-                                parse_mode="HTML"
-                            )
-                        
-                        # Remover o arquivo temporário
-                        try:
-                            os.remove(nome_arquivo_temp)
-                            BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 🗑️ Arquivo temporário removido")
-                        except:
-                            BOT2_LOGGER.warning(f"[GIF-PROMO][{horario_atual}] ⚠️ Não foi possível remover o arquivo temporário")
-                        
-                        BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] ✅ GIF enviado com sucesso para {chat_id}")
-                        envios_com_sucesso += 1
-                    else:
-                        BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Erro ao baixar o arquivo. Status: {arquivo_resposta.status_code}")
-                        # Tentar enviar diretamente com a URL como fallback
-                        BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 🔄 Tentando fallback com URL direta")
-                        bot2.send_animation(
-                            chat_id=chat_id,
-                            animation=gif_url,
-                            caption="",
-                            parse_mode="HTML"
-                        )
-                        BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] ✅ GIF enviado com sucesso (fallback)")
-                        envios_com_sucesso += 1
-                except Exception as download_error:
-                    BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Erro ao baixar/enviar: {str(download_error)}")
-                    # Tentar enviar diretamente com a URL como fallback
-                    BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 🔄 Tentando segundo fallback com URL direta")
-                    try:
-                        bot2.send_animation(
-                            chat_id=chat_id,
-                            animation=gif_url,
-                            caption="",
-                            parse_mode="HTML"
-                        )
-                        BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] ✅ GIF enviado com sucesso (segundo fallback)")
-                        envios_com_sucesso += 1
-                    except Exception as final_error:
-                        BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Falha total no envio: {str(final_error)}")
-                
-            except Exception as e:
-                BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Erro no envio para {chat_id}: {str(e)}")
-                if "rights to send" in str(e).lower():
-                    BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] 🚫 Bot sem permissões no canal {chat_id}")
-        
-        # Registrar resultado final
-        BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 📊 Total de GIFs enviados com sucesso: {envios_com_sucesso}/{len(chats)}")
-        return envios_com_sucesso > 0
-    
-    except Exception as e:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Erro geral: {str(e)}")
         traceback.print_exc()
         return False
