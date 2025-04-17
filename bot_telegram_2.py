@@ -2293,507 +2293,81 @@ def enviar_sinal_manual():
         return False
 
 
-def bot2_enviar_gif_especial():
-    """
-    Envia um GIF especial para todos os canais após sinais múltiplos de 3.
-    """
-    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, URLS_GIFS_DIRETAS, bot2
+def verificar_agendamento_sinais():
+    """Verifica se os sinais estão agendados corretamente e reagenda se necessário."""
+    global bot2_sinais_agendados, BOT2_LOGGER
     
     try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] Iniciando envio de GIF especial para múltiplos de 3")
-
-        gif_enviado_com_sucesso = False
+        BOT2_LOGGER.info("Verificando agendamento de sinais...")
         
-        # Limpar quaisquer agendamentos anteriores para envio de mensagem de cadastro
-        schedule.clear("cadastro_especial")
-
-        for idioma, chats in BOT2_CANAIS_CONFIG.items():
-            if not chats:  # Se não houver chats configurados para este idioma, pula
-                continue
-            
-            for chat_id in chats:
-                try:
-                    # Usar o GIF especial 
-                    if idioma == "pt":
-                        gif_url = URLS_GIFS_DIRETAS["gif_especial_pt"]
-                    else:
-                        # Para os outros idiomas usar o mesmo gif
-                        gif_url = URLS_GIFS_DIRETAS["gif_especial_pt"]
-
-                    BOT2_LOGGER.info(
-                        f"[{horario_atual}] Tentando enviar GIF especial como animação do URL: {gif_url} para o canal {chat_id}"
-                    )
-                    
-                    try:
-                        # Baixar o arquivo para enviar como arquivo em vez de URL
-                        BOT2_LOGGER.info(f"[{horario_atual}] Baixando arquivo de {gif_url}")
-                        arquivo_resposta = requests.get(gif_url, stream=True, timeout=10)
-                        
-                        if arquivo_resposta.status_code == 200:
-                            # Criar um arquivo temporário no formato correto
-                            extensao = ".gif"
-                            if ".webp" in gif_url.lower():
-                                extensao = ".webp"
-                            
-                            nome_arquivo_temp = f"temp_gif_{random.randint(1000, 9999)}{extensao}"
-                            
-                            # Salvar o arquivo temporariamente
-                            with open(nome_arquivo_temp, 'wb') as f:
-                                f.write(arquivo_resposta.content)
-                            
-                            BOT2_LOGGER.info(f"[{horario_atual}] Arquivo baixado com sucesso como {nome_arquivo_temp}")
-                            
-                            # Abrir o arquivo e enviar como animação
-                            with open(nome_arquivo_temp, 'rb') as f_gif:
-                                # Enviar o GIF como animação diretamente do arquivo nas dimensões especificadas
-                                BOT2_LOGGER.info(f"[{horario_atual}] Enviando arquivo como animação")
-                                bot2.send_animation(
-                                    chat_id=chat_id,
-                                    animation=f_gif,
-                                    caption="",
-                                    parse_mode="HTML",
-                                    width=208,
-                                    height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
-                                )
-                            
-                            # Remover o arquivo temporário
-                            try:
-                                os.remove(nome_arquivo_temp)
-                                BOT2_LOGGER.info(f"[{horario_atual}] Arquivo temporário {nome_arquivo_temp} removido")
-                            except:
-                                BOT2_LOGGER.warning(f"[{horario_atual}] Não foi possível remover o arquivo temporário {nome_arquivo_temp}")
-                            
-                            BOT2_LOGGER.info(f"[{horario_atual}] GIF especial enviado com sucesso como animação para o canal {chat_id}")
-                            gif_enviado_com_sucesso = True
-                        else:
-                            BOT2_LOGGER.error(f"[{horario_atual}] Erro ao baixar o arquivo. Status code: {arquivo_resposta.status_code}")
-                            # Tentar enviar diretamente com a URL como fallback
-                            bot2.send_animation(
-                                chat_id=chat_id,
-                                animation=gif_url,
-                                caption="",
-                                parse_mode="HTML",
-                                width=208,
-                                height=84
-                            )
-                            BOT2_LOGGER.info(f"[{horario_atual}] GIF enviado com sucesso como URL para o canal {chat_id} (fallback)")
-                            gif_enviado_com_sucesso = True
-                    except Exception as download_error:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao baixar/enviar o arquivo: {str(download_error)}")
-                        # Tentar enviar diretamente com a URL como fallback
-                        bot2.send_animation(
-                            chat_id=chat_id,
-                            animation=gif_url,
-                            caption="",
-                            parse_mode="HTML",
-                            width=208,
-                            height=84
-                        )
-                        BOT2_LOGGER.info(f"[{horario_atual}] GIF enviado com sucesso como URL para o canal {chat_id} (fallback após erro)")
-                        gif_enviado_com_sucesso = True
-
-                except Exception as e:
-                    BOT2_LOGGER.error(
-                        f"[{horario_atual}] Erro ao enviar GIF especial para o canal {chat_id}: {str(e)}"
-                    )
-
-                    if "rights to send" in str(e).lower():
-                        BOT2_LOGGER.error(
-                            f"[{horario_atual}] Bot não tem permissões de administrador no canal {chat_id}"
-                        )
-
-        if gif_enviado_com_sucesso:
-            BOT2_LOGGER.info(f"[{horario_atual}] GIF especial enviado com sucesso para sinais múltiplos de 3")
-            
-            # Remover o agendamento da mensagem de cadastro para evitar spam
-            # schedule.every(1).minutes.do(bot2_enviar_mensagem_cadastro).tag("cadastro_especial")
-            # BOT2_LOGGER.info(f"[{horario_atual}] Agendado envio da mensagem de cadastro em 1 minuto")
-            
+        # Verificar se há jobs agendados com a tag "bot2_sinais"
+        jobs_sinais = schedule.get_jobs("bot2_sinais")
+        
+        if not jobs_sinais:
+            BOT2_LOGGER.warning("Nenhum job de sinal agendado! Reagendando...")
+            bot2_iniciar_ciclo_sinais()
             return True
         else:
-            BOT2_LOGGER.warning(
-                f"[{horario_atual}] Não foi possível enviar o GIF especial para sinais múltiplos de 3"
-            )
-            return False
-    
+            BOT2_LOGGER.info(f"Encontrados {len(jobs_sinais)} jobs de sinais agendados")
+            for job in jobs_sinais:
+                BOT2_LOGGER.info(f"Job agendado: {job}")
+            return True
     except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao enviar GIF especial: {str(e)}")
+        BOT2_LOGGER.error(f"Erro ao verificar agendamento de sinais: {str(e)}")
         traceback.print_exc()
         return False
 
 
-def bot2_enviar_gif_promo(idioma="pt"):
+def verificar_configuracoes_bot():
     """
-    Envia um GIF promocional antes do sinal.
-
-    Args:
-        idioma (str): O idioma do GIF a ser enviado (pt, en, es)
+    Verifica se as configurações do bot estão corretas antes de iniciar.
+    
+    Returns:
+        bool: True se as configurações estão corretas, False caso contrário
     """
-    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, URLS_GIFS_DIRETAS, bot2
+    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, ATIVOS_CATEGORIAS
     
     try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] Iniciando função bot2_enviar_gif_promo para idioma {idioma}")
-
-        gif_enviado_com_sucesso = False
+        BOT2_LOGGER.info("Verificando configurações do bot...")
         
-        # Limpar quaisquer agendamentos anteriores para envio de mensagem de abertura
-        schedule.clear("abertura_corretora")
-
-        # Verificar se o idioma existe em BOT2_CANAIS_CONFIG
-        chats = BOT2_CANAIS_CONFIG.get(idioma, [])
-        
-        if not chats:
-            BOT2_LOGGER.warning(f"[{horario_atual}] Não há canais configurados para o idioma {idioma}")
+        # Verificar se o token está configurado
+        if not BOT2_TOKEN or len(BOT2_TOKEN) < 10:
+            BOT2_LOGGER.error("Token do bot não configurado ou inválido")
             return False
-
-        # Definir a URL do GIF do Giphy com base no idioma
-        gif_key = f"promo_{idioma}"
-        if gif_key in URLS_GIFS_DIRETAS:
-            gif_url = URLS_GIFS_DIRETAS[gif_key]
-        else:
-            # Usar o gif promocional em inglês como padrão
-            gif_url = URLS_GIFS_DIRETAS["promo_en"]
-
-        for chat_id in chats:
-            try:
-                BOT2_LOGGER.info(
-                    f"[{horario_atual}] Tentando enviar GIF promo como animação do URL: {gif_url} para o canal {chat_id}"
-                )
-                
-                try:
-                    # Baixar o arquivo para enviar como arquivo em vez de URL
-                    BOT2_LOGGER.info(f"[{horario_atual}] Baixando arquivo de {gif_url}")
-                    arquivo_resposta = requests.get(gif_url, stream=True, timeout=10)
-                    
-                    if arquivo_resposta.status_code == 200:
-                        # Criar um arquivo temporário no formato correto
-                        extensao = ".gif"
-                        if ".webp" in gif_url.lower():
-                            extensao = ".webp"
-                        
-                        nome_arquivo_temp = f"temp_gif_{random.randint(1000, 9999)}{extensao}"
-                        
-                        # Salvar o arquivo temporariamente
-                        with open(nome_arquivo_temp, 'wb') as f:
-                            f.write(arquivo_resposta.content)
-                        
-                        BOT2_LOGGER.info(f"[{horario_atual}] Arquivo baixado com sucesso como {nome_arquivo_temp}")
-                        
-                        # Abrir o arquivo e enviar como animação
-                        with open(nome_arquivo_temp, 'rb') as f_gif:
-                            # Enviar o GIF como animação diretamente do arquivo nas dimensões especificadas
-                            BOT2_LOGGER.info(f"[{horario_atual}] Enviando arquivo como animação")
-                            bot2.send_animation(
-                                chat_id=chat_id,
-                                animation=f_gif,
-                                caption="",
-                                parse_mode="HTML",
-                                width=208,
-                                height=84  # Arredondando para 84 pixels já que não é possível usar valores decimais
-                            )
-                        
-                        # Remover o arquivo temporário
-                        try:
-                            os.remove(nome_arquivo_temp)
-                            BOT2_LOGGER.info(f"[{horario_atual}] Arquivo temporário {nome_arquivo_temp} removido")
-                        except:
-                            BOT2_LOGGER.warning(f"[{horario_atual}] Não foi possível remover o arquivo temporário {nome_arquivo_temp}")
-                        
-                        BOT2_LOGGER.info(f"[{horario_atual}] GIF promocional enviado com sucesso como animação para o canal {chat_id}")
-                        gif_enviado_com_sucesso = True
-                    else:
-                        BOT2_LOGGER.error(f"[{horario_atual}] Erro ao baixar o arquivo. Status code: {arquivo_resposta.status_code}")
-                        # Tentar enviar diretamente com a URL como fallback
-                        bot2.send_animation(
-                            chat_id=chat_id,
-                            animation=gif_url,
-                            caption="",
-                            parse_mode="HTML",
-                            width=208,
-                            height=84
-                        )
-                        BOT2_LOGGER.info(f"[{horario_atual}] GIF enviado com sucesso como URL para o canal {chat_id} (fallback)")
-                        gif_enviado_com_sucesso = True
-                except Exception as download_error:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao baixar/enviar o arquivo: {str(download_error)}")
-                    # Tentar enviar diretamente com a URL como fallback
-                    bot2.send_animation(
-                        chat_id=chat_id,
-                        animation=gif_url,
-                        caption="",
-                        parse_mode="HTML",
-                        width=208,
-                        height=84
-                    )
-                    BOT2_LOGGER.info(f"[{horario_atual}] GIF enviado com sucesso como URL para o canal {chat_id} (fallback após erro)")
-                    gif_enviado_com_sucesso = True
-
-            except Exception as e:
-                BOT2_LOGGER.error(
-                    f"[{horario_atual}] Erro ao enviar GIF promocional para o canal {chat_id}: {str(e)}"
-                )
-
-                if "rights to send" in str(e).lower():
-                    BOT2_LOGGER.error(
-                        f"[{horario_atual}] Bot não tem permissões de administrador no canal {chat_id}"
-                    )
-
-        if gif_enviado_com_sucesso:
-            BOT2_LOGGER.info(f"[{horario_atual}] GIF promocional enviado com sucesso para idioma {idioma}")
-            
-            # Em vez de agendar, vamos criar uma thread que espera 1 minuto e envia a mensagem
-            def enviar_mensagem_abertura_apos_delay():
-                try:
-                    BOT2_LOGGER.info(f"[{horario_atual}] Aguardando 1 minuto para enviar mensagem de abertura da corretora...")
-                    time.sleep(60)  # Esperar 1 minuto
-                    
-                    BOT2_LOGGER.info(f"[{horario_atual}] Enviando mensagem de abertura da corretora após espera...")
-                    bot2_enviar_mensagem_abertura_corretora()
-                except Exception as e:
-                    BOT2_LOGGER.error(f"[{horario_atual}] Erro ao enviar mensagem de abertura: {str(e)}")
-                    traceback.print_exc()
-            
-            # Iniciar thread para envio da mensagem de abertura após 1 minuto
-            abertura_thread = threading.Thread(target=enviar_mensagem_abertura_apos_delay)
-            abertura_thread.daemon = True
-            abertura_thread.start()
-            BOT2_LOGGER.info(f"[{horario_atual}] Thread para envio da mensagem de abertura iniciada (1 minuto de espera)")
-            
-            return True
-        else:
-            BOT2_LOGGER.warning(
-                f"[{horario_atual}] Não foi possível enviar o GIF promocional para idioma {idioma}"
-            )
+        
+        # Verificar canais configurados
+        if not BOT2_CANAIS_CONFIG:
+            BOT2_LOGGER.error("Nenhum canal configurado para envio de sinais")
             return False
-    
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao enviar GIF promocional: {str(e)}")
-        traceback.print_exc()
-        return False
-
-
-def bot2_enviar_mensagem_cadastro():
-    """Envia uma mensagem de cadastro para todos os canais configurados."""
-    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA
-    
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[{horario_atual}] Iniciando envio de mensagem de cadastro")
         
-        # Contar quantas mensagens foram enviadas com sucesso
-        mensagens_enviadas = 0
+        # Contar o número total de canais
+        total_canais = sum(len(chats) for chats in BOT2_CANAIS_CONFIG.values())
+        if total_canais == 0:
+            BOT2_LOGGER.error("Nenhum canal configurado para envio de sinais")
+            return False
         
-        # Para cada idioma configurado, envia a mensagem formatada
+        # Verificar se existem ativos configurados
+        if not ATIVOS_CATEGORIAS or "Digital" not in ATIVOS_CATEGORIAS:
+            BOT2_LOGGER.error("Categoria 'Digital' não configurada ou sem ativos")
+            return False
+        
+        if not ATIVOS_CATEGORIAS["Digital"]:
+            BOT2_LOGGER.error("Nenhum ativo configurado na categoria 'Digital'")
+            return False
+        
+        # Exibir resumo das configurações
+        BOT2_LOGGER.info(f"Token do bot configurado: {BOT2_TOKEN[:5]}...{BOT2_TOKEN[-5:]}")
+        BOT2_LOGGER.info(f"Total de canais configurados: {total_canais}")
+        
         for idioma, chats in BOT2_CANAIS_CONFIG.items():
-            if not chats:  # Se não houver chats configurados para este idioma, pula
-                continue
-            
-            config_idioma = CONFIGS_IDIOMA.get(idioma, CONFIGS_IDIOMA["pt"])
-            link_corretora = config_idioma.get("link_corretora", "")
-            
-            if idioma == "pt":
-                texto_cadastro = f"🔴 ATENÇÃO 🔴\n\nATUALIZAÇÃO DE CADASTRO NECESSÁRIA!\n\nPara continuar recebendo os sinais, clique no link abaixo e atualize seus dados de cadastro.\n\n<a href=\"{link_corretora}\" title=\"\"><b>ATUALIZAR CADASTRO</b></a> 🔹"
-            elif idioma == "en":
-                texto_cadastro = f"🔴 ATTENTION 🔴\n\nREGISTRATION UPDATE REQUIRED!\n\nTo continue receiving signals, click the link below and update your registration data.\n\n<a href=\"{link_corretora}\" title=\"\"><b>UPDATE REGISTRATION</b></a> 🔹"
-            else:  # es
-                texto_cadastro = f"🔴 ATENCIÓN 🔴\n\n¡ACTUALIZACIÓN DE REGISTRO NECESARIA!\n\nPara seguir recibiendo las señales, haga clic en el enlace a continuación y actualice sus datos de registro.\n\n<a href=\"{link_corretora}\" title=\"\"><b>ACTUALIZAR REGISTRO</b></a> 🔹"
-            
-            for chat_id in chats:
-                try:
-                    # URL base para a API do Telegram
-                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                    
-                    resposta = requests.post(
-                        url_base,
-                        json={
-                            "chat_id": chat_id,
-                            "text": texto_cadastro,
-                            "parse_mode": "HTML",
-                            "disable_web_page_preview": True,
-                        },
-                        timeout=10,
-                    )
-                    
-                    if resposta.status_code == 200:
-                        BOT2_LOGGER.info(
-                            f"[{horario_atual}] Mensagem de cadastro enviada com sucesso para {chat_id} (idioma: {idioma})"
-                        )
-                        mensagens_enviadas += 1
-                    else:
-                        BOT2_LOGGER.error(
-                            f"[{horario_atual}] Erro ao enviar mensagem de cadastro para {chat_id}: {resposta.text}"
-                        )
-                except Exception as e:
-                    BOT2_LOGGER.error(
-                        f"[{horario_atual}] Exceção ao enviar mensagem de cadastro para {chat_id}: {str(e)}"
-                    )
+            BOT2_LOGGER.info(f"Canais para idioma '{idioma}': {len(chats)}")
         
-        if mensagens_enviadas > 0:
-            BOT2_LOGGER.info(f"[{horario_atual}] Total de {mensagens_enviadas} mensagens de cadastro enviadas com sucesso")
-            
-            # Agendar envio da mensagem de abertura da corretora em 9 minutos
-            # Desativar o agendamento automático de GIFs promocionais para evitar conflitos
-            # schedule.every(9).minutes.do(bot2_enviar_gif_promo, idioma="pt").tag("gif_promo")
-            BOT2_LOGGER.info("Agendamento automático de GIFs promocionais desativado para evitar conflitos com GIFs pós-sinal")
-            
-            return True
-        else:
-            BOT2_LOGGER.warning(f"[{horario_atual}] Nenhuma mensagem de cadastro foi enviada")
-            return False
+        BOT2_LOGGER.info(f"Total de ativos na categoria 'Digital': {len(ATIVOS_CATEGORIAS['Digital'])}")
+        BOT2_LOGGER.info("Todas as configurações estão corretas!")
+        
+        return True
     except Exception as e:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ Erro geral: {str(e)}")
-        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
-        traceback.print_exc()
-        return False
-
-
-def enviar_mensagem_participacao():
-    """
-    Envia a mensagem de participação da sessão para todos os canais configurados.
-    Esta mensagem é enviada 27 minutos após o sinal original para sinais múltiplos de 3.
-    """
-    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, CONFIGS_IDIOMA, VIDEO_TELEGRAM_URL, VIDEO_TELEGRAM_EN_URL, VIDEO_TELEGRAM_ES_URL
-
-    try:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔄 Iniciando envio da mensagem de participação da sessão")
-
-        # Contar quantas mensagens foram enviadas
-        envios_com_sucesso = 0
-
-        # Verificar se as constantes de vídeo estão definidas
-        if not 'VIDEO_TELEGRAM_URL' in globals() or not VIDEO_TELEGRAM_URL:
-            BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ URL do vídeo em português não está definida!")
-            VIDEO_TELEGRAM_URL = "https://t.me/trendingbrazil/215"
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo PT: {VIDEO_TELEGRAM_URL}")
-        
-        if not 'VIDEO_TELEGRAM_EN_URL' in globals() or not VIDEO_TELEGRAM_EN_URL:
-            BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ URL do vídeo em inglês não está definida!")
-            VIDEO_TELEGRAM_EN_URL = "https://t.me/trendingenglish/226"
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo EN: {VIDEO_TELEGRAM_EN_URL}")
-            
-        if not 'VIDEO_TELEGRAM_ES_URL' in globals() or not VIDEO_TELEGRAM_ES_URL:
-            BOT2_LOGGER.warning(f"[PARTICIPACAO][{horario_atual}] ⚠️ URL do vídeo em espanhol não está definida!")
-            VIDEO_TELEGRAM_ES_URL = "https://t.me/trendingespanish/212"
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Usando URL padrão para vídeo ES: {VIDEO_TELEGRAM_ES_URL}")
-
-        # Para cada idioma configurado, envia a mensagem formatada
-        for idioma, chats in BOT2_CANAIS_CONFIG.items():
-            if not chats:  # Se não houver chats configurados para este idioma, pula
-                BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] ℹ️ Nenhum chat configurado para idioma {idioma}, pulando")
-                continue
-
-            # Links específicos por idioma
-            if idioma == "pt":
-                link_corretora = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
-                link_video = "https://t.me/trendingbrazil/215"
-            elif idioma == "en":
-                link_corretora = "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
-                link_video = "https://t.me/trendingenglish/226"
-            else:  # es
-                link_corretora = "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
-                link_video = "https://t.me/trendingespanish/212"
-            
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🔗 Links configurados: Corretora={link_corretora}, Vídeo={link_video}")
-
-            # Configurar texto com base no idioma
-            if idioma == "pt":
-                texto_participacao = (
-                    "⚠️⚠️PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠️⚠️\n\n"
-                    "1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
-                    "Você vai poder testar todos nossas\n"
-                    "operações com risco ZERO!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_corretora}\" title=\"\"><b>CRIE SUA CONTA AQUI E GANHE R$10.000</b></a>\n\n"
-                    "—————————————————————\n\n"
-                    "2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_video}\" title=\"\"><b>CLIQUE AQUI E ASSISTA O VÍDEO</b></a>"
-                )
-            elif idioma == "en":
-                texto_participacao = (
-                    "⚠️⚠️TO PARTICIPATE IN THIS SESSION, FOLLOW THE STEPS BELOW⚠️⚠️\n\n"
-                    "1st ✅ —> Create your broker account at the link below and GET $10,000 FOR FREE to start operating with us without having to risk your money.\n\n"
-                    "You will be able to test all our\n"
-                    "operations with ZERO risk!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_corretora}\" title=\"\"><b>CREATE YOUR ACCOUNT HERE AND GET $10,000</b></a>\n\n"
-                    "—————————————————————\n\n"
-                    "2nd ✅ —> Watch the video below and learn how to deposit and how to join us in our operations!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_video}\" title=\"\"><b>CLICK HERE AND WATCH THE VIDEO</b></a>"
-                )
-            else:  # es
-                texto_participacao = (
-                    "⚠️⚠️PARA PARTICIPAR EN ESTA SESIÓN, SIGA LOS PASOS A CONTINUACIÓN⚠️⚠️\n\n"
-                    "1º ✅ —> Cree su cuenta de corredor en el enlace a continuación y OBTENGA $10,000 GRATIS para comenzar a operar con nosotros sin tener que arriesgar su dinero.\n\n"
-                    "Podrás probar todas nuestras\n"
-                    "operaciones con riesgo CERO!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_corretora}\" title=\"\"><b>CREE SU CUENTA AQUÍ Y OBTENGA $10,000</b></a>\n\n"
-                    "—————————————————————\n\n"
-                    "2º ✅ —> ¡Mire el video a continuación y aprenda cómo depositar y cómo unirse a nosotros en nuestras operaciones!\n\n"
-                    "👇🏻👇🏻👇🏻👇🏻\n\n"
-                    f"<a href=\"{link_video}\" title=\"\"><b>HAGA CLIC AQUÍ Y VEA EL VIDEO</b></a>"
-                )
-
-            BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 📤 Enviando para {len(chats)} chat(s) no idioma {idioma}")
-
-            for chat_id in chats:
-                try:
-                    # URL base para a API do Telegram
-                    url_base = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
-                    
-                    BOT2_LOGGER.info(f"[PARTICIPACAO][{horario_atual}] 🚀 Enviando para chat_id: {chat_id}")
-                    
-                    # Aqui está o envio real
-                    resposta = requests.post(
-                        url_base,
-                        json={
-                            "chat_id": chat_id,
-                            "text": texto_participacao,
-                            "parse_mode": "HTML",
-                            "disable_web_page_preview": True,
-                        },
-                        timeout=15,  # Aumentando o timeout para garantir que tenha tempo suficiente
-                    )
-                    
-                    if resposta.status_code == 200:
-                        BOT2_LOGGER.info(
-                            f"[PARTICIPACAO][{horario_atual}] ✅ Mensagem enviada com sucesso para {chat_id} (idioma: {idioma})"
-                        )
-                        envios_com_sucesso += 1
-                    else:
-                        BOT2_LOGGER.error(
-                            f"[PARTICIPACAO][{horario_atual}] ❌ Erro ao enviar: {resposta.status_code} - {resposta.text}"
-                        )
-                except Exception as e:
-                    BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ Erro ao enviar para {chat_id}: {str(e)}")
-                    if "rights to send" in str(e).lower():
-                        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] 🚫 Bot sem permissões no canal {chat_id}")
-                    traceback.print_exc()
-
-        # Resumo final
-        total_chats = sum(len(chats) for chats in BOT2_CANAIS_CONFIG.values() if chats)
-        BOT2_LOGGER.info(
-            f"[PARTICIPACAO][{horario_atual}] 📊 Total de mensagens enviadas com sucesso: {envios_com_sucesso}/{total_chats}"
-        )
-        if envios_com_sucesso == 0 and total_chats > 0:
-            BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌❌❌ ALERTA: Nenhuma mensagem de participação foi enviada com sucesso!")
-        
-        return envios_com_sucesso > 0
-    except Exception as e:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[PARTICIPACAO][{horario_atual}] ❌ Erro geral: {str(e)}")
+        BOT2_LOGGER.error(f"Erro ao verificar configurações: {str(e)}")
         traceback.print_exc()
         return False
 
@@ -2909,6 +2483,31 @@ def bot2_enviar_mensagem_abertura_corretora():
         return False
 
 
+def verificar_agendamento_sinais():
+    """Verifica se os sinais estão agendados corretamente e reagenda se necessário."""
+    global bot2_sinais_agendados, BOT2_LOGGER
+    
+    try:
+        BOT2_LOGGER.info("Verificando agendamento de sinais...")
+        
+        # Verificar se há jobs agendados com a tag "bot2_sinais"
+        jobs_sinais = schedule.get_jobs("bot2_sinais")
+        
+        if not jobs_sinais:
+            BOT2_LOGGER.warning("Nenhum job de sinal agendado! Reagendando...")
+            bot2_iniciar_ciclo_sinais()
+            return True
+        else:
+            BOT2_LOGGER.info(f"Encontrados {len(jobs_sinais)} jobs de sinais agendados")
+            for job in jobs_sinais:
+                BOT2_LOGGER.info(f"Job agendado: {job}")
+            return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao verificar agendamento de sinais: {str(e)}")
+        traceback.print_exc()
+        return False
+
+
 def verificar_configuracoes_bot():
     """
     Verifica se as configurações do bot estão corretas antes de iniciar.
@@ -2961,3 +2560,67 @@ def verificar_configuracoes_bot():
         BOT2_LOGGER.error(f"Erro ao verificar configurações: {str(e)}")
         traceback.print_exc()
         return False
+
+
+# Inicialização do sistema de envio de sinais
+if __name__ == "__main__":
+    BOT2_LOGGER.info("=== Iniciando sistema de envio de sinais ===")
+    
+    try:
+        # Inicializar variáveis e configurações
+        bot2_contador_sinais = 0
+        bot2_sinais_agendados = False
+        ultimo_sinal_enviado = None
+        mensagem_perda_enviada_hoje = False
+        
+        # Testar a conexão com a API do Telegram
+        BOT2_LOGGER.info("Testando conexão com a API do Telegram...")
+        try:
+            bot_info = bot2.get_me()
+            BOT2_LOGGER.info(f"Conexão com API do Telegram OK! Bot: @{bot_info.username} ({bot_info.first_name})")
+        except Exception as e:
+            BOT2_LOGGER.error(f"Erro ao conectar com a API do Telegram: {str(e)}")
+            BOT2_LOGGER.error("Verifique se o token está correto e se há conexão com a internet.")
+            raise
+        
+        # Definir número máximo de tentativas de reinicialização
+        max_retries = 5
+        retry_count = 0
+        retry_delay = 60  # segundos
+        
+        while retry_count < max_retries:
+            try:
+                BOT2_LOGGER.info(f"Tentativa {retry_count + 1} de {max_retries} para iniciar o bot")
+                
+                # Verificar configurações
+                if not verificar_configuracoes_bot():
+                    BOT2_LOGGER.error("Falha na verificação de configurações. Tentando novamente em 60 segundos...")
+                    time.sleep(retry_delay)
+                    retry_count += 1
+                    continue
+                
+                # Verificar agendamento de sinais
+                verificar_agendamento_sinais()
+                
+                # Iniciar o bot
+                iniciar_ambos_bots()
+                
+                # Se chegarmos aqui, o bot está rodando normalmente
+                BOT2_LOGGER.info("Bot iniciado com sucesso e em execução!")
+                break
+                
+            except Exception as e:
+                retry_count += 1
+                BOT2_LOGGER.error(f"Erro ao iniciar o bot (tentativa {retry_count}): {str(e)}")
+                BOT2_LOGGER.error(f"Tentando novamente em {retry_delay} segundos...")
+                traceback.print_exc()
+                time.sleep(retry_delay)
+                
+        if retry_count >= max_retries:
+            BOT2_LOGGER.critical(f"Falha após {max_retries} tentativas. Verificar logs para detalhes.")
+            sys.exit(1)
+            
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro crítico ao iniciar o sistema: {str(e)}")
+        traceback.print_exc()
+        sys.exit(1)
