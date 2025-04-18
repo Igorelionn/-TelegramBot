@@ -1034,11 +1034,11 @@ def is_asset_available(asset, current_time=None, current_day=None):
         
         # Verificar se current_time é uma string ou objeto datetime
         if isinstance(current_time, str):
-            # Se for string, usá-la diretamente
-            current_time_str = current_time
+            # Se for string, converter para objeto time
+            current_time_obj = datetime.strptime(current_time, "%H:%M").time()
         else:
-            # Se for datetime, formatar para string HH:MM
-            current_time_str = current_time.strftime("%H:%M")
+            # Se for datetime, extrair o componente time
+            current_time_obj = current_time.time()
         
         # Mapeamento de nomes de ativos para as chaves em HORARIOS_PADRAO
         mapeamento_chaves = {
@@ -1114,8 +1114,8 @@ def is_asset_available(asset, current_time=None, current_day=None):
         for intervalo in horarios_dia:
             intervalo_inicio, intervalo_fim = parse_time_range(intervalo)
             
-            # Comparar strings de horários (HH:MM)
-            if intervalo_inicio <= current_time_str <= intervalo_fim:
+            # Agora, comparar objetos time
+            if intervalo_inicio <= current_time_obj <= intervalo_fim:
                 return True
         
         # Se chegou até aqui, não está em nenhum intervalo
