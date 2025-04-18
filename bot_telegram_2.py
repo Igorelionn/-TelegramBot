@@ -26,6 +26,8 @@ from functools import lru_cache
 import telebot
 import threading
 from datetime import time as datetime_time
+import uuid
+import copy
 
 # Definição da variável global assets
 assets = {}
@@ -1791,13 +1793,13 @@ def verificar_url_gif(url):
 
 def bot2_enviar_gif_pos_sinal(signal=None):
     """
-    Envia um GIF pós-sinal para todos os canais configurados, 7 minutos após o sinal original.
+    Envia uma imagem pós-sinal para todos os canais configurados, 7 minutos após o sinal original.
     
     Args:
         signal: O sinal que foi enviado anteriormente. Se None, usa o último sinal enviado.
     
     Returns:
-        bool: True se pelo menos um GIF foi enviado com sucesso, False caso contrário.
+        bool: True se pelo menos uma imagem foi enviada com sucesso, False caso contrário.
     """
     global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, ultimo_sinal_enviado
     
@@ -1806,7 +1808,7 @@ def bot2_enviar_gif_pos_sinal(signal=None):
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         
-        BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 🔄 Iniciando envio de GIF pós-sinal")
+        BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 🔄 Iniciando envio de imagem pós-sinal")
         
         # Se não foi fornecido um sinal, usar o último sinal enviado
         if not signal and ultimo_sinal_enviado:
@@ -1838,7 +1840,24 @@ def bot2_enviar_gif_pos_sinal(signal=None):
         
         BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 📊 Total de canais configurados: {total_canais}")
         
-        # Para cada idioma, enviar o GIF apropriado
+        # Caminho da imagem pós-sinal (a mesma para todos os idiomas)
+        imagem_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/pos_sinal/180398513446716419%20(7).webp"
+        
+        # Verificar se o arquivo existe (via HEAD request)
+        try:
+            resposta_verificacao = requests.head(imagem_url, timeout=5)
+            if resposta_verificacao.status_code != 200:
+                BOT2_LOGGER.warning(f"[GIF-POS][{horario_atual}] ⚠️ Imagem pós-sinal não encontrada: {imagem_url} (Status: {resposta_verificacao.status_code})")
+                # Fallback para URL alternativa se necessário
+                imagem_url = "https://i.imgur.com/6MLS405.gif"
+                BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 🔄 Usando URL de fallback: {imagem_url}")
+        except Exception as e:
+            BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] ❌ Erro ao verificar URL da imagem: {str(e)}")
+            # Fallback para URL alternativa
+            imagem_url = "https://i.imgur.com/6MLS405.gif"
+            BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 🔄 Usando URL de fallback: {imagem_url}")
+        
+        # Para cada idioma, enviar a imagem pós-sinal
         for idioma, chats in BOT2_CANAIS_CONFIG.items():
             if not chats:
                 BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] ℹ️ Nenhum chat configurado para idioma {idioma}, pulando")
@@ -1846,38 +1865,20 @@ def bot2_enviar_gif_pos_sinal(signal=None):
             
             BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 🌐 Processando idioma: {idioma} ({len(chats)} canais)")
             
-            # Selecionar a URL do GIF com base no idioma
-            gif_url = ""
-            if idioma == "pt":
-                gif_url = "https://i.imgur.com/6MLS405.gif"  # URL do GIF em português
-            elif idioma == "en":
-                gif_url = "https://i.imgur.com/0wqK1Qj.gif"  # URL do GIF em inglês
-            elif idioma == "es":
-                gif_url = "https://i.imgur.com/6MLS405.gif"  # URL do GIF em espanhol (usando o mesmo de PT por enquanto)
-            else:
-                gif_url = "https://i.imgur.com/6MLS405.gif"  # URL padrão se idioma não for reconhecido
-            
-            # Verificar se a URL do GIF é válida
-            if not verificar_url_gif(gif_url):
-                BOT2_LOGGER.warning(f"[GIF-POS][{horario_atual}] ⚠️ URL do GIF para idioma {idioma} é inválida: {gif_url}")
-                # Usar URL de fallback se a principal não for válida
-                gif_url = "https://i.imgur.com/6MLS405.gif"  # URL de fallback
-                BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 🔄 Usando URL de fallback: {gif_url}")
-            
             # Enviar para cada chat configurado neste idioma
             for chat_id in chats:
                 try:
-                    # Preparar a URL para o método sendAnimation da API do Telegram
-                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                    # Preparar a URL para o método sendPhoto da API do Telegram (em vez de sendAnimation)
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
                     
                     # Montar o payload da requisição
                     payload = {
                         "chat_id": chat_id,
-                        "animation": gif_url,
+                        "photo": imagem_url,
                         "disable_notification": False
                     }
                     
-                    BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 🚀 Enviando GIF para chat_id: {chat_id} (idioma: {idioma})")
+                    BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 🚀 Enviando imagem pós-sinal para chat_id: {chat_id} (idioma: {idioma})")
                     
                     # Enviar a requisição para a API
                     inicio_envio = time.time()
@@ -1886,11 +1887,11 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                     
                     # Verificar o resultado da requisição
                     if resposta.status_code == 200:
-                        BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] ✅ GIF enviado com sucesso para {chat_id} (tempo: {tempo_resposta:.1f}ms)")
+                        BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] ✅ Imagem enviada com sucesso para {chat_id} (tempo: {tempo_resposta:.1f}ms)")
                         resultados_envio.append(True)
                         enviados_com_sucesso += 1
                     else:
-                        BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] ❌ Falha ao enviar GIF para {chat_id}: {resposta.status_code} - {resposta.text}")
+                        BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] ❌ Falha ao enviar imagem para {chat_id}: {resposta.status_code} - {resposta.text}")
                         resultados_envio.append(False)
                         
                         # Se falhar, tentar novamente uma vez
@@ -1898,7 +1899,7 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                         try:
                             resposta_retry = requests.post(url, json=payload, timeout=15)
                             if resposta_retry.status_code == 200:
-                                BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] ✅ GIF enviado com sucesso na segunda tentativa para {chat_id}")
+                                BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] ✅ Imagem enviada com sucesso na segunda tentativa para {chat_id}")
                                 resultados_envio.append(True)
                                 enviados_com_sucesso += 1
                             else:
@@ -1907,31 +1908,31 @@ def bot2_enviar_gif_pos_sinal(signal=None):
                             BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] ❌ Erro na segunda tentativa: {str(e)}")
                 
                 except Exception as e:
-                    BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] ❌ Exceção ao enviar GIF para {chat_id}: {str(e)}")
+                    BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] ❌ Exceção ao enviar imagem para {chat_id}: {str(e)}")
                     BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
                     resultados_envio.append(False)
         
         # Calcular estatísticas finais
         if total_canais > 0:
             taxa_sucesso = (enviados_com_sucesso / total_canais) * 100
-            BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 📊 RESUMO: {enviados_com_sucesso}/{total_canais} GIFs enviados com sucesso ({taxa_sucesso:.1f}%)")
+            BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 📊 RESUMO: {enviados_com_sucesso}/{total_canais} imagens enviadas com sucesso ({taxa_sucesso:.1f}%)")
         else:
-            BOT2_LOGGER.warning(f"[GIF-POS][{horario_atual}] ⚠️ Nenhum canal configurado para envio de GIFs!")
+            BOT2_LOGGER.warning(f"[GIF-POS][{horario_atual}] ⚠️ Nenhum canal configurado para envio de imagens!")
         
-        # Retornar True se pelo menos um GIF foi enviado com sucesso
+        # Retornar True se pelo menos uma imagem foi enviada com sucesso
         envio_bem_sucedido = any(resultados_envio)
         
         if envio_bem_sucedido:
-            BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] ✅ Envio de GIF pós-sinal concluído com sucesso")
+            BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] ✅ Envio de imagem pós-sinal concluído com sucesso")
         else:
-            BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] ❌ Falha em todos os envios de GIF pós-sinal")
+            BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] ❌ Falha em todos os envios de imagem pós-sinal")
         
         return envio_bem_sucedido
     
     except Exception as e:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] ❌ Erro crítico ao enviar GIF pós-sinal: {str(e)}")
+        BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] ❌ Erro crítico ao enviar imagem pós-sinal: {str(e)}")
         BOT2_LOGGER.error(f"[GIF-POS][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
         return False
 
@@ -2106,32 +2107,49 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
             else:
                 # Para sinais não múltiplos de 3, apenas enviar o GIF pós-sinal após 7 minutos
                 BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ⏱️ Agendando GIF pós-sinal para 7 minutos (T+7)")
+                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🔍 VALIDAÇÃO: sinal={sinal}")
                 
                 def enviar_gif_pos_sinal_apos_delay():
                     try:
+                        # ID único para rastreamento nos logs
+                        thread_id = str(uuid.uuid4())[:8]
+                        
+                        # Capturar o sinal aqui dentro da função para garantir que estamos usando o valor correto
+                        sinal_thread = sinal  # Capturando o valor de sinal no momento da criação da thread
+                        BOT2_LOGGER.info(f"[GIF-DELAY][{bot2_obter_hora_brasilia().strftime('%H:%M:%S')}][Thread-{thread_id}] 🔍 Sinal capturado na thread: {sinal_thread}")
+                        
                         # Aguardar 7 minutos
                         inicio_espera = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-                        BOT2_LOGGER.info(f"[GIF-DELAY][{inicio_espera}] ⏲️ Iniciando contagem de 7 minutos para o GIF pós-sinal")
-                        time.sleep(420)  # 7 minutos = 420 segundos
+                        BOT2_LOGGER.info(f"[GIF-DELAY][{inicio_espera}][Thread-{thread_id}] ⏲️ Iniciando contagem de 7 minutos para o GIF pós-sinal")
+                        
+                        # Log adicional para depuração - a cada minuto
+                        for i in range(1, 8):
+                            time.sleep(60)  # 1 minuto
+                            agora_log = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                            BOT2_LOGGER.info(f"[GIF-DELAY][{agora_log}][Thread-{thread_id}] ⏳ Aguardando... {i}/7 minutos decorridos")
                         
                         # Enviar o GIF pós-sinal
                         agora = bot2_obter_hora_brasilia()
                         horario_atual = agora.strftime("%H:%M:%S")
-                        BOT2_LOGGER.info(f"[GIF-DELAY][{horario_atual}] ⏰ Tempo de espera concluído, enviando GIF pós-sinal (T+7)")
-                        bot2_enviar_gif_pos_sinal(sinal)
+                        BOT2_LOGGER.info(f"[GIF-DELAY][{horario_atual}][Thread-{thread_id}] ⏰ Tempo de espera concluído, enviando GIF pós-sinal (T+7)")
+                        
+                        # Log detalhado antes de chamar a função
+                        BOT2_LOGGER.info(f"[GIF-DELAY][{horario_atual}][Thread-{thread_id}] 🔍 Tentando enviar GIF pós-sinal. Sinal usado: {sinal_thread}")
+                        resultado = bot2_enviar_gif_pos_sinal(sinal_thread)
+                        BOT2_LOGGER.info(f"[GIF-DELAY][{horario_atual}][Thread-{thread_id}] 📊 Resultado do envio do GIF pós-sinal: {'✅ Sucesso' if resultado else '❌ Falha'}")
                     except Exception as e:
                         agora = bot2_obter_hora_brasilia()
                         horario_atual = agora.strftime("%H:%M:%S")
                         BOT2_LOGGER.error(f"[GIF-DELAY][{horario_atual}] ❌ Erro no agendamento do GIF pós-sinal: {str(e)}")
                         BOT2_LOGGER.error(f"[GIF-DELAY][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
-                        traceback.print_exc()
-                    
-                    # Iniciar thread para envio do GIF pós-sinal
-                    global thread_gif_pos_sinal_ativa
-                    thread_gif_pos_sinal_ativa = threading.Thread(target=enviar_gif_pos_sinal_apos_delay)
-                    thread_gif_pos_sinal_ativa.daemon = True
-                    thread_gif_pos_sinal_ativa.start()
-                    BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🧵 Thread para GIF pós-sinal iniciada com sucesso")
+                
+                # Iniciar thread para envio do GIF pós-sinal
+                global thread_gif_pos_sinal_ativa
+                thread_gif_pos_sinal_ativa = threading.Thread(target=enviar_gif_pos_sinal_apos_delay)
+                thread_gif_pos_sinal_ativa.daemon = True
+                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🧵 Iniciando thread para GIF pós-sinal (T+7 minutos)")
+                thread_gif_pos_sinal_ativa.start()
+                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ✅ Thread para GIF pós-sinal iniciada com sucesso ID: {thread_gif_pos_sinal_ativa.ident}")
 
         BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ✅ Processamento do sinal concluído com sucesso")
         
@@ -2171,14 +2189,43 @@ def enviar_sequencia_multiplo_tres():
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] 🔄 Iniciando sequência especial para múltiplo de 3")
         
+        # Capturar o sinal atual no início da sequência para evitar problemas de referência
+        if ultimo_sinal_enviado:
+            sinal_sequencia = copy.deepcopy(ultimo_sinal_enviado)  # Fazer uma cópia segura
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] ✅ Sinal capturado no início da sequência: {sinal_sequencia}")
+        else:
+            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}] ❌ ultimo_sinal_enviado é None no início da sequência!")
+            sinal_sequencia = {"ativo": "Fallback Signal", "direcao": "CALL", "expiracao": 5}
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] ⚠️ Usando sinal de fallback: {sinal_sequencia}")
+        
         # T+7: GIF pós-sinal - precisa ser agendado primeiro
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] ⏱️ Agendando GIF pós-sinal para T+7 minutos")
-        time.sleep(420)  # 7 minutos (T+0 → T+7)
+        
+        # ID único para rastreamento nos logs
+        seq_id = str(uuid.uuid4())[:8]
+        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🆔 ID da sequência: {seq_id}")
+        
+        # Log adicional para depuração - a cada minuto
+        for i in range(1, 8):
+            time.sleep(60)  # 1 minuto
+            agora_log = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{agora_log}][Seq-{seq_id}] ⏳ Aguardando GIF pós-sinal... {i}/7 minutos decorridos")
         
         # Enviar GIF pós-sinal com até 3 tentativas
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] 🎬 Enviando GIF pós-sinal (T+7)")
+        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🎬 Enviando GIF pós-sinal (T+7)")
+        
+        # Verificar se último_sinal_enviado existe
+        if ultimo_sinal_enviado is None:
+            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro: último_sinal_enviado é None!")
+            # Tentar criar um sinal genérico
+            sinal_generico = {"ativo": "Backup Signal", "direcao": "CALL", "expiracao": 5}
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Usando sinal genérico para recuperação: {sinal_generico}")
+            sinal_sequencia = sinal_generico
+        else:
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ último_sinal_enviado encontrado: {ultimo_sinal_enviado}")
+            sinal_sequencia = copy.deepcopy(ultimo_sinal_enviado)
         
         tentativas = 0
         max_tentativas = 3
@@ -2187,20 +2234,22 @@ def enviar_sequencia_multiplo_tres():
         while tentativas < max_tentativas and not sucesso_gif_pos_sinal:
             try:
                 tentativas += 1
-                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] 🔄 Tentativa {tentativas}/{max_tentativas} de enviar GIF pós-sinal")
-                resultado_gif = bot2_enviar_gif_pos_sinal(ultimo_sinal_enviado)
+                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Tentativa {tentativas}/{max_tentativas} de enviar GIF pós-sinal")
+                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔍 Enviando GIF com sinal: {sinal_sequencia}")
+                resultado_gif = bot2_enviar_gif_pos_sinal(sinal_sequencia)
                 
                 if resultado_gif:
                     sucesso_gif_pos_sinal = True
-                    BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] ✅ GIF pós-sinal enviado com sucesso!")
+                    BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ GIF pós-sinal enviado com sucesso!")
                 else:
-                    BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}] ⚠️ Falha ao enviar GIF pós-sinal. Tentando novamente...")
+                    BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Falha ao enviar GIF pós-sinal. Tentando novamente...")
                     time.sleep(30)  # Aguarda 30 segundos antes da próxima tentativa
             except Exception as e:
-                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}] ❌ Erro ao enviar GIF pós-sinal: {str(e)}")
+                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro ao enviar GIF pós-sinal: {str(e)}")
                 time.sleep(30)  # Aguarda 30 segundos antes da próxima tentativa
         
         if not sucesso_gif_pos_sinal:
+            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha nas {max_tentativas} tentativas de enviar GIF pós-sinal. Continuando sequência...")
             BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}] ❌ Falha nas {max_tentativas} tentativas de enviar GIF pós-sinal. Continuando sequência...")
         
         # T+27: Mensagem de participação (20 minutos após o T+7)
