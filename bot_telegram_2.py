@@ -974,6 +974,205 @@ mensagem_perda_enviada_hoje = False
 # Iniciar uma variável de semáforo para controlar acesso concorrente
 sequencia_multiplo_tres_lock = threading.Lock()
 
+# Adicionar variável para rastrear a última data em que a mensagem de perda foi enviada
+ultima_data_mensagem_perda = None
+
+# Links de afiliados para cada idioma
+LINKS_CORRETORA = {
+    "pt": "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack=",
+    "en": "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack=",
+    "es": "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+}
+
+# Mensagem de perda para ser enviada uma vez ao dia
+def get_mensagem_perda(idioma):
+    """Retorna a mensagem de perda formatada para o idioma especificado"""
+    link = LINKS_CORRETORA.get(idioma, LINKS_CORRETORA["pt"])  # Usar link PT como fallback
+    
+    if idioma == "pt":
+        return f"""⚠️ GERENCIAMENTO DE BANCA ⚠️
+
+Sinal anterior não alcançou o resultado esperado!
+Lembre-se de seguir seu gerenciamento para recuperar na próxima entrada.
+
+<a href="{link}">Continue operando 📈</a>"""
+    elif idioma == "en":
+        return f"""⚠️ BANKROLL MANAGEMENT ⚠️
+
+Previous signal did not achieve the expected result!
+Remember to follow your management to recover in the next entry.
+
+<a href="{link}">Continue trading 📈</a>"""
+    elif idioma == "es":
+        return f"""⚠️ GESTIÓN DE BANCA ⚠️
+
+¡La señal anterior no alcanzó el resultado esperado!
+Recuerde seguir su gestión para recuperarse en la próxima entrada.
+
+<a href="{link}">Continúe operando 📈</a>"""
+    else:
+        # Fallback para português
+        return f"""⚠️ GERENCIAMENTO DE BANCA ⚠️
+
+Sinal anterior não alcançou o resultado esperado!
+Lembre-se de seguir seu gerenciamento para recuperar na próxima entrada.
+
+<a href="{link}">Continue operando 📈</a>"""
+
+def verificar_mensagem_perda_hoje():
+    """
+    Verifica se a mensagem de perda já foi enviada hoje.
+    
+    Returns:
+        bool: True se a mensagem já foi enviada hoje, False caso contrário
+    """
+    global ultima_data_mensagem_perda
+    
+    # Obter a data atual em Brasília
+    agora = bot2_obter_hora_brasilia()
+    data_atual = agora.strftime("%Y-%m-%d")
+    
+    # Se nunca foi enviada ou foi enviada em outro dia, deve enviar hoje
+    if ultima_data_mensagem_perda is None or ultima_data_mensagem_perda != data_atual:
+        return False
+    
+    # Se já foi enviada hoje, não enviar novamente
+    return True
+
+def enviar_mensagem_perda(signal=None):
+    """
+    Envia uma mensagem de perda para todos os canais configurados.
+    
+    Args:
+        signal: O sinal que foi enviado anteriormente. Se None, usa o último sinal enviado.
+    
+    Returns:
+        bool: True se pelo menos uma mensagem foi enviada com sucesso, False caso contrário.
+    """
+    global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, ultimo_sinal_enviado, ultima_data_mensagem_perda
+    
+    try:
+        # Registrar que a mensagem de perda foi enviada hoje
+        agora = bot2_obter_hora_brasilia()
+        data_atual = agora.strftime("%Y-%m-%d")
+        ultima_data_mensagem_perda = data_atual
+        
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[PERDA][{horario_atual}] 🔄 Iniciando envio de mensagem de perda (uma vez ao dia)")
+        
+        # Se não foi fornecido um sinal, usar o último sinal enviado
+        if not signal and ultimo_sinal_enviado:
+            signal = ultimo_sinal_enviado
+            BOT2_LOGGER.info(f"[PERDA][{horario_atual}] ℹ️ Usando último sinal enviado: {signal['ativo']} {signal['direcao']}")
+        
+        if not signal:
+            BOT2_LOGGER.error(f"[PERDA][{horario_atual}] ❌ Nenhum sinal fornecido e nenhum sinal anterior disponível")
+            return False
+        
+        # Verificar conexão com API antes de enviar
+        BOT2_LOGGER.info(f"[PERDA][{horario_atual}] 🔄 Verificando conexão com API do Telegram...")
+        try:
+            url_verificacao = f"https://api.telegram.org/bot{BOT2_TOKEN}/getMe"
+            resposta = requests.get(url_verificacao, timeout=10)
+            if resposta.status_code == 200:
+                BOT2_LOGGER.info(f"[PERDA][{horario_atual}] ✅ Conexão com API OK!")
+            else:
+                BOT2_LOGGER.warning(f"[PERDA][{horario_atual}] ⚠️ API do Telegram respondeu com código {resposta.status_code}")
+        except Exception as e:
+            BOT2_LOGGER.warning(f"[PERDA][{horario_atual}] ⚠️ Erro ao verificar conexão com API: {str(e)}")
+        
+        # Lista para armazenar resultado dos envios
+        resultados_envio = []
+        
+        # Contadores para estatísticas
+        total_canais = sum(len(chats) for chats in BOT2_CANAIS_CONFIG.items())
+        enviados_com_sucesso = 0
+        
+        BOT2_LOGGER.info(f"[PERDA][{horario_atual}] 📊 Total de canais configurados: {total_canais}")
+        
+        # Para cada idioma, enviar a mensagem de perda apropriada
+        for idioma, chats in BOT2_CANAIS_CONFIG.items():
+            if not chats:
+                BOT2_LOGGER.info(f"[PERDA][{horario_atual}] ℹ️ Nenhum chat configurado para idioma {idioma}, pulando")
+                continue
+            
+            BOT2_LOGGER.info(f"[PERDA][{horario_atual}] 🌐 Processando idioma: {idioma} ({len(chats)} canais)")
+            
+            # Obter a mensagem formatada para o idioma
+            mensagem = get_mensagem_perda(idioma)
+            
+            # Enviar para cada chat configurado neste idioma
+            for chat_id in chats:
+                try:
+                    # Preparar a URL para o método sendMessage da API do Telegram
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                    
+                    # Montar o payload da requisição
+                    payload = {
+                        "chat_id": chat_id,
+                        "text": mensagem,
+                        "parse_mode": "HTML",
+                        "disable_notification": False
+                    }
+                    
+                    BOT2_LOGGER.info(f"[PERDA][{horario_atual}] 🚀 Enviando mensagem de perda para chat_id: {chat_id} (idioma: {idioma})")
+                    
+                    # Enviar a requisição para a API
+                    inicio_envio = time.time()
+                    resposta = requests.post(url, json=payload, timeout=15)
+                    tempo_resposta = (time.time() - inicio_envio) * 1000  # em milissegundos
+                    
+                    # Verificar o resultado da requisição
+                    if resposta.status_code == 200:
+                        BOT2_LOGGER.info(f"[PERDA][{horario_atual}] ✅ Mensagem enviada com sucesso para {chat_id} (tempo: {tempo_resposta:.1f}ms)")
+                        resultados_envio.append(True)
+                        enviados_com_sucesso += 1
+                    else:
+                        BOT2_LOGGER.error(f"[PERDA][{horario_atual}] ❌ Falha ao enviar mensagem para {chat_id}: {resposta.status_code} - {resposta.text}")
+                        resultados_envio.append(False)
+                        
+                        # Se falhar, tentar novamente uma vez
+                        BOT2_LOGGER.info(f"[PERDA][{horario_atual}] 🔄 Tentando novamente para {chat_id}...")
+                        try:
+                            resposta_retry = requests.post(url, json=payload, timeout=15)
+                            if resposta_retry.status_code == 200:
+                                BOT2_LOGGER.info(f"[PERDA][{horario_atual}] ✅ Mensagem enviada com sucesso na segunda tentativa para {chat_id}")
+                                resultados_envio.append(True)
+                                enviados_com_sucesso += 1
+                            else:
+                                BOT2_LOGGER.error(f"[PERDA][{horario_atual}] ❌ Falha na segunda tentativa: {resposta_retry.status_code}")
+                        except Exception as e:
+                            BOT2_LOGGER.error(f"[PERDA][{horario_atual}] ❌ Erro na segunda tentativa: {str(e)}")
+                
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[PERDA][{horario_atual}] ❌ Exceção ao enviar mensagem para {chat_id}: {str(e)}")
+                    BOT2_LOGGER.error(f"[PERDA][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
+                    resultados_envio.append(False)
+        
+        # Calcular estatísticas finais
+        if total_canais > 0:
+            taxa_sucesso = (enviados_com_sucesso / total_canais) * 100
+            BOT2_LOGGER.info(f"[PERDA][{horario_atual}] 📊 RESUMO: {enviados_com_sucesso}/{total_canais} mensagens enviadas com sucesso ({taxa_sucesso:.1f}%)")
+        else:
+            BOT2_LOGGER.warning(f"[PERDA][{horario_atual}] ⚠️ Nenhum canal configurado para envio de mensagens!")
+        
+        # Retornar True se pelo menos uma mensagem foi enviada com sucesso
+        envio_bem_sucedido = any(resultados_envio)
+        
+        if envio_bem_sucedido:
+            BOT2_LOGGER.info(f"[PERDA][{horario_atual}] ✅ Envio de mensagem de perda concluído com sucesso")
+        else:
+            BOT2_LOGGER.error(f"[PERDA][{horario_atual}] ❌ Falha em todos os envios de mensagem de perda")
+        
+        return envio_bem_sucedido
+    
+    except Exception as e:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.error(f"[PERDA][{horario_atual}] ❌ Erro crítico ao enviar mensagem de perda: {str(e)}")
+        BOT2_LOGGER.error(f"[PERDA][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
+        return False
+
 def adicionar_blitz(lista_ativos):
     for ativo in lista_ativos:
         if ativo in HORARIOS_PADRAO:
@@ -1794,12 +1993,13 @@ def verificar_url_gif(url):
 def bot2_enviar_gif_pos_sinal(signal=None):
     """
     Envia uma imagem pós-sinal para todos os canais configurados, 7 minutos após o sinal original.
+    Uma vez por dia, envia uma mensagem de perda em vez da imagem.
     
     Args:
         signal: O sinal que foi enviado anteriormente. Se None, usa o último sinal enviado.
     
     Returns:
-        bool: True se pelo menos uma imagem foi enviada com sucesso, False caso contrário.
+        bool: True se pelo menos uma imagem/mensagem foi enviada com sucesso, False caso contrário.
     """
     global BOT2_LOGGER, BOT2_CANAIS_CONFIG, BOT2_TOKEN, ultimo_sinal_enviado
     
@@ -1807,6 +2007,12 @@ def bot2_enviar_gif_pos_sinal(signal=None):
         # Obter a hora atual em Brasília para os logs
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
+        
+        # Verificar se devemos enviar a mensagem de perda em vez do GIF
+        # (uma vez por dia)
+        if not verificar_mensagem_perda_hoje():
+            BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 🔄 Decidido enviar mensagem de perda em vez de imagem pós-sinal (uma vez ao dia)")
+            return enviar_mensagem_perda(signal)
         
         BOT2_LOGGER.info(f"[GIF-POS][{horario_atual}] 🔄 Iniciando envio de imagem pós-sinal")
         
