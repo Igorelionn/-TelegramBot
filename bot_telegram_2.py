@@ -1112,6 +1112,7 @@ def enviar_mensagem_perda(signal=None):
                         "chat_id": chat_id,
                         "text": mensagem,
                         "parse_mode": "HTML",
+                        "disable_web_page_preview": True,
                         "disable_notification": False
                     }
                     
@@ -2535,7 +2536,7 @@ def enviar_sequencia_multiplo_tres():
         # ETAPA 2: Enviar mensagem de participação com até 3 tentativas
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 📢 Enviando mensagem de participação (T+27)")
+        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 📢 ETAPA 2/4: Enviando mensagem de participação (T+27)")
         
         tentativas = 0
         max_tentativas = 3
@@ -2649,11 +2650,21 @@ def enviar_sequencia_multiplo_tres():
         # Resumo da sequência
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 📊 RESUMO DA SEQUÊNCIA MÚLTIPLO DE 3:")
+        tempo_total = time.time() - inicio_sequencia
+        
+        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 📊 RESUMO DA SEQUÊNCIA MÚLTIPLO DE 3 (tempo total: {tempo_total/60:.1f} minutos):")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] - GIF pós-sinal (T+7): {'✅ OK' if sucesso_gif_pos_sinal else '❌ FALHA'}")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] - Mensagem de participação (T+27): {'✅ OK' if sucesso_participacao else '❌ FALHA'}")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] - GIF promocional (T+35): {'✅ OK' if ao_menos_um_gif_promo else '❌ FALHA'}")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] - Mensagem de abertura (T+36): {'✅ OK' if sucesso_abertura else '❌ FALHA'}")
+        
+        # Verificar se arquivo de lock ainda existe e removê-lo
+        try:
+            if os.path.exists(lock_file):
+                os.remove(lock_file)
+                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔓 Arquivo de lock removido: {lock_file}")
+        except Exception as e:
+            BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Erro ao remover arquivo de lock: {str(e)}")
         
         if sucesso_gif_pos_sinal and sucesso_participacao and ao_menos_um_gif_promo and sucesso_abertura:
             BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Sequência especial para múltiplo de 3 concluída com SUCESSO TOTAL!")
@@ -3028,30 +3039,35 @@ def bot2_enviar_mensagem_abertura_corretora():
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] 🔄 Iniciando envio da mensagem de abertura da corretora")
         
+        # Links de afiliados para cada idioma
+        link_pt = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
+        link_en = "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
+        link_es = "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+        
         # Mensagem de abertura da corretora
-        mensagem_pt = """👉🏼Abram a corretora Pessoal
+        mensagem_pt = f"""👉🏼Abram a corretora Pessoal
 
 ⚠️FIQUEM ATENTOS⚠️
 
 🔥Cadastre-se na XXBROKER agora mesmo🔥
 
-➡️ CLICANDO AQUI"""
+➡️ <a href="{link_pt}">CLICANDO AQUI</a>"""
 
-        mensagem_en = """👉🏼Open your broker account now
+        mensagem_en = f"""👉🏼Open your broker account now
 
 ⚠️STAY ALERT⚠️
 
 🔥Sign up with XXBROKER right now🔥
 
-➡️ CLICK HERE"""
+➡️ <a href="{link_en}">CLICK HERE</a>"""
 
-        mensagem_es = """👉🏼Abran la corretora Personas
+        mensagem_es = f"""👉🏼Abran la corretora Personas
 
 ⚠️ESTÉN ATENTOS⚠️
 
 🔥Regístrese en XXBROKER ahora mismo🔥
 
-➡️ HAGA CLIC AQUÍ"""
+➡️ <a href="{link_es}">HAGA CLIC AQUÍ</a>"""
         
         mensagens_enviadas = []
         
@@ -3412,22 +3428,15 @@ def bot2_enviar_gif_promo(idioma="pt"):
         chats = BOT2_CANAIS_CONFIG[idioma]
         BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 📢 Total de canais para idioma {idioma}: {len(chats)}")
         
-        # Selecionar URL do sticker promocional com base no idioma (usando formato webp para transparência)
-        if idioma == "pt":
-            sticker_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/gif_promo/promo_pt.webp"
-        elif idioma == "en":
-            sticker_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/gif_promo/promo_en.webp"
-        elif idioma == "es":
-            sticker_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/gif_promo/promo_es.webp"
-        else:
-            sticker_url = "https://raw.githubusercontent.com/IgorElion/-TelegramBot/main/videos/gif_promo/promo_pt.webp"  # URL padrão se idioma não reconhecido
-            
-        # Verificar se a URL do sticker é válida
-        if not verificar_url_gif(sticker_url):
-            BOT2_LOGGER.warning(f"[GIF-PROMO][{horario_atual}] ⚠️ URL do sticker promocional inválida: {sticker_url}")
-            # Usar URL alternativa
-            sticker_url = "https://i.imgur.com/jphWAEq.webp"
-            BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 🔄 Usando URL alternativa: {sticker_url}")
+        # Usar a mesma URL do GIF promocional para todos os idiomas
+        gif_url = "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGhqMmNqOWFpbTQ2cjNxMzF1YncxcnAwdTFvN2o1NWRmc2dvYXZ6bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/whPiIq21hxXuJn7WVX/giphy.gif"
+        
+        # Verificar se a URL do GIF é válida
+        if not verificar_url_gif(gif_url):
+            BOT2_LOGGER.warning(f"[GIF-PROMO][{horario_atual}] ⚠️ URL do GIF promocional inválida: {gif_url}")
+            # Usar URL alternativa se a verificação falhar
+            gif_url = "https://i.imgur.com/jphWAEq.gif"
+            BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 🔄 Usando URL alternativa: {gif_url}")
         
         # Lista para armazenar resultados dos envios
         resultados_envio = []
@@ -3436,17 +3445,17 @@ def bot2_enviar_gif_promo(idioma="pt"):
         # Enviar para cada canal configurado
         for chat_id in chats:
             try:
-                # URL para o método sendSticker da API do Telegram (preserva transparência e tamanho adequado)
-                url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendSticker"
+                # URL para o método sendAnimation da API do Telegram (para GIFs)
+                url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
                 
                 # Montar payload da requisição
                 payload = {
                     "chat_id": chat_id,
-                    "sticker": sticker_url,
+                    "animation": gif_url,
                     "disable_notification": False
                 }
                 
-                BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 🚀 Enviando sticker promocional para chat_id: {chat_id}")
+                BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 🚀 Enviando GIF promocional para chat_id: {chat_id}")
                 
                 # Enviar requisição para API
                 inicio_envio = time.time()
@@ -3455,11 +3464,11 @@ def bot2_enviar_gif_promo(idioma="pt"):
                 
                 # Verificar resultado da requisição
                 if resposta.status_code == 200:
-                    BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] ✅ Sticker promocional enviado com sucesso para {chat_id} (tempo: {tempo_resposta:.1f}ms)")
+                    BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] ✅ GIF promocional enviado com sucesso para {chat_id} (tempo: {tempo_resposta:.1f}ms)")
                     resultados_envio.append(True)
                     enviados_com_sucesso += 1
                 else:
-                    BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Falha ao enviar sticker promocional para {chat_id}: {resposta.status_code} - {resposta.text}")
+                    BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Falha ao enviar GIF promocional para {chat_id}: {resposta.status_code} - {resposta.text}")
                     resultados_envio.append(False)
                     
                     # Tentar novamente uma vez se falhar
@@ -3467,7 +3476,7 @@ def bot2_enviar_gif_promo(idioma="pt"):
                     try:
                         resposta_retry = requests.post(url, json=payload, timeout=15)
                         if resposta_retry.status_code == 200:
-                            BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] ✅ Sticker promocional enviado com sucesso na segunda tentativa para {chat_id}")
+                            BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] ✅ GIF promocional enviado com sucesso na segunda tentativa para {chat_id}")
                             resultados_envio.append(True)
                             enviados_com_sucesso += 1
                         else:
@@ -3476,28 +3485,28 @@ def bot2_enviar_gif_promo(idioma="pt"):
                         BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Erro na segunda tentativa: {str(e)}")
                         
             except Exception as e:
-                BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Exceção ao enviar sticker promocional para {chat_id}: {str(e)}")
+                BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Exceção ao enviar GIF promocional para {chat_id}: {str(e)}")
                 BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
                 resultados_envio.append(False)
         
         # Calcular estatísticas finais
         if chats:
             taxa_sucesso = (enviados_com_sucesso / len(chats)) * 100
-            BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 📊 RESUMO: {enviados_com_sucesso}/{len(chats)} stickers promocionais enviados com sucesso ({taxa_sucesso:.1f}%)")
+            BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] 📊 RESUMO: {enviados_com_sucesso}/{len(chats)} GIFs promocionais enviados com sucesso ({taxa_sucesso:.1f}%)")
         
         # Retornar True se pelo menos um GIF foi enviado com sucesso
         envio_bem_sucedido = any(resultados_envio)
         
         if envio_bem_sucedido:
-            BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] ✅ Envio de sticker promocional para idioma {idioma} concluído com sucesso")
+            BOT2_LOGGER.info(f"[GIF-PROMO][{horario_atual}] ✅ Envio de GIF promocional para idioma {idioma} concluído com sucesso")
         else:
-            BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Falha em todos os envios de sticker promocional para idioma {idioma}")
+            BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Falha em todos os envios de GIF promocional para idioma {idioma}")
         
         return envio_bem_sucedido
     
     except Exception as e:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Erro crítico ao enviar sticker promocional: {str(e)}")
+        BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Erro crítico ao enviar GIF promocional: {str(e)}")
         BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
         return False
