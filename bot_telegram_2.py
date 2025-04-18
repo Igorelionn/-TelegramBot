@@ -1013,47 +1013,68 @@ def parse_time_range(time_str):
 
 def is_asset_available(asset, current_time=None, current_day=None):
     """
-    Verifica se um ativo está disponível para negociação em um determinado horário.
-
+    Verifica se um ativo está disponível para negociação no horário especificado.
+    
     Args:
-        asset (str): O nome do ativo a ser verificado.
-        current_time (datetime, optional): O horário atual. Se None, usará o horário atual do sistema.
-        current_day (str, optional): O dia atual. Se None, será determinado a partir do horário atual.
-
+        asset (str): Nome do ativo a ser verificado
+        current_time (datetime ou str): Horário atual (formato datetime ou string HH:MM)
+        current_day (str): Dia da semana atual (em inglês: Monday, Tuesday, etc.)
+    
     Returns:
-        bool: True se o ativo estiver disponível, False caso contrário.
+        bool: True se o ativo estiver disponível, False caso contrário
     """
-    # Se o horário atual não foi fornecido, usar o horário de Brasília
-    if current_time is None:
-        current_time = bot2_obter_hora_brasilia()
-
-    # Determinar o dia da semana atual
-    if current_day is None:
-        # segunda-feira, terça-feira, etc.
-        current_day = current_time.strftime("%A")
-
-    # Transformar o horário atual em um formato de string para comparação
-    current_time_str = current_time.strftime("%H:%M")
-
-    # Se o ativo tiver um horário personalizado, verificar nesse horário
-    asset_key = asset.replace(" ", "_").replace("/", "_")
-    if asset_key in HORARIOS_PADRAO:
-        day_ranges = HORARIOS_PADRAO[asset_key].get(current_day, [])
-        if not day_ranges:
-            return False  # Se não há horários definidos para este dia, o ativo não está disponível
-
-        # Verificar se o horário atual está dentro de algum dos intervalos
-        # definidos
-        for time_range in day_ranges:
-            start_time, end_time = time_range.split("-")
-            if start_time <= current_time_str <= end_time:
+    global BOT2_LOGGER, HORARIOS_PADRAO
+    
+    try:
+        # Se o horário e o dia não foram fornecidos, usar o horário atual de Brasília
+        if current_time is None:
+            agora = bot2_obter_hora_brasilia()
+            current_time = agora
+            current_day = agora.strftime("%A")
+        
+        # Verificar se current_time é uma string ou objeto datetime
+        if isinstance(current_time, str):
+            # Se for string, usá-la diretamente
+            current_time_str = current_time
+        else:
+            # Se for datetime, formatar para string HH:MM
+            current_time_str = current_time.strftime("%H:%M")
+        
+        # Normalizar nome do ativo para chave no dicionário
+        asset_key = asset.replace(" ", "_").replace("/", "_").replace("(", "_").replace(")", "_")
+        
+        # Verificar se o ativo existe no dicionário de horários
+        if asset_key not in HORARIOS_PADRAO:
+            BOT2_LOGGER.warning(f"Ativo {asset} não encontrado na configuração de horários")
+            return False
+        
+        # Verificar se o dia atual está na configuração do ativo
+        if current_day not in HORARIOS_PADRAO[asset_key]:
+            BOT2_LOGGER.debug(f"Dia {current_day} não configurado para o ativo {asset}")
+            return False
+        
+        # Obter intervalos de horário para o dia atual
+        horarios_dia = HORARIOS_PADRAO[asset_key][current_day]
+        
+        # Se a lista de horários estiver vazia, o ativo não está disponível nesse dia
+        if not horarios_dia:
+            return False
+        
+        # Verificar se o horário atual está dentro de algum dos intervalos configurados
+        for intervalo in horarios_dia:
+            intervalo_inicio, intervalo_fim = parse_time_range(intervalo)
+            
+            # Comparar strings de horários (HH:MM)
+            if intervalo_inicio <= current_time_str <= intervalo_fim:
                 return True
-
-        return False  # Se não está em nenhum intervalo, não está disponível
-
-    # Se o ativo não tem um horário específico definido, ele está sempre
-    # disponível
-    return True
+        
+        # Se chegou até aqui, não está em nenhum intervalo
+        return False
+    
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao verificar disponibilidade do ativo {asset}: {str(e)}")
+        BOT2_LOGGER.error(f"Detalhes: {traceback.format_exc()}")
+        return False
 
 
 def bot2_verificar_horario_ativo(ativo, categoria):
@@ -1088,41 +1109,61 @@ def bot2_obter_hora_brasilia():
 
 def bot2_verificar_disponibilidade():
     """
-    Verifica quais ativos estão disponíveis no momento da verificação.
-    Retorna uma lista de ativos da categoria Digital disponíveis.
+    Verifica quais ativos estão disponíveis para negociação no momento atual.
+    
+    Returns:
+        list: Lista de nomes dos ativos disponíveis
     """
-    ativos_disponiveis = []
-
-    # Obter hora atual no fuso horário de Brasília
-    agora = bot2_obter_hora_brasilia()
-    dia_atual = agora.strftime("%A")
-    hora_atual = agora.strftime("%H:%M")
-
-    BOT2_LOGGER.info(
-        f"Verificando disponibilidade para o dia {dia_atual} às {hora_atual}"
-    )
-
-    # Filtrar apenas ativos da categoria Digital
-    ativos_digital = [ativo for ativo in ATIVOS_CATEGORIAS["Digital"]]
-
-    if not ativos_digital:
-        BOT2_LOGGER.warning("Nenhum ativo na categoria Digital encontrado!")
+    global BOT2_LOGGER, ATIVOS_CATEGORIAS
+    
+    try:
+        # Obter hora atual em Brasília
+        agora = bot2_obter_hora_brasilia()
+        
+        # Formar strings de hora e dia para logs e verificação
+        hora_atual = agora.strftime("%H:%M")
+        dia_atual = agora.strftime("%A")
+        data_hora_str = agora.strftime("%Y-%m-%d %H:%M:%S")
+        
+        BOT2_LOGGER.info(f"📆 Data/Hora atual: {data_hora_str} ({dia_atual})")
+        BOT2_LOGGER.info(f"Verificando disponibilidade para o dia {dia_atual} às {hora_atual}")
+        
+        # Inicializar lista de ativos disponíveis
+        ativos_disponiveis = []
+        
+        # Percorrer a categoria "Digital" para verificar quais ativos estão disponíveis
+        ativos_digital = ATIVOS_CATEGORIAS.get("Digital", [])
+        BOT2_LOGGER.info(f"Total de ativos na categoria Digital: {len(ativos_digital)}")
+        
+        if not ativos_digital:
+            BOT2_LOGGER.warning("Nenhum ativo encontrado na categoria Digital")
+            return []
+            
+        # Verificar disponibilidade de cada ativo
+        for ativo in ativos_digital:
+            try:
+                # Passar objeto datetime para a função de verificação
+                if is_asset_available(ativo, agora, dia_atual):
+                    ativos_disponiveis.append(ativo)
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao verificar disponibilidade do ativo {ativo}: {str(e)}")
+        
+        # Logs informativos sobre o resultado da verificação
+        total_disponiveis = len(ativos_disponiveis)
+        percentual = (total_disponiveis / len(ativos_digital)) * 100 if ativos_digital else 0
+        
+        BOT2_LOGGER.info(f"✅ Ativos disponíveis: {total_disponiveis}/{len(ativos_digital)} ({percentual:.1f}%)")
+        if ativos_disponiveis:
+            BOT2_LOGGER.info(f"📋 Lista de ativos disponíveis: {', '.join(ativos_disponiveis)}")
+        else:
+            BOT2_LOGGER.warning("⚠️ Nenhum ativo disponível no momento atual!")
+            
+        return ativos_disponiveis
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"❌ Erro ao verificar disponibilidade dos ativos: {str(e)}")
+        BOT2_LOGGER.error(f"🔍 Detalhes: {traceback.format_exc()}")
         return []
-
-    BOT2_LOGGER.info(
-        f"Total de ativos na categoria Digital: {len(ativos_digital)}"
-    )
-
-    # Verificar disponibilidade de cada ativo
-    for ativo in ativos_digital:
-        if is_asset_available(ativo, hora_atual, dia_atual):
-            ativos_disponiveis.append(ativo)
-
-    BOT2_LOGGER.info(
-        f"Ativos disponíveis no momento ({len(ativos_disponiveis)}): {ativos_disponiveis}"
-    )
-
-    return ativos_disponiveis
 
 
 def bot2_gerar_sinal_aleatorio():
