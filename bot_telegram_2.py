@@ -1040,8 +1040,58 @@ def is_asset_available(asset, current_time=None, current_day=None):
             # Se for datetime, formatar para string HH:MM
             current_time_str = current_time.strftime("%H:%M")
         
-        # Normalizar nome do ativo para chave no dicionário
-        asset_key = asset.replace(" ", "_").replace("/", "_").replace("(", "_").replace(")", "_")
+        # Mapeamento de nomes de ativos para as chaves em HORARIOS_PADRAO
+        mapeamento_chaves = {
+            "Gold/Silver (OTC)": "Gold/Silver_OTC",
+            "Worldcoin (OTC)": "Worldcoin_OTC",
+            "USD/THB (OTC)": "USD/THB_OTC",
+            "ETH/USD (OTC)": "ETH/USD_OTC",
+            "CHF/JPY (OTC)": "CHF/JPY_OTC",
+            "Pepe (OTC)": "Pepe_OTC",
+            "GBP/AUD (OTC)": "GBP/AUD_OTC",
+            "GBP/CHF": "GBP/CHF",
+            "GBP/CAD (OTC)": "GBP/CAD_OTC",
+            "EUR/JPY (OTC)": "EUR/JPY_OTC",
+            "AUD/CHF": "AUD/CHF",
+            "GER 30 (OTC)": "GER_30_OTC",
+            "AUD/CHF (OTC)": "AUD/CHF_OTC",
+            "EUR/AUD": "EUR/AUD",
+            "USD/CAD (OTC)": "USD/CAD_OTC",
+            "BTC/USD": "BTC/USD",
+            "Amazon/Ebay (OTC)": "Amazon/Ebay_OTC",
+            "Coca-Cola Company (OTC)": "Coca-Cola_Company_OTC",
+            "AIG (OTC)": "AIG_OTC",
+            "Amazon/Alibaba (OTC)": "Amazon/Alibaba_OTC",
+            "Bitcoin Cash (OTC)": "Bitcoin_Cash_OTC",
+            "AUD/USD": "AUD/USD",
+            "DASH (OTC)": "DASH_OTC",
+            "BTC/USD (OTC)": "BTC/USD_OTC",
+            "SP 35 (OTC)": "SP_35_OTC",
+            "TRUMP Coin (OTC)": "TRUM_Coin_OTC",
+            "US 100 (OTC)": "US_100_OTC",
+            "EUR/CAD (OTC)": "EUR/CAD_OTC",
+            "HK 33 (OTC)": "HK_33_OTC",
+            "Alphabet/Microsoft (OTC)": "Alphabet_Microsoft_OTC",
+            "1000Sats (OTC)": "1000Sats_OTC",
+            "USD/ZAR (OTC)": "USD/ZAR_OTC",
+            "Litecoin (OTC)": "Litecoin_OTC",
+            "Hamster Kombat (OTC)": "Hamster_Kombat_OTC",
+            "USD Currency Index (OTC)": "USD Currency Index_OTC",
+            "AUS 200 (OTC)": "AUS_200_OTC",
+            "USD/CAD": "USD/CAD",
+            "MELANIA Coin (OTC)": "MELANIA_Coin_OTC",
+            "JP 225 (OTC)": "JP_225_OTC",
+            "AUD/CAD (OTC)": "AUD/CAD_OTC",
+            "AUD/JPY (OTC)": "AUD/JPY_OTC",
+            "US 500 (OTC)": "US_500_OTC",
+        }
+        
+        # Obter a chave correta para o ativo
+        if asset in mapeamento_chaves:
+            asset_key = mapeamento_chaves[asset]
+        else:
+            # Normalização alternativa (fallback)
+            asset_key = asset.replace(" ", "_").replace("/", "_").replace("(", "_").replace(")", "_")
         
         # Verificar se o ativo existe no dicionário de horários
         if asset_key not in HORARIOS_PADRAO:
