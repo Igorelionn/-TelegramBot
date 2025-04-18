@@ -2582,14 +2582,17 @@ def bot2_iniciar_ciclo_sinais():
     """
     Inicia o ciclo de envio de sinais do Bot 2, agendando para serem enviados
     a cada hora no minuto 13.
+    Também agenda uma verificação de ativos disponíveis 3 minutos antes do sinal.
     """
     global bot2_sinais_agendados, BOT2_LOGGER
     
     try:
         # Limpar agendamentos anteriores para evitar duplicação
         schedule.clear("bot2_sinais")
+        schedule.clear("verificacao_previa")
         
         BOT2_LOGGER.info("🔄 Sinal do Bot 2 agendado para o minuto 13 de cada hora")
+        BOT2_LOGGER.info("🔄 Verificação prévia de ativos agendada para o minuto 10 de cada hora (3 min antes do sinal)")
         BOT2_LOGGER.info("⚙️ Configuração atual: 1 sinal por hora, apenas ativos Digital, expiração de 5 minutos")
         
         # Verificar os ativos disponíveis no momento da inicialização
@@ -2626,6 +2629,63 @@ def bot2_iniciar_ciclo_sinais():
         tempo_para_proximo = (proxima_hora - hora_atual).total_seconds() / 60.0
         
         BOT2_LOGGER.info(f"📅 Próximo sinal agendado para: {proxima_hora.strftime('%H:%M')} (em {tempo_para_proximo:.1f} minutos)")
+        
+        # Função para verificar ativos disponíveis 3 minutos antes do sinal
+        def verificar_ativos_pre_sinal():
+            """Verifica ativos disponíveis 3 minutos antes do sinal agendado"""
+            try:
+                # Obter hora atual
+                hora_atual = bot2_obter_hora_brasilia()
+                hora_formatada = hora_atual.strftime("%H:%M:%S")
+                
+                BOT2_LOGGER.info(f"[PRE-SINAL][{hora_formatada}] 🔍 VERIFICAÇÃO PRÉ-SINAL: Verificando ativos disponíveis 3 minutos antes do sinal")
+                BOT2_LOGGER.info(f"[PRE-SINAL][{hora_formatada}] 🕒 Hora atual: {hora_atual.strftime('%Y-%m-%d %H:%M:%S')}")
+                
+                # Calcular hora do próximo sinal (3 minutos após esta verificação)
+                hora_proximo_sinal = hora_atual + timedelta(minutes=3)
+                BOT2_LOGGER.info(f"[PRE-SINAL][{hora_formatada}] ⏱️ Sinal será enviado às: {hora_proximo_sinal.strftime('%H:%M:%S')}")
+                
+                # Verificar ativos disponíveis
+                ativos_disponiveis = bot2_verificar_disponibilidade()
+                
+                # Armazenar ativos disponíveis para uso na geração do sinal
+                ATIVOS_CATEGORIAS["Digital_Disponiveis"] = ativos_disponiveis
+                
+                total_ativos = len(ATIVOS_CATEGORIAS["Digital"])
+                
+                if not ativos_disponiveis:
+                    BOT2_LOGGER.warning(f"[PRE-SINAL][{hora_formatada}] ⚠️ ALERTA: Nenhum ativo disponível para o próximo sinal!")
+                    BOT2_LOGGER.warning(f"[PRE-SINAL][{hora_formatada}] ⚠️ O sinal pode não ser enviado se essa situação persistir!")
+                    return
+                
+                percentual_disponivel = (len(ativos_disponiveis) / total_ativos) * 100
+                BOT2_LOGGER.info(f"[PRE-SINAL][{hora_formatada}] ✅ {len(ativos_disponiveis)}/{total_ativos} ativos disponíveis ({percentual_disponivel:.1f}%)")
+                
+                # Mostrar alguns ativos disponíveis (até 5)
+                amostra_disponiveis = ativos_disponiveis[:5]
+                BOT2_LOGGER.info(f"[PRE-SINAL][{hora_formatada}] 🟢 Exemplos disponíveis: {', '.join(amostra_disponiveis)}{' e outros...' if len(ativos_disponiveis) > 5 else ''}")
+                
+                # Verificar conexão com a API do Telegram
+                BOT2_LOGGER.info(f"[PRE-SINAL][{hora_formatada}] 🔄 Verificando conexão com a API do Telegram...")
+                
+                try:
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/getMe"
+                    resposta = requests.get(url, timeout=10)
+                    
+                    if resposta.status_code == 200:
+                        bot_info = resposta.json()
+                        BOT2_LOGGER.info(f"[PRE-SINAL][{hora_formatada}] ✅ Conexão com API OK! Bot: @{bot_info['result']['username']}")
+                    else:
+                        BOT2_LOGGER.error(f"[PRE-SINAL][{hora_formatada}] ❌ Falha na conexão com API: {resposta.status_code} - {resposta.text}")
+                        BOT2_LOGGER.warning(f"[PRE-SINAL][{hora_formatada}] ⚠️ Recomendado verificar a conexão antes do envio do sinal!")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[PRE-SINAL][{hora_formatada}] ❌ Erro ao verificar API: {str(e)}")
+                    BOT2_LOGGER.warning(f"[PRE-SINAL][{hora_formatada}] ⚠️ Tente reiniciar o bot se o problema persistir!")
+                    
+            except Exception as e:
+                agora = bot2_obter_hora_brasilia()
+                BOT2_LOGGER.error(f"[PRE-SINAL][{agora.strftime('%H:%M:%S')}] ❌ Erro ao fazer verificação pré-sinal: {str(e)}")
+                BOT2_LOGGER.error(f"[PRE-SINAL][{agora.strftime('%H:%M:%S')}] 🔍 Detalhes: {traceback.format_exc()}")
         
         # Definir a função que verifica os ativos disponíveis antes de enviar o sinal
         def enviar_sinal_com_verificacao():
@@ -2707,6 +2767,9 @@ def bot2_iniciar_ciclo_sinais():
         
         # Agendar para o minuto 13 de cada hora
         schedule.every().hour.at(":13").do(enviar_sinal_com_verificacao).tag("bot2_sinais")
+        
+        # Agendar verificação prévia 3 minutos antes do sinal
+        schedule.every().hour.at(":10").do(verificar_ativos_pre_sinal).tag("verificacao_previa")
         
         # Marcar como agendado
         bot2_sinais_agendados = True
