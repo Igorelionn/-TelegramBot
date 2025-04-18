@@ -2127,9 +2127,10 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
                         traceback.print_exc()
                     
                     # Iniciar thread para envio do GIF pós-sinal
-                    gif_pos_sinal_thread = threading.Thread(target=enviar_gif_pos_sinal_apos_delay)
-                    gif_pos_sinal_thread.daemon = True
-                    gif_pos_sinal_thread.start()
+                    global thread_gif_pos_sinal_ativa
+                    thread_gif_pos_sinal_ativa = threading.Thread(target=enviar_gif_pos_sinal_apos_delay)
+                    thread_gif_pos_sinal_ativa.daemon = True
+                    thread_gif_pos_sinal_ativa.start()
                     BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🧵 Thread para GIF pós-sinal iniciada com sucesso")
 
         BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ✅ Processamento do sinal concluído com sucesso")
@@ -2162,14 +2163,45 @@ def enviar_sequencia_multiplo_tres():
     T+35: GIF promocional (35 minutos após o sinal)
     T+36: Mensagem de abertura da corretora (36 minutos após o sinal)
     """
+    global ultimo_sinal_enviado
+    
     try:
         # Registrar início da sequência
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] 🔄 Iniciando sequência especial para múltiplo de 3")
         
-        # T+7: GIF pós-sinal (já enviado no fluxo normal, mas registramos aqui)
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] ℹ️ T+7: GIF pós-sinal já enviado no fluxo normal")
+        # T+7: GIF pós-sinal - precisa ser agendado primeiro
+        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] ⏱️ Agendando GIF pós-sinal para T+7 minutos")
+        time.sleep(420)  # 7 minutos (T+0 → T+7)
+        
+        # Enviar GIF pós-sinal com até 3 tentativas
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] 🎬 Enviando GIF pós-sinal (T+7)")
+        
+        tentativas = 0
+        max_tentativas = 3
+        sucesso_gif_pos_sinal = False
+        
+        while tentativas < max_tentativas and not sucesso_gif_pos_sinal:
+            try:
+                tentativas += 1
+                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] 🔄 Tentativa {tentativas}/{max_tentativas} de enviar GIF pós-sinal")
+                resultado_gif = bot2_enviar_gif_pos_sinal(ultimo_sinal_enviado)
+                
+                if resultado_gif:
+                    sucesso_gif_pos_sinal = True
+                    BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] ✅ GIF pós-sinal enviado com sucesso!")
+                else:
+                    BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}] ⚠️ Falha ao enviar GIF pós-sinal. Tentando novamente...")
+                    time.sleep(30)  # Aguarda 30 segundos antes da próxima tentativa
+            except Exception as e:
+                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}] ❌ Erro ao enviar GIF pós-sinal: {str(e)}")
+                time.sleep(30)  # Aguarda 30 segundos antes da próxima tentativa
+        
+        if not sucesso_gif_pos_sinal:
+            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}] ❌ Falha nas {max_tentativas} tentativas de enviar GIF pós-sinal. Continuando sequência...")
         
         # T+27: Mensagem de participação (20 minutos após o T+7)
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] ⏱️ Agendando mensagem de participação para T+27 minutos")
@@ -2271,6 +2303,7 @@ def enviar_sequencia_multiplo_tres():
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] 📊 RESUMO DA SEQUÊNCIA MÚLTIPLO DE 3:")
+        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] - GIF pós-sinal (T+7): {'✅ OK' if sucesso_gif_pos_sinal else '❌ FALHA'}")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] - Mensagem de participação (T+27): {'✅ OK' if sucesso_participacao else '❌ FALHA'}")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] - GIF promocional (T+35): {'✅ OK' if sucesso_gif_promo else '❌ FALHA'}")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] - Mensagem de abertura (T+36): {'✅ OK' if sucesso_abertura else '❌ FALHA'}")
