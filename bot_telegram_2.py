@@ -3545,76 +3545,120 @@ def testar_envio_mensagens_corrigidas():
     Envia apenas para o canal em espanhol (es) para verificação.
     """
     try:
-        BOT2_LOGGER.info("====== INICIANDO TESTE DE ENVIO DE MENSAGENS CORRIGIDAS ======")
-        BOT2_LOGGER.info("Este teste enviará a mensagem de participação e o GIF promocional apenas para o canal em espanhol")
+        print("\n" + "="*50)
+        print("  TESTANDO ENVIO DE MENSAGENS CORRIGIDAS")
+        print("  Este teste vai enviar para os canais em espanhol")
+        print("="*50 + "\n")
         
-        # Verificar se as funções existem
-        if enviar_mensagem_participacao is None:
-            BOT2_LOGGER.error("❌ ERRO: Função enviar_mensagem_participacao não está definida!")
+        BOT2_LOGGER.info("="*70)
+        BOT2_LOGGER.info("====== INICIANDO TESTE DE ENVIO DE MENSAGENS CORRIGIDAS ======")
+        BOT2_LOGGER.info("====== ESTE TESTE ENVIARÁ PARA OS CANAIS EM ESPANHOL ======")
+        BOT2_LOGGER.info("="*70)
+        
+        # Verificar se as funções existem e estão atribuídas corretamente
+        BOT2_LOGGER.info("🔍 Verificando se as funções corrigidas estão definidas...")
+        
+        if 'enviar_mensagem_participacao' not in globals() or globals()['enviar_mensagem_participacao'] is None:
+            BOT2_LOGGER.error("❌ ERRO: Função enviar_mensagem_participacao não está definida nos globals()!")
+            print("ERRO: Função enviar_mensagem_participacao não está definida!")
             return False
             
-        if bot2_enviar_gif_promo is None:
-            BOT2_LOGGER.error("❌ ERRO: Função bot2_enviar_gif_promo não está definida!")
+        if 'bot2_enviar_gif_promo' not in globals() or globals()['bot2_enviar_gif_promo'] is None:
+            BOT2_LOGGER.error("❌ ERRO: Função bot2_enviar_gif_promo não está definida nos globals()!")
+            print("ERRO: Função bot2_enviar_gif_promo não está definida!")
             return False
+        
+        BOT2_LOGGER.info("✅ Funções verificadas e estão corretamente definidas nos globals()")
+        
+        # Verificar se há canais em espanhol configurados
+        if "es" not in BOT2_CANAIS_CONFIG or not BOT2_CANAIS_CONFIG["es"]:
+            BOT2_LOGGER.error("❌ ERRO: Nenhum canal configurado para idioma espanhol (es)!")
+            print("ERRO: Nenhum canal configurado para idioma espanhol!")
+            return False
+            
+        canais_es = BOT2_CANAIS_CONFIG.get("es", [])
+        BOT2_LOGGER.info(f"ℹ️ Canais em espanhol: {canais_es}")
+        print(f"Canais em espanhol: {canais_es}")
         
         # 1. Testar envio da mensagem de participação apenas para o canal em espanhol
-        BOT2_LOGGER.info("🔄 Testando envio da mensagem de participação para canal ES...")
+        BOT2_LOGGER.info("="*50)
+        BOT2_LOGGER.info("🧪 TESTE 1: ENVIO DA MENSAGEM DE PARTICIPAÇÃO")
+        BOT2_LOGGER.info("="*50)
+        print("\nTESTE 1: Enviando mensagem de participação...")
         
         # Backup das configurações originais
-        backup_canais = copy.deepcopy(BOT2_CANAIS_CONFIG)
+        canais_original = copy.deepcopy(BOT2_CANAIS_CONFIG)
         
-        # Modificar temporariamente para enviar apenas para canal espanhol
-        canais_original = BOT2_CANAIS_CONFIG.copy()
-        canais_es = BOT2_CANAIS_CONFIG.get("es", [])
-        
-        if not canais_es:
-            BOT2_LOGGER.error("❌ Nenhum canal configurado para idioma espanhol (es)!")
-            return False
+        try:
+            # Configurar temporariamente apenas o canal espanhol
+            canais_temp = {"es": canais_es, "pt": [], "en": []}
             
-        BOT2_LOGGER.info(f"ℹ️ Canais em espanhol: {canais_es}")
-        
-        # Configurar temporariamente apenas o canal espanhol
-        canais_temp = {"es": canais_es}
-        for idioma in ["pt", "en"]:
-            canais_temp[idioma] = []
+            # Substituir temporariamente a configuração
+            BOT2_LOGGER.info("ℹ️ Modificando temporariamente a configuração para enviar apenas para canais em espanhol")
+            BOT2_CANAIS_CONFIG.clear()
+            BOT2_CANAIS_CONFIG.update(canais_temp)
             
-        # Substituir temporariamente a configuração
-        BOT2_CANAIS_CONFIG.clear()
-        BOT2_CANAIS_CONFIG.update(canais_temp)
+            # Testar envio da mensagem de participação
+            BOT2_LOGGER.info("🚀 Enviando mensagem de participação...")
+            print("Enviando mensagem de participação...")
+            
+            resultado_participacao = enviar_mensagem_participacao()
+            
+            if resultado_participacao:
+                BOT2_LOGGER.info("✅ TESTE 1 PASSOU: Mensagem de participação enviada com sucesso!")
+                print("✓ Teste 1 passou: Mensagem enviada com sucesso!")
+            else:
+                BOT2_LOGGER.error("❌ TESTE 1 FALHOU: Erro ao enviar mensagem de participação")
+                print("✗ Teste 1 falhou: Erro ao enviar mensagem de participação")
+            
+            # Aguardar 10 segundos antes de enviar o GIF promocional
+            BOT2_LOGGER.info("⏳ Aguardando 10 segundos antes de enviar o GIF promocional...")
+            print("Aguardando 10 segundos antes do próximo teste...")
+            time.sleep(10)
+            
+            # Testar envio do GIF promocional
+            BOT2_LOGGER.info("="*50)
+            BOT2_LOGGER.info("🧪 TESTE 2: ENVIO DO GIF PROMOCIONAL")
+            BOT2_LOGGER.info("="*50)
+            print("\nTESTE 2: Enviando GIF promocional...")
+            
+            BOT2_LOGGER.info("🚀 Enviando GIF promocional para idioma 'es'...")
+            print("Enviando GIF promocional...")
+            
+            resultado_gif = bot2_enviar_gif_promo("es")
+            
+            if resultado_gif:
+                BOT2_LOGGER.info("✅ TESTE 2 PASSOU: GIF promocional enviado com sucesso!")
+                print("✓ Teste 2 passou: GIF enviado com sucesso!")
+            else:
+                BOT2_LOGGER.error("❌ TESTE 2 FALHOU: Erro ao enviar GIF promocional")
+                print("✗ Teste 2 falhou: Erro ao enviar GIF promocional")
+            
+        finally:
+            # Restaurar configuração original
+            BOT2_LOGGER.info("ℹ️ Restaurando configuração original de canais")
+            BOT2_CANAIS_CONFIG.clear()
+            BOT2_CANAIS_CONFIG.update(canais_original)
         
-        # Testar envio da mensagem de participação
-        BOT2_LOGGER.info("🚀 Enviando mensagem de participação...")
-        resultado_participacao = enviar_mensagem_participacao()
+        # Resumo final do teste
+        BOT2_LOGGER.info("="*70)
+        BOT2_LOGGER.info("====== RESUMO DO TESTE DE MENSAGENS CORRIGIDAS ======")
+        BOT2_LOGGER.info(f"Mensagem de participação: {'✅ PASSOU' if resultado_participacao else '❌ FALHOU'}")
+        BOT2_LOGGER.info(f"GIF promocional: {'✅ PASSOU' if resultado_gif else '❌ FALHOU'}")
+        BOT2_LOGGER.info(f"Resultado geral: {'✅ PASSOU' if resultado_participacao and resultado_gif else '❌ FALHOU'}")
+        BOT2_LOGGER.info("====== FIM DO TESTE DE MENSAGENS CORRIGIDAS ======")
+        BOT2_LOGGER.info("="*70)
         
-        if resultado_participacao:
-            BOT2_LOGGER.info("✅ Mensagem de participação enviada com sucesso!")
-        else:
-            BOT2_LOGGER.error("❌ Falha ao enviar mensagem de participação")
+        print("\n" + "="*50)
+        print(f"  RESULTADO DO TESTE: {'PASSOU' if resultado_participacao and resultado_gif else 'FALHOU'}")
+        print("="*50 + "\n")
         
-        # Aguardar 10 segundos antes de enviar o GIF promocional
-        BOT2_LOGGER.info("⏳ Aguardando 10 segundos antes de enviar o GIF promocional...")
-        time.sleep(10)
-        
-        # Testar envio do GIF promocional
-        BOT2_LOGGER.info("🚀 Enviando GIF promocional...")
-        resultado_gif = bot2_enviar_gif_promo("es")
-        
-        if resultado_gif:
-            BOT2_LOGGER.info("✅ GIF promocional enviado com sucesso!")
-        else:
-            BOT2_LOGGER.error("❌ Falha ao enviar GIF promocional")
-        
-        # Restaurar configuração original
-        BOT2_CANAIS_CONFIG.clear()
-        BOT2_CANAIS_CONFIG.update(canais_original)
-        BOT2_LOGGER.info("ℹ️ Configuração de canais restaurada")
-        
-        BOT2_LOGGER.info("====== TESTE DE ENVIO DE MENSAGENS CONCLUÍDO ======")
         return resultado_participacao and resultado_gif
         
     except Exception as e:
         BOT2_LOGGER.error(f"❌ Erro no teste de envio de mensagens: {str(e)}")
         BOT2_LOGGER.error(f"🔍 Detalhes: {traceback.format_exc()}")
+        print(f"ERRO durante teste: {str(e)}")
         
         # Tentar restaurar configuração original
         try:
@@ -3681,9 +3725,35 @@ if __name__ == "__main__":
             BOT2_LOGGER.error(f"🔍 Detalhes: {traceback.format_exc()}")
             sys.exit(1)
         
-        # Executar teste de envio das mensagens corrigidas
-        BOT2_LOGGER.info(f"🧪 Executando teste de envio das mensagens corrigidas...")
-        testar_envio_mensagens_corrigidas()
+        # Verificar se as funções estão corretamente definidas
+        BOT2_LOGGER.info(f"🔍 Verificando se as funções necessárias estão definidas...")
+        if 'enviar_mensagem_participacao' not in globals() or globals()['enviar_mensagem_participacao'] is None:
+            BOT2_LOGGER.error(f"❌ Função enviar_mensagem_participacao não está definida nos globals()!")
+            # Definir a função explicitamente
+            BOT2_LOGGER.info(f"🔧 Tentando definir enviar_mensagem_participacao...")
+            globals()['enviar_mensagem_participacao'] = enviar_mensagem_participacao
+            
+        if 'bot2_enviar_gif_promo' not in globals() or globals()['bot2_enviar_gif_promo'] is None:
+            BOT2_LOGGER.error(f"❌ Função bot2_enviar_gif_promo não está definida nos globals()!")
+            # Definir a função explicitamente
+            BOT2_LOGGER.info(f"🔧 Tentando definir bot2_enviar_gif_promo...")
+            globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
+            
+        # IMPORTANTE: Executar teste de envio das mensagens corrigidas IMEDIATAMENTE
+        BOT2_LOGGER.info(f"")
+        BOT2_LOGGER.info(f"🧪 EXECUTANDO TESTE DE ENVIO DAS MENSAGENS CORRIGIDAS...")
+        BOT2_LOGGER.info(f"🧪 ESTE TESTE OCORRE IMEDIATAMENTE NA INICIALIZAÇÃO...")
+        BOT2_LOGGER.info(f"")
+        print("\nINICIANDO TESTE DE ENVIO DE MENSAGENS...\n")
+        
+        # Executar o teste diretamente, não dentro de um try/except para que erros sejam visíveis
+        resultado_teste = testar_envio_mensagens_corrigidas()
+        
+        # Registrar resultado do teste
+        BOT2_LOGGER.info(f"")
+        BOT2_LOGGER.info(f"🧪 RESULTADO DO TESTE: {'✅ PASSOU' if resultado_teste else '❌ FALHOU'}")
+        BOT2_LOGGER.info(f"")
+        print(f"\nResultado do teste: {'PASSOU' if resultado_teste else 'FALHOU'}\n")
         
         # Continuar com a inicialização normal após o teste
         BOT2_LOGGER.info(f"🔄 Continuando inicialização normal do bot...")
