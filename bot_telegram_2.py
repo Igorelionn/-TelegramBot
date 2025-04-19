@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Bot Telegram 2 para envio de sinais em canais separados por idioma.
-Versão independente que não depende mais do Bot 1.
-Os sinais serão enviados da seguinte forma:
-- Canal Português: -1002424874613
-- Canal Inglês: -1002453956387
-- Canal Espanhol: -1002446547846
-O bot enviará 1 sinal por hora no minuto 13.
+Bot de envio de sinais para canais do Telegram
+Por: Trending Brasil
+Versão: 2.0
 """
 
-# Importaes necessrias
+# Importar bibliotecas necessárias
 import traceback
 import socket
 import pytz
@@ -29,6 +25,15 @@ from datetime import time as datetime_time
 import uuid
 import copy
 
+# Declarar funções que precisam ser globalmente acessíveis em qualquer escopo
+# Estas declarações garantem que as funções sejam reconhecidas mesmo quando executadas em diferentes contextos
+enviar_mensagem_participacao = None  # Será definida mais adiante no código
+bot2_enviar_gif_promo = None  # Será definida mais adiante no código
+bot2_enviar_mensagem_abertura_corretora = None  # Será definida mais adiante no código
+
+# Constantes e configurações
+# ... existing code ...
+
 # Definição da variável global assets
 assets = {}
 
@@ -44,12 +49,51 @@ bot2_formatter = logging.Formatter(
 
 # Evitar duplicação de handlers
 if not BOT2_LOGGER.handlers:
-    bot2_file_handler = logging.FileHandler("bot_telegram_bot2_logs.log")
+    # Handler para arquivo (pode usar UTF-8)
+    bot2_file_handler = logging.FileHandler("bot_telegram_bot2_logs.log", encoding='utf-8')
     bot2_file_handler.setFormatter(bot2_formatter)
     BOT2_LOGGER.addHandler(bot2_file_handler)
 
+    # Handler para console (sem emojis para evitar problemas de codificação)
+    class NoEmojiFormatter(logging.Formatter):
+        """Formatter que remove emojis e outros caracteres Unicode incompatíveis com Windows console"""
+        def format(self, record):
+            # Primeiro obter a mensagem formatada normalmente
+            msg = super().format(record)
+            # Substitua emojis comuns por equivalentes ASCII
+            emoji_map = {
+                '🚀': '[ROCKET]',
+                '🔧': '[CONFIG]',
+                '✅': '[OK]',
+                '❌': '[ERRO]',
+                '⚠️': '[AVISO]',
+                '🔄': '[RELOAD]',
+                '📅': '[DATA]',
+                '🔍': '[BUSCA]',
+                '📊': '[STATS]',
+                '📋': '[LISTA]',
+                '🌐': '[GLOBAL]',
+                '📣': '[ANUNCIO]',
+                '🎬': '[VIDEO]',
+                '⏱️': '[TEMPO]',
+                '⏳': '[ESPERA]',
+                '🟢': '[VERDE]',
+                '🔒': '[LOCK]',
+                '🔓': '[UNLOCK]',
+                '📤': '[ENVIO]',
+                '⚙️': '[ENGRENAGEM]',
+                '🛑': '[PARAR]',
+                '🆔': '[ID]',
+            }
+            
+            for emoji, replacement in emoji_map.items():
+                msg = msg.replace(emoji, replacement)
+                
+            return msg
+    
+    console_formatter = NoEmojiFormatter("%(asctime)s - BOT2 - %(levelname)s - %(message)s")
     bot2_console_handler = logging.StreamHandler()
-    bot2_console_handler.setFormatter(bot2_formatter)
+    bot2_console_handler.setFormatter(console_formatter)
     BOT2_LOGGER.addHandler(bot2_console_handler)
 
 # Credenciais Telegram
@@ -2565,9 +2609,7 @@ def enviar_sequencia_multiplo_tres():
                 tentativas += 1
                 BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Tentativa {tentativas}/{max_tentativas} de enviar mensagem de participação")
                 
-                # Importar a função localmente
-                from __main__ import enviar_mensagem_participacao
-                
+                # Chamar diretamente a função definida no mesmo arquivo
                 resultado_participacao = enviar_mensagem_participacao()
                 
                 if resultado_participacao:
@@ -2602,9 +2644,6 @@ def enviar_sequencia_multiplo_tres():
         # Enviar para cada idioma configurado
         idiomas = list(BOT2_CANAIS_CONFIG.keys())
         sucesso_gif_promo = {}
-        
-        # Importar a função localmente para o GIF promocional
-        from __main__ import bot2_enviar_gif_promo
         
         # Enviar GIF promo para cada idioma
         for idioma in idiomas:
@@ -2643,7 +2682,7 @@ def enviar_sequencia_multiplo_tres():
         else:
             BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar GIF promocional para todos os idiomas. Continuando sequência...")
         
-        # T+36: Mensagem de abertura da corretora (1 minuto após o GIF promocional)
+        # ETAPA 4: T+36: Mensagem de abertura da corretora (1 minuto após o GIF promocional)
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏱️ Agendando mensagem de abertura da corretora para T+36 minutos (1 minuto após GIF promocional)")
         time.sleep(60)  # 1 minuto (T+35 → T+36)
         
@@ -2655,9 +2694,6 @@ def enviar_sequencia_multiplo_tres():
         tentativas = 0
         max_tentativas = 3
         sucesso_abertura = False
-        
-        # Importar a função localmente
-        from __main__ import bot2_enviar_mensagem_abertura_corretora
         
         while tentativas < max_tentativas and not sucesso_abertura:
             try:
@@ -2690,28 +2726,32 @@ def enviar_sequencia_multiplo_tres():
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] - GIF promocional (T+35): {'✅ OK' if ao_menos_um_gif_promo else '❌ FALHA'}")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] - Mensagem de abertura (T+36): {'✅ OK' if sucesso_abertura else '❌ FALHA'}")
         
-        # Verificar se arquivo de lock ainda existe e removê-lo
+        # Remover arquivo de lock
         try:
-            if os.path.exists(lock_file):
-                os.remove(lock_file)
-                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔓 Arquivo de lock removido: {lock_file}")
+            os.remove(lock_file)
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔓 Arquivo de lock removido: {lock_file}")
         except Exception as e:
-            BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Erro ao remover arquivo de lock: {str(e)}")
+            BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Não foi possível remover o arquivo de lock: {str(e)}")
         
+        # Avaliar o resultado geral
         if sucesso_gif_pos_sinal and sucesso_participacao and ao_menos_um_gif_promo and sucesso_abertura:
-            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Sequência especial para múltiplo de 3 concluída com SUCESSO TOTAL!")
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Sequência especial para múltiplo de 3 concluída com SUCESSO!")
         else:
             BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Sequência especial para múltiplo de 3 concluída com alguns itens falhos.")
-        
-        # Retornar resultado geral da sequência
-        return (sucesso_gif_pos_sinal and sucesso_participacao and ao_menos_um_gif_promo and sucesso_abertura)
-        
+            
     except Exception as e:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}] ❌ Erro na sequência múltiplo de 3: {str(e)}")
-        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
-        return False
+        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}] ❌ Erro geral ao executar sequência para múltiplo de 3: {str(e)}")
+        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
+        
+        # Tentar remover arquivo de lock em caso de erro
+        try:
+            if 'lock_file' in locals() and os.path.exists(lock_file):
+                os.remove(lock_file)
+                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}] 🔓 Arquivo de lock removido após erro: {lock_file}")
+        except Exception as lock_error:
+            BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}] ⚠️ Não foi possível remover o arquivo de lock após erro: {str(lock_error)}")
 
 
 def bot2_iniciar_ciclo_sinais():
@@ -3061,78 +3101,77 @@ def verificar_configuracoes_bot():
 
 def bot2_enviar_mensagem_abertura_corretora():
     """
-    Envia a mensagem de abertura da corretora, que deve ser enviada 36 minutos
-    após o sinal original nos casos de múltiplos de 3.
+    Envia mensagem de abertura da corretora para todos os canais configurados.
+    Esta mensagem é enviada 36 minutos após o sinal principal (T+36) para sinais múltiplos de 3.
     
-    Retorna: True se enviado com sucesso, False caso contrário.
+    Returns:
+        bool: True se a mensagem foi enviada com sucesso, False caso contrário
     """
     try:
+        # Obter hora atual para os logs
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
+        
         BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] 🔄 Iniciando envio da mensagem de abertura da corretora")
         
-        # Links de afiliados para cada idioma
-        link_pt = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
-        link_en = "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
-        link_es = "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+        # Links de afiliados por idioma
+        links = {
+            "pt": "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack=",
+            "en": "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack=",
+            "es": "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+        }
         
-        # Mensagem de abertura da corretora
-        mensagem_pt = f"""👉🏼Abram a corretora Pessoal
+        # Mensagens por idioma
+        mensagens = {
+            "pt": f"""👉🏼Abram a corretora Pessoal
 
 ⚠️FIQUEM ATENTOS⚠️
 
 🔥Cadastre-se na XXBROKER agora mesmo🔥
 
-➡️ <a href="{link_pt}">CLICANDO AQUI</a>"""
-
-        mensagem_en = f"""👉🏼Open your broker account now
+➡️ <a href="{links['pt']}">CLICANDO AQUI</a>""",
+            
+            "en": f"""👉🏼Open your broker account now
 
 ⚠️STAY ALERT⚠️
 
-🔥Sign up with XXBROKER right now🔥
+🔥Register at XXBROKER right now🔥
 
-➡️ <a href="{link_en}">CLICK HERE</a>"""
-
-        mensagem_es = f"""👉🏼Abran la corretora Personas
+➡️ <a href="{links['en']}">CLICK HERE</a>""",
+            
+            "es": f"""👉🏼Abran su cuenta de corredor ahora
 
 ⚠️ESTÉN ATENTOS⚠️
 
 🔥Regístrese en XXBROKER ahora mismo🔥
 
-➡️ <a href="{link_es}">HAGA CLIC AQUÍ</a>"""
+➡️ <a href="{links['es']}">HAGA CLIC AQUÍ</a>"""
+        }
         
-        mensagens_enviadas = []
+        canais_enviados = 0
+        total_canais = 0
         
-        # Enviar para cada idioma configurado
+        # Para cada idioma, enviar mensagem para os canais configurados
         for idioma, chats in BOT2_CANAIS_CONFIG.items():
             if not chats:
-                BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] ℹ️ Nenhum chat configurado para idioma {idioma}")
                 continue
                 
-            # Selecionar a mensagem conforme o idioma
-            if idioma == "pt":
-                mensagem = mensagem_pt
-            elif idioma == "en":
-                mensagem = mensagem_en
-            elif idioma == "es":
-                mensagem = mensagem_es
-            else:
-                mensagem = mensagem_pt  # Usar PT como fallback
-                
+            total_canais += len(chats)
+            mensagem = mensagens.get(idioma, mensagens["pt"])  # Usar PT como fallback
+            
             BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] 📤 Enviando mensagem de abertura para {len(chats)} canais no idioma {idioma}")
             
-            # Enviar para cada canal deste idioma
             for chat_id in chats:
                 try:
-                    # Construir URL da API
+                    # URL da API do Telegram
                     url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
                     
-                    # Montar payload
+                    # Payload da requisição
                     payload = {
                         "chat_id": chat_id,
                         "text": mensagem,
                         "parse_mode": "HTML",
-                        "disable_web_page_preview": True
+                        "disable_web_page_preview": False
                     }
                     
                     # Enviar mensagem
@@ -3141,18 +3180,16 @@ def bot2_enviar_mensagem_abertura_corretora():
                     
                     if resposta.status_code == 200:
                         BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] ✅ Mensagem de abertura enviada com sucesso para {chat_id}")
-                        mensagens_enviadas.append(True)
+                        canais_enviados += 1
                     else:
                         BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] ❌ Erro ao enviar para {chat_id}: {resposta.status_code} - {resposta.text}")
-                        mensagens_enviadas.append(False)
-                        
+                
                 except Exception as e:
                     BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] ❌ Erro ao enviar para {chat_id}: {str(e)}")
                     BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
-                    mensagens_enviadas.append(False)
         
-        # Verificar se pelo menos uma mensagem foi enviada com sucesso
-        sucesso = any(mensagens_enviadas)
+        # Verificar se pelo menos um canal recebeu a mensagem
+        sucesso = canais_enviados > 0
         if sucesso:
             BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] ✅ Mensagem de abertura enviada com sucesso para pelo menos um canal")
         else:
@@ -3161,11 +3198,14 @@ def bot2_enviar_mensagem_abertura_corretora():
         return sucesso
             
     except Exception as e:
-        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] ❌ Erro geral ao enviar mensagem de abertura: {str(e)}")
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] ❌ Erro geral ao enviar mensagem de abertura da corretora: {str(e)}")
         BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
         return False
 
+# Atribuir a função à variável global para garantir acesso em todos os contextos
+globals()['bot2_enviar_mensagem_abertura_corretora'] = bot2_enviar_mensagem_abertura_corretora
 
 # Inicialização do sistema de envio de sinais
 if __name__ == "__main__":
@@ -3542,3 +3582,6 @@ def bot2_enviar_gif_promo(idioma="pt"):
         BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] ❌ Erro crítico ao enviar GIF promocional: {str(e)}")
         BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
         return False
+
+# Atribuir a função à variável global para garantir acesso em todos os contextos
+globals()['enviar_mensagem_participacao'] = enviar_mensagem_participacao
