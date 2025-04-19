@@ -3164,7 +3164,7 @@ if __name__ == "__main__":
     try:
         print(f"\n{'=' * 50}")
         print(f"  INICIANDO BOT DE SINAIS")
-        print(f"  TESTE IMEDIATO DE MENSAGENS SERÁ EXECUTADO")
+        print(f"  Data: {datetime.now().strftime('%Y-%m-%d')} | Hora: {datetime.now().strftime('%H:%M:%S')}")
         print(f"{'=' * 50}\n")
         
         # Configurar captura de exceções não tratadas para logar adequadamente
@@ -3213,19 +3213,66 @@ if __name__ == "__main__":
             BOT2_LOGGER.error(f"🔍 Detalhes: {traceback.format_exc()}")
             sys.exit(1)
             
-        # IMPORTANTE: O teste imediato será executado apenas APÓS a definição das funções
-        # no final do script. Isso garantirá que as funções não sejam None quando chamadas.
-        
-        # Continuar inicialização normal
-        BOT2_LOGGER.info("🔄 Continuando inicialização normal do bot...")
-            
         # Iniciar tentativas de inicialização do bot
         max_retries = 5
         retry_count = 0
         retry_delay = 10  # segundos
         
-        # Código do loop principal de inicialização
-        # ... existing code ...
+        while retry_count < max_retries:
+            try:
+                retry_count += 1
+                BOT2_LOGGER.info(f"🔄 Tentativa {retry_count} de {max_retries} para iniciar o bot")
+                
+                # Verificar configurações do bot
+                BOT2_LOGGER.info(f"🔍 Verificando configurações do bot...")
+                if not verificar_configuracoes_bot():
+                    BOT2_LOGGER.error(f"❌ Falha na verificação das configurações. Corrigindo erros antes de continuar...")
+                    sys.exit(1)
+                
+                # Verificar agendamento de sinais
+                BOT2_LOGGER.info(f"🔍 Verificando agendamento de sinais...")
+                verificar_agendamento_sinais()
+                
+                # Iniciar ambos os bots (apenas Bot 2 está ativo)
+                BOT2_LOGGER.info(f"🔄 Iniciando sistema principal de sinais...")
+                iniciar_ambos_bots()
+                
+                # Se chegarmos aqui, o bot está rodando normalmente
+                BOT2_LOGGER.info(f"✅ Bot iniciado com sucesso e em execução!")
+                
+                # Verificar e exibir status de inicialização
+                BOT2_LOGGER.info(f"📊 STATUS DO SISTEMA:")
+                BOT2_LOGGER.info(f"🕒 Hora de início: {hora_inicio}")
+                BOT2_LOGGER.info(f"🤖 Bot Telegram: @{bot_info['username']}")
+                BOT2_LOGGER.info(f"📢 Canais configurados: {sum(len(chats) for chats in BOT2_CANAIS_CONFIG.values())}")
+                BOT2_LOGGER.info(f"📈 Ativos disponíveis: {len(bot2_verificar_disponibilidade())}")
+                BOT2_LOGGER.info(f"⏱️ Próximo sinal: Minuto 13 de cada hora")
+                
+                # Loop principal para manter a execução
+                try:
+                    BOT2_LOGGER.info(f"🔄 Entrando no loop principal de execução...")
+                    BOT2_LOGGER.info(f"⚙️ Bot em execução e aguardando eventos agendados...")
+                    
+                    # Iniciar o loop principal que verifica as tarefas agendadas
+                    while True:
+                        schedule.run_pending()
+                        time.sleep(1)
+                except KeyboardInterrupt:
+                    BOT2_LOGGER.info(f"🛑 Bot encerrado manualmente pelo usuário")
+                    sys.exit(0)
+                
+                break  # Sair do loop de tentativas se tudo funcionou
+                
+            except Exception as e:
+                BOT2_LOGGER.error(f"❌ Erro ao iniciar o bot (tentativa {retry_count}): {str(e)}")
+                BOT2_LOGGER.error(f"⏱️ Tentando novamente em {retry_delay} segundos...")
+                BOT2_LOGGER.error(f"🔍 Detalhes: {traceback.format_exc()}")
+                time.sleep(retry_delay)
+                
+        if retry_count >= max_retries:
+            BOT2_LOGGER.critical(f"❌ Falha após {max_retries} tentativas. Verificar logs para detalhes.")
+            sys.exit(1)
+    
     except Exception as e:
         BOT2_LOGGER.critical(f"❌ Erro crítico ao iniciar o sistema: {str(e)}")
         BOT2_LOGGER.critical(f"🔍 Detalhes: {traceback.format_exc()}")
@@ -3493,79 +3540,3 @@ def bot2_enviar_gif_promo(idioma="pt"):
 # Garantir que as funções estejam registradas no escopo global
 globals()['enviar_mensagem_participacao'] = enviar_mensagem_participacao
 globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
-
-# Colocar a função de teste no final do arquivo, após todas as outras definições
-def executar_teste_imediato_mensagens():
-    """
-    Executa um teste imediato do envio de mensagens e GIFs promocionais.
-    Envia apenas para os canais em espanhol.
-    """
-    BOT2_LOGGER.info("="*70)
-    BOT2_LOGGER.info("===== TESTE IMEDIATO DE MENSAGENS APÓS INICIALIZAÇÃO =====")
-    BOT2_LOGGER.info("="*70)
-    
-    # Verificar se as funções estão definidas corretamente
-    if 'enviar_mensagem_participacao' not in globals() or not callable(globals()['enviar_mensagem_participacao']):
-        BOT2_LOGGER.error("❌ ERRO CRÍTICO: Função enviar_mensagem_participacao não está definida ou não é callable!")
-        return False
-        
-    if 'bot2_enviar_gif_promo' not in globals() or not callable(globals()['bot2_enviar_gif_promo']):
-        BOT2_LOGGER.error("❌ ERRO CRÍTICO: Função bot2_enviar_gif_promo não está definida ou não é callable!")
-        return False
-    
-    # Obter referências às funções
-    func_mensagem = globals()['enviar_mensagem_participacao']
-    func_gif = globals()['bot2_enviar_gif_promo']
-    
-    # Executar teste direto para o canal ES
-    canais_es = BOT2_CANAIS_CONFIG.get("es", [])
-    BOT2_LOGGER.info(f"📢 Canais em espanhol: {canais_es}")
-    
-    try:
-        # Backup da configuração original
-        canais_backup = copy.deepcopy(BOT2_CANAIS_CONFIG)
-        
-        # Modificar temporariamente para enviar apenas para ES
-        canais_temp = {"es": canais_es, "pt": [], "en": []}
-        BOT2_CANAIS_CONFIG.clear()
-        BOT2_CANAIS_CONFIG.update(canais_temp)
-        
-        # 1. Enviar mensagem de participação
-        BOT2_LOGGER.info("🚀 ENVIANDO MENSAGEM DE PARTICIPAÇÃO PARA CANAL ES...")
-        try:
-            resultado = func_mensagem()
-            BOT2_LOGGER.info(f"📋 Resultado mensagem participação: {'✅ SUCESSO' if resultado else '❌ FALHA'}")
-        except Exception as e:
-            BOT2_LOGGER.error(f"❌ ERRO AO ENVIAR MENSAGEM DE PARTICIPAÇÃO: {str(e)}")
-            BOT2_LOGGER.error(traceback.format_exc())
-        
-        # Aguardar 5 segundos
-        BOT2_LOGGER.info("⏱️ Aguardando 5 segundos...")
-        time.sleep(5)
-        
-        # 2. Enviar GIF promocional
-        BOT2_LOGGER.info("🎬 ENVIANDO GIF PROMOCIONAL PARA CANAL ES...")
-        try:
-            resultado = func_gif("es")
-            BOT2_LOGGER.info(f"📋 Resultado GIF promocional: {'✅ SUCESSO' if resultado else '❌ FALHA'}")
-        except Exception as e:
-            BOT2_LOGGER.error(f"❌ ERRO AO ENVIAR GIF PROMOCIONAL: {str(e)}")
-            BOT2_LOGGER.error(traceback.format_exc())
-            
-    finally:
-        # Restaurar configuração original
-        BOT2_CANAIS_CONFIG.clear()
-        BOT2_CANAIS_CONFIG.update(canais_backup)
-        BOT2_LOGGER.info("🔄 Configuração original de canais restaurada")
-        
-    BOT2_LOGGER.info("="*70)
-    BOT2_LOGGER.info("===== FIM DO TESTE IMEDIATO =====")
-    BOT2_LOGGER.info("="*70)
-    
-    return True
-
-# Executar este teste imediatamente após todas as definições de funções
-if __name__ == "__main__" and 'enviar_mensagem_participacao' in globals() and 'bot2_enviar_gif_promo' in globals():
-    # Verificar se ambas as funções existem e estão definidas corretamente
-    BOT2_LOGGER.info("🧪 Executando teste imediato de mensagens...")
-    executar_teste_imediato_mensagens()
