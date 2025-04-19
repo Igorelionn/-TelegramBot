@@ -3585,3 +3585,6 @@ def bot2_enviar_gif_promo(idioma="pt"):
 
 # Atribuir a função à variável global para garantir acesso em todos os contextos
 globals()['enviar_mensagem_participacao'] = enviar_mensagem_participacao
+globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
+
+# Certifique-se de que as funções críticas estão atribuídas ao namespace global
