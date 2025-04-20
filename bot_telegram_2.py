@@ -2701,11 +2701,9 @@ def bot2_iniciar_ciclo_sinais():
         # Limpar agendamentos anteriores para evitar duplicação
         schedule.clear("bot2_sinais")
         schedule.clear("verificacao_previa")
-        schedule.clear("reset_controle")
         
         BOT2_LOGGER.info("🔄 Sinal do Bot 2 agendado para o minuto 13 de cada hora")
         BOT2_LOGGER.info("🔄 Verificação prévia de ativos agendada para o minuto 10 de cada hora (3 min antes do sinal)")
-        BOT2_LOGGER.info("🔄 Reset de controle anti-duplicação agendado para o minuto 0 de cada hora")
         BOT2_LOGGER.info("⚙️ Configuração atual: 1 sinal por hora, apenas ativos Digital, expiração de 5 minutos")
         
         # Verificar os ativos disponíveis no momento da inicialização
@@ -2800,14 +2798,89 @@ def bot2_iniciar_ciclo_sinais():
                 BOT2_LOGGER.error(f"[PRE-SINAL][{agora.strftime('%H:%M:%S')}] ❌ Erro ao fazer verificação pré-sinal: {str(e)}")
                 BOT2_LOGGER.error(f"[PRE-SINAL][{agora.strftime('%H:%M:%S')}] 🔍 Detalhes: {traceback.format_exc()}")
         
+        # Definir a função que verifica os ativos disponíveis antes de enviar o sinal
+        def enviar_sinal_com_verificacao():
+            """Função que verifica ativos disponíveis antes de enviar o sinal."""
+            try:
+                # Obter hora atual
+                hora_atual = bot2_obter_hora_brasilia()
+                hora_formatada = hora_atual.strftime("%H:%M:%S")
+                
+                BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🔔 INICIANDO CICLO DE ENVIO DE SINAL")
+                BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🕒 Hora atual: {hora_atual.strftime('%Y-%m-%d %H:%M:%S')}")
+                
+                # Verificar ativos disponíveis no momento do envio
+                BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🔍 Verificando ativos disponíveis em tempo real...")
+                ativos_disponiveis = bot2_verificar_disponibilidade()
+                
+                if not ativos_disponiveis:
+                    BOT2_LOGGER.warning(f"[SINAL][{hora_formatada}] ⚠️ ALERTA: Nenhum ativo disponível neste momento!")
+                    BOT2_LOGGER.warning(f"[SINAL][{hora_formatada}] ⚠️ O sinal NÃO será enviado!")
+                    return
+                
+                total_ativos = len(ATIVOS_CATEGORIAS["Digital"])
+                percentual_disponivel = (len(ativos_disponiveis) / total_ativos) * 100
+                
+                BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] ✅ {len(ativos_disponiveis)}/{total_ativos} ativos disponíveis ({percentual_disponivel:.1f}%)")
+                
+                # Mostra alguns ativos disponíveis (até 5)
+                amostra_disponiveis = ativos_disponiveis[:5]
+                BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🟢 Exemplos disponíveis: {', '.join(amostra_disponiveis)}{' e outros...' if len(ativos_disponiveis) > 5 else ''}")
+                
+                # Verificar conexão com a API do Telegram antes de enviar
+                BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🔄 Verificando conexão com a API do Telegram...")
+                
+                try:
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/getMe"
+                    resposta = requests.get(url, timeout=10)
+                    
+                    if resposta.status_code == 200:
+                        bot_info = resposta.json()
+                        BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] ✅ Conexão com API OK! Bot: @{bot_info['result']['username']}")
+                    else:
+                        BOT2_LOGGER.error(f"[SINAL][{hora_formatada}] ❌ Falha na conexão com API: {resposta.status_code} - {resposta.text}")
+                        BOT2_LOGGER.warning(f"[SINAL][{hora_formatada}] ⚠️ Tentando enviar sinal mesmo assim...")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[SINAL][{hora_formatada}] ❌ Erro ao verificar API: {str(e)}")
+                    BOT2_LOGGER.warning(f"[SINAL][{hora_formatada}] ⚠️ Tentando enviar sinal mesmo assim...")
+                
+                # Armazenar ativos disponíveis para uso na geração do sinal
+                ATIVOS_CATEGORIAS["Digital_Disponiveis"] = ativos_disponiveis
+                
+                # Agora sim, enviar o sinal
+                BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🚀 Iniciando envio do sinal...")
+                resultado = bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=False)
+                
+                if resultado:
+                    BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] ✅ Sinal enviado com sucesso!")
+                    
+                    # Agendar verificação do próximo sinal
+                    proxima_hora = hora_atual + timedelta(hours=1)
+                    proxima_hora = proxima_hora.replace(minute=13, second=0, microsecond=0)
+                    BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 📅 Próximo sinal agendado para: {proxima_hora.strftime('%H:%M')}")
+                else:
+                    BOT2_LOGGER.error(f"[SINAL][{hora_formatada}] ❌ Falha ao enviar sinal!")
+                    
+                    # Verificar se há erros de conexão e agendar uma tentativa em 5 minutos
+                    BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🔄 Agendando nova tentativa em 5 minutos...")
+                    
+                    # Criar um job único para tentar novamente em 5 minutos
+                    proxima_tentativa = hora_atual + timedelta(minutes=5)
+                    BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🕒 Próxima tentativa: {proxima_tentativa.strftime('%H:%M:%S')}")
+                
+                # Verificar e limpar tarefas desnecessárias para evitar acúmulo
+                BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🧹 Verificando e limpando tarefas pendentes...")
+                
+            except Exception as e:
+                agora = bot2_obter_hora_brasilia()
+                BOT2_LOGGER.error(f"[SINAL][{agora.strftime('%H:%M:%S')}] ❌ Erro crítico ao enviar sinal: {str(e)}")
+                BOT2_LOGGER.error(f"[SINAL][{agora.strftime('%H:%M:%S')}] 🔍 Detalhes: {traceback.format_exc()}")
+        
         # Agendar para o minuto 13 de cada hora
         schedule.every().hour.at(":13").do(enviar_sinal_com_verificacao).tag("bot2_sinais")
         
         # Agendar verificação prévia 3 minutos antes do sinal
         schedule.every().hour.at(":10").do(verificar_ativos_pre_sinal).tag("verificacao_previa")
-        
-        # Agendar reset do controle de duplicação a cada hora
-        schedule.every().hour.at(":00").do(verificar_e_resetar_controle_sinal_minuto_13).tag("reset_controle")
         
         # Marcar como agendado
         bot2_sinais_agendados = True
@@ -3089,11 +3162,6 @@ globals()['bot2_enviar_mensagem_abertura_corretora'] = bot2_enviar_mensagem_aber
 # Inicialização do sistema de envio de sinais
 if __name__ == "__main__":
     try:
-        print(f"\n{'=' * 50}")
-        print(f"  INICIANDO BOT DE SINAIS")
-        print(f"  INICIANDO CICLO NORMAL")
-        print(f"{'=' * 50}\n")
-        
         # Configurar captura de exceções não tratadas para logar adequadamente
         def log_uncaught_exceptions(exctype, value, tb):
             BOT2_LOGGER.critical(f"❌ ERRO CRÍTICO NÃO TRATADO: {exctype.__name__}: {value}")
@@ -3108,6 +3176,11 @@ if __name__ == "__main__":
         # Configurar data e hora no início da execução
         data_inicio = datetime.now().strftime("%Y-%m-%d")
         hora_inicio = datetime.now().strftime("%H:%M:%S")
+        
+        print(f"\n{'=' * 50}")
+        print(f"  INICIANDO BOT DE SINAIS")
+        print(f"  Data: {data_inicio} | Hora: {hora_inicio}")
+        print(f"{'=' * 50}\n")
         
         # Configurar sistema de logging detalhado
         BOT2_LOGGER.info(f"🚀 INICIANDO SISTEMA DE SINAIS v2.0 ({data_inicio} {hora_inicio})")
@@ -3140,139 +3213,71 @@ if __name__ == "__main__":
             BOT2_LOGGER.error(f"🔍 Detalhes: {traceback.format_exc()}")
             sys.exit(1)
             
-        # IMPORTANTE: O teste imediato será executado apenas APÓS a definição das funções
-        # no final do script. Isso garantirá que as funções não sejam None quando chamadas.
-        
-        # Continuar inicialização normal
-        BOT2_LOGGER.info("🔄 Continuando inicialização normal do bot...")
-            
         # Iniciar tentativas de inicialização do bot
         max_retries = 5
         retry_count = 0
         retry_delay = 10  # segundos
         
-        # Código do loop principal de inicialização
-        # ... existing code ...
+        while retry_count < max_retries:
+            try:
+                retry_count += 1
+                BOT2_LOGGER.info(f"🔄 Tentativa {retry_count} de {max_retries} para iniciar o bot")
+                
+                # Verificar configurações do bot
+                BOT2_LOGGER.info(f"🔍 Verificando configurações do bot...")
+                if not verificar_configuracoes_bot():
+                    BOT2_LOGGER.error(f"❌ Falha na verificação das configurações. Corrigindo erros antes de continuar...")
+                    sys.exit(1)
+                
+                # Verificar agendamento de sinais
+                BOT2_LOGGER.info(f"🔍 Verificando agendamento de sinais...")
+                verificar_agendamento_sinais()
+                
+                # Iniciar ambos os bots (apenas Bot 2 está ativo)
+                BOT2_LOGGER.info(f"🔄 Iniciando sistema principal de sinais...")
+                iniciar_ambos_bots()
+                
+                # Se chegarmos aqui, o bot está rodando normalmente
+                BOT2_LOGGER.info(f"✅ Bot iniciado com sucesso e em execução!")
+                
+                # Verificar e exibir status de inicialização
+                BOT2_LOGGER.info(f"📊 STATUS DO SISTEMA:")
+                BOT2_LOGGER.info(f"🕒 Hora de início: {hora_inicio}")
+                BOT2_LOGGER.info(f"🤖 Bot Telegram: @{bot_info['username']}")
+                BOT2_LOGGER.info(f"📢 Canais configurados: {sum(len(chats) for chats in BOT2_CANAIS_CONFIG.values())}")
+                BOT2_LOGGER.info(f"📈 Ativos disponíveis: {len(bot2_verificar_disponibilidade())}")
+                BOT2_LOGGER.info(f"⏱️ Próximo sinal: Minuto 13 de cada hora")
+                
+                # Loop principal para manter a execução
+                try:
+                    BOT2_LOGGER.info(f"🔄 Entrando no loop principal de execução...")
+                    BOT2_LOGGER.info(f"⚙️ Bot em execução e aguardando eventos agendados...")
+                    
+                    # Iniciar o loop principal que verifica as tarefas agendadas
+                    while True:
+                        schedule.run_pending()
+                        time.sleep(1)
+                except KeyboardInterrupt:
+                    BOT2_LOGGER.info(f"🛑 Bot encerrado manualmente pelo usuário")
+                    sys.exit(0)
+                
+                break  # Sair do loop de tentativas se tudo funcionou
+                
+            except Exception as e:
+                retry_count += 1
+                BOT2_LOGGER.error(f"❌ Erro ao iniciar o bot (tentativa {retry_count}): {str(e)}")
+                BOT2_LOGGER.error(f"⏱️ Tentando novamente em {retry_delay} segundos...")
+                BOT2_LOGGER.error(f"🔍 Detalhes: {traceback.format_exc()}")
+                time.sleep(retry_delay)
+                
+        if retry_count >= max_retries:
+            BOT2_LOGGER.critical(f"❌ Falha após {max_retries} tentativas. Verificar logs para detalhes.")
+            sys.exit(1)
+    
     except Exception as e:
-        print(f"Erro na inicialização: {str(e)}")
-        BOT2_LOGGER.error(f"Erro na inicialização: {str(e)}")
-        BOT2_LOGGER.error(traceback.format_exc())
-
-# Definição das funções enviar_mensagem_participacao e bot2_enviar_gif_promo
-# Estas funções DEVEM estar definidas ANTES de serem chamadas
-
-# Variável global para controlar a execução dos sinais no minuto 13
-SINAL_MINUTO_13_JA_ENVIADO = False
-
-# Função para garantir que o sinal do minuto 13 não seja duplicado
-def verificar_e_resetar_controle_sinal_minuto_13():
-    """
-    Verifica e reseta a variável global de controle do sinal do minuto 13.
-    Essa função é chamada no início de cada hora para garantir que o sinal
-    possa ser enviado no próximo minuto 13.
-    """
-    global SINAL_MINUTO_13_JA_ENVIADO, BOT2_LOGGER
-    
-    # Resetar o controle no início de uma nova hora
-    if SINAL_MINUTO_13_JA_ENVIADO:
-        hora_atual = bot2_obter_hora_brasilia()
-        BOT2_LOGGER.info(f"[CONTROLE][{hora_atual.strftime('%H:%M:%S')}] 🔄 Resetando controle de sinal para minuto 13 da próxima hora")
-        SINAL_MINUTO_13_JA_ENVIADO = False
-    
-    return True
-
-# Função para enviar o sinal com verificação prévia
-def enviar_sinal_com_verificacao():
-    """Função que verifica ativos disponíveis antes de enviar o sinal."""
-    global SINAL_MINUTO_13_JA_ENVIADO
-    
-    try:
-        # Obter hora atual
-        hora_atual = bot2_obter_hora_brasilia()
-        hora_formatada = hora_atual.strftime("%H:%M:%S")
-        minuto_atual = hora_atual.minute
-        
-        # Verificar se estamos no minuto 13 e se o sinal já foi enviado nesta hora
-        if minuto_atual == 13 and SINAL_MINUTO_13_JA_ENVIADO:
-            BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] ⚠️ Sinal do minuto 13 já foi enviado nesta hora. Ignorando duplicação.")
-            return False
-        
-        BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🔔 INICIANDO CICLO DE ENVIO DE SINAL")
-        BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🕒 Hora atual: {hora_atual.strftime('%Y-%m-%d %H:%M:%S')}")
-        
-        # Verificar ativos disponíveis no momento do envio
-        BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🔍 Verificando ativos disponíveis em tempo real...")
-        ativos_disponiveis = bot2_verificar_disponibilidade()
-        
-        if not ativos_disponiveis:
-            BOT2_LOGGER.warning(f"[SINAL][{hora_formatada}] ⚠️ ALERTA: Nenhum ativo disponível neste momento!")
-            BOT2_LOGGER.warning(f"[SINAL][{hora_formatada}] ⚠️ O sinal NÃO será enviado!")
-            return False
-        
-        total_ativos = len(ATIVOS_CATEGORIAS["Digital"])
-        percentual_disponivel = (len(ativos_disponiveis) / total_ativos) * 100
-        
-        BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] ✅ {len(ativos_disponiveis)}/{total_ativos} ativos disponíveis ({percentual_disponivel:.1f}%)")
-        
-        # Mostra alguns ativos disponíveis (até 5)
-        amostra_disponiveis = ativos_disponiveis[:5]
-        BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🟢 Exemplos disponíveis: {', '.join(amostra_disponiveis)}{' e outros...' if len(ativos_disponiveis) > 5 else ''}")
-        
-        # Verificar conexão com a API do Telegram antes de enviar
-        BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🔄 Verificando conexão com a API do Telegram...")
-        
-        try:
-            url = f"https://api.telegram.org/bot{BOT2_TOKEN}/getMe"
-            resposta = requests.get(url, timeout=10)
-            
-            if resposta.status_code == 200:
-                bot_info = resposta.json()
-                BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] ✅ Conexão com API OK! Bot: @{bot_info['result']['username']}")
-            else:
-                BOT2_LOGGER.error(f"[SINAL][{hora_formatada}] ❌ Falha na conexão com API: {resposta.status_code} - {resposta.text}")
-                BOT2_LOGGER.warning(f"[SINAL][{hora_formatada}] ⚠️ Tentando enviar sinal mesmo assim...")
-        except Exception as e:
-            BOT2_LOGGER.error(f"[SINAL][{hora_formatada}] ❌ Erro ao verificar API: {str(e)}")
-            BOT2_LOGGER.warning(f"[SINAL][{hora_formatada}] ⚠️ Tentando enviar sinal mesmo assim...")
-        
-        # Armazenar ativos disponíveis para uso na geração do sinal
-        ATIVOS_CATEGORIAS["Digital_Disponiveis"] = ativos_disponiveis
-        
-        # Agora sim, enviar o sinal
-        BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🚀 Iniciando envio do sinal...")
-        resultado = bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=False)
-        
-        if resultado:
-            BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] ✅ Sinal enviado com sucesso!")
-            
-            # Marcar que o sinal do minuto 13 foi enviado nesta hora
-            if minuto_atual == 13:
-                SINAL_MINUTO_13_JA_ENVIADO = True
-                BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🔒 Sinal do minuto 13 marcado como enviado para esta hora")
-            
-            # Agendar verificação do próximo sinal
-            proxima_hora = hora_atual + timedelta(hours=1)
-            proxima_hora = proxima_hora.replace(minute=13, second=0, microsecond=0)
-            BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 📅 Próximo sinal agendado para: {proxima_hora.strftime('%H:%M')}")
-        else:
-            BOT2_LOGGER.error(f"[SINAL][{hora_formatada}] ❌ Falha ao enviar sinal!")
-            
-            # Verificar se há erros de conexão e agendar uma tentativa em 5 minutos
-            BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🔄 Agendando nova tentativa em 5 minutos...")
-            
-            # Criar um job único para tentar novamente em 5 minutos
-            proxima_tentativa = hora_atual + timedelta(minutes=5)
-            BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🕒 Próxima tentativa: {proxima_tentativa.strftime('%H:%M:%S')}")
-        
-        # Verificar e limpar tarefas desnecessárias para evitar acúmulo
-        BOT2_LOGGER.info(f"[SINAL][{hora_formatada}] 🧹 Verificando e limpando tarefas pendentes...")
-        
-        return resultado
-    except Exception as e:
-        agora = bot2_obter_hora_brasilia()
-        BOT2_LOGGER.error(f"[SINAL][{agora.strftime('%H:%M:%S')}] ❌ Erro crítico ao enviar sinal: {str(e)}")
-        BOT2_LOGGER.error(f"[SINAL][{agora.strftime('%H:%M:%S')}] 🔍 Detalhes: {traceback.format_exc()}")
-        return False
+        BOT2_LOGGER.critical(f"❌ Erro crítico ao iniciar o sistema: {str(e)}")
+        BOT2_LOGGER.critical(f"🔍 Detalhes: {traceback.format_exc()}")
+        sys.exit(1)
 
 def enviar_mensagem_participacao():
     """
@@ -3530,169 +3535,6 @@ def bot2_enviar_gif_promo(idioma="pt"):
         BOT2_LOGGER.error(f"[GIF-PROMO][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
         return False
 
-# Garantir que as funções estejam registradas no escopo global
+# Atribuir a função à variável global para garantir acesso em todos os contextos
 globals()['enviar_mensagem_participacao'] = enviar_mensagem_participacao
 globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
-
-# Variável de controle para executar o teste apenas uma vez
-TESTE_JA_EXECUTADO = False
-ARQUIVO_CONTROLE_TESTE = "teste_mensagens_executado.txt"
-
-def executar_teste_imediato_mensagens():
-    """
-    Executa um teste imediato das mensagens de participação e GIF promocional.
-    Esta função será executada apenas uma vez, e depois o bot seguirá com seu fluxo normal.
-    Usa um arquivo para persistir o estado entre reinicializações.
-    """
-    # Arquivo de controle para verificar se o teste já foi executado
-    arquivo_controle = "teste_mensagens_executado.txt"
-    
-    # Verificar se o teste já foi executado anteriormente
-    if os.path.exists(arquivo_controle):
-        try:
-            # Ler a data/hora da execução anterior
-            with open(arquivo_controle, 'r') as f:
-                conteudo = f.read().strip()
-            
-            # Registrar que o teste será pulado
-            BOT2_LOGGER.info(f"🔄 Teste imediato já foi executado anteriormente ({conteudo})")
-            BOT2_LOGGER.info(f"📋 Pulando execução do teste e seguindo com fluxo normal do bot")
-            return True
-        except Exception:
-            # Se houver erro ao ler o arquivo, prosseguir com o teste
-            BOT2_LOGGER.warning("⚠️ Erro ao ler arquivo de controle, prosseguindo com o teste")
-    
-    BOT2_LOGGER.info("="*70)
-    BOT2_LOGGER.info("===== INICIANDO TESTE IMEDIATO =====")
-    BOT2_LOGGER.info("="*70)
-    
-    # Verificar se as funções estão definidas corretamente
-    if 'enviar_mensagem_participacao' not in globals() or not callable(globals()['enviar_mensagem_participacao']):
-        BOT2_LOGGER.error("❌ ERRO CRÍTICO: Função enviar_mensagem_participacao não está definida ou não é callable!")
-        return False
-        
-    if 'bot2_enviar_gif_promo' not in globals() or not callable(globals()['bot2_enviar_gif_promo']):
-        BOT2_LOGGER.error("❌ ERRO CRÍTICO: Função bot2_enviar_gif_promo não está definida ou não é callable!")
-        return False
-    
-    # Obter referências às funções
-    func_mensagem = globals()['enviar_mensagem_participacao']
-    func_gif = globals()['bot2_enviar_gif_promo']
-    
-    # Executar teste direto para o canal ES
-    canais_es = BOT2_CANAIS_CONFIG.get("es", [])
-    BOT2_LOGGER.info(f"📢 Canais em espanhol: {canais_es}")
-    
-    try:
-        # Backup da configuração original
-        canais_backup = copy.deepcopy(BOT2_CANAIS_CONFIG)
-        
-        # Modificar temporariamente para enviar apenas para ES
-        canais_temp = {"es": canais_es, "pt": [], "en": []}
-        BOT2_CANAIS_CONFIG.clear()
-        BOT2_CANAIS_CONFIG.update(canais_temp)
-        
-        # 1. Enviar mensagem de participação
-        BOT2_LOGGER.info("🚀 ENVIANDO MENSAGEM DE PARTICIPAÇÃO PARA CANAL ES...")
-        try:
-            resultado = func_mensagem()
-            BOT2_LOGGER.info(f"📋 Resultado mensagem participação: {'✅ SUCESSO' if resultado else '❌ FALHA'}")
-        except Exception as e:
-            BOT2_LOGGER.error(f"❌ ERRO AO ENVIAR MENSAGEM DE PARTICIPAÇÃO: {str(e)}")
-            BOT2_LOGGER.error(traceback.format_exc())
-        
-        # Aguardar 5 segundos
-        BOT2_LOGGER.info("⏱️ Aguardando 5 segundos...")
-        time.sleep(5)
-        
-        # 2. Enviar GIF promocional
-        BOT2_LOGGER.info("🎬 ENVIANDO GIF PROMOCIONAL PARA CANAL ES...")
-        try:
-            resultado = func_gif("es")
-            BOT2_LOGGER.info(f"📋 Resultado GIF promocional: {'✅ SUCESSO' if resultado else '❌ FALHA'}")
-        except Exception as e:
-            BOT2_LOGGER.error(f"❌ ERRO AO ENVIAR GIF PROMOCIONAL: {str(e)}")
-            BOT2_LOGGER.error(traceback.format_exc())
-            
-    finally:
-        # Restaurar configuração original
-        BOT2_CANAIS_CONFIG.clear()
-        BOT2_CANAIS_CONFIG.update(canais_backup)
-        BOT2_LOGGER.info("🔄 Configuração original de canais restaurada")
-        
-    BOT2_LOGGER.info("="*70)
-    BOT2_LOGGER.info("===== FIM DO TESTE IMEDIATO =====")
-    BOT2_LOGGER.info("="*70)
-    
-    # Marcar o teste como executado para evitar execuções futuras
-    try:
-        # Criar ou substituir o arquivo com a data/hora atual
-        with open(arquivo_controle, 'w') as f:
-            data_hora_atual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"Teste executado em: {data_hora_atual}")
-        
-        BOT2_LOGGER.info(f"✅ Teste marcado como executado. Arquivo de controle '{arquivo_controle}' criado")
-    except Exception as e:
-        BOT2_LOGGER.error(f"❌ Erro ao criar arquivo de controle: {str(e)}")
-    
-    return True
-
-# Executar este teste imediatamente após todas as definições de funções
-if __name__ == "__main__" and 'enviar_mensagem_participacao' in globals() and 'bot2_enviar_gif_promo' in globals():
-    # Verificar se ambas as funções existem e estão definidas corretamente
-    BOT2_LOGGER.info("🧪 Executando teste imediato de mensagens...")
-    executar_teste_imediato_mensagens()
-    
-    # Após o teste, iniciar o ciclo normal do bot
-    BOT2_LOGGER.info("🚀 Iniciando ciclo normal de sinais após teste inicial...")
-    bot2_iniciar_ciclo_sinais()
-
-# Verificar se o teste imediato deve ser executado
-def verificar_se_teste_foi_executado():
-    """
-    Verifica se o teste imediato de mensagens já foi executado anteriormente.
-    Usa um arquivo para persistir essa informação entre execuções.
-    
-    Returns:
-        bool: True se o teste já foi executado anteriormente, False caso contrário
-    """
-    arquivo_controle = "teste_mensagens_executado.txt"
-    
-    # Verificar se o arquivo de controle existe
-    if os.path.exists(arquivo_controle):
-        try:
-            # Ler a data/hora da execução anterior
-            with open(arquivo_controle, 'r') as f:
-                conteudo = f.read().strip()
-            
-            # Registrar que o teste será pulado
-            BOT2_LOGGER.info(f"🔄 Teste imediato já foi executado anteriormente ({conteudo})")
-            BOT2_LOGGER.info(f"📋 Pulando execução do teste e seguindo com fluxo normal do bot")
-            return True
-        except Exception:
-            # Se houver erro ao ler o arquivo, assumir que o teste não foi executado
-            return False
-    
-    return False
-
-# Marcar que o teste foi executado
-def marcar_teste_como_executado():
-    """
-    Cria um arquivo de controle indicando que o teste foi executado.
-    """
-    arquivo_controle = "teste_mensagens_executado.txt"
-    
-    try:
-        # Criar ou substituir o arquivo com a data/hora atual
-        with open(arquivo_controle, 'w') as f:
-            data_hora_atual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"Teste executado em: {data_hora_atual}")
-        
-        BOT2_LOGGER.info(f"✅ Teste marcado como executado. Arquivo de controle '{arquivo_controle}' criado")
-        return True
-    except Exception as e:
-        BOT2_LOGGER.error(f"❌ Erro ao criar arquivo de controle: {str(e)}")
-        return False
-
-# Variável de controle para executar o teste apenas uma vez
-TESTE_JA_EXECUTADO = False
