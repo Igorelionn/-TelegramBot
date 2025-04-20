@@ -2484,12 +2484,22 @@ def enviar_sequencia_multiplo_tres():
     2. Mensagem de participação (T+26 min)
     3. GIF promocional (T+35 min)
     4. Mensagem de abertura de corretora (T+55 min)
+    
+    Utiliza um sistema de persistência para evitar duplicação em caso de reinicialização.
     """
     global BOT2_LOGGER, ultimo_sinal_enviado, sequencia_multiplo_tres_lock, BOT2_CANAIS_CONFIG, thread_sequencia_ativa
     
     # Gerar ID único para esta sequência para rastrear nos logs
     seq_id = uuid.uuid4().hex[:8]
     
+    # Verificar se já existe uma sequência ativa
+    sequencia_ativa, seq_id_ativo = verificar_sequencia_m3_ativa()
+    if sequencia_ativa:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Já existe uma sequência múltiplo de 3 em execução (ID: {seq_id_ativo}). Ignorando solicitação.")
+        return False
+
     # Usar lock para garantir acesso exclusivo
     with sequencia_multiplo_tres_lock:
         # Se já existe uma thread rodando, não iniciar outra
@@ -2497,9 +2507,12 @@ def enviar_sequencia_multiplo_tres():
             agora = bot2_obter_hora_brasilia()
             horario_atual = agora.strftime("%H:%M:%S")
             BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Já existe uma sequência múltiplo de 3 em execução. Ignorando solicitação.")
-            return
+            return False
 
     try:
+        # Registrar esta sequência como ativa para persistência
+        registrar_sequencia_m3_ativa(seq_id)
+        
         # Iniciar o tempo para medir duração total
         inicio_sequencia = time.time()
         
@@ -2515,6 +2528,7 @@ def enviar_sequencia_multiplo_tres():
         result_sinal = bot2_send_message()
         if not result_sinal:
             BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar sinal normal. Abortando sequência.")
+            finalizar_sequencia_m3_ativa()
             return False
             
         # Verificar se o último sinal foi salvo corretamente
@@ -2676,17 +2690,20 @@ def enviar_sequencia_multiplo_tres():
         horario_atual = agora.strftime("%H:%M:%S")
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Sequência múltiplo de 3 CONCLUÍDA! Tempo total: {tempo_total/60:.1f} minutos ({tempo_total:.1f}s)")
         
-        return True
+        # Remover o arquivo de controle da sequência
+        finalizar_sequencia_m3_ativa()
         
+        return True
     except Exception as e:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro ao executar sequência: {str(e)}")
+        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro na sequência múltiplo de 3: {str(e)}")
         BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔍 Detalhes: {traceback.format_exc()}")
+        
+        # Remover o arquivo de controle em caso de erro
+        finalizar_sequencia_m3_ativa()
+        
         return False
-    finally:
-        # Resetar a variável de controle de thread para permitir novas sequências
-        thread_sequencia_ativa = None
 
 
 def bot2_iniciar_ciclo_sinais():
@@ -3537,6 +3554,8 @@ globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
 # Variável de controle para executar o teste apenas uma vez
 TESTE_JA_EXECUTADO = False
 ARQUIVO_CONTROLE_TESTE = "teste_executado.txt"
+# Arquivo de controle para sequência múltiplo de três
+ARQUIVO_CONTROLE_SEQUENCIA_M3 = "sequencia_m3_ativa.txt"
 
 def verificar_teste_ja_executado():
     """
@@ -3573,6 +3592,66 @@ def marcar_teste_como_executado():
         TESTE_JA_EXECUTADO = True
     except Exception as e:
         BOT2_LOGGER.error(f"Erro ao criar arquivo de controle: {str(e)}")
+
+def verificar_sequencia_m3_ativa():
+    """
+    Verifica se existe uma sequência múltiplo de 3 ativa através de um arquivo de controle.
+    Retorna True se existir uma sequência ativa, False caso contrário.
+    """
+    try:
+        # Verificar se o arquivo de controle existe
+        if os.path.exists(ARQUIVO_CONTROLE_SEQUENCIA_M3):
+            with open(ARQUIVO_CONTROLE_SEQUENCIA_M3, "r") as arquivo:
+                dados = arquivo.read().strip().split(",")
+                if len(dados) >= 2:
+                    timestamp_str, seq_id = dados[:2]
+                    try:
+                        # Verificar se o timestamp ainda é válido (menos de 60 minutos)
+                        timestamp = float(timestamp_str)
+                        tempo_atual = time.time()
+                        if tempo_atual - timestamp < 60 * 60:  # 60 minutos em segundos
+                            BOT2_LOGGER.info(f"Sequência múltiplo de 3 ativa encontrada (ID: {seq_id}, iniciada há {(tempo_atual - timestamp) / 60:.1f} minutos)")
+                            return True, seq_id
+                        else:
+                            BOT2_LOGGER.info(f"Sequência múltiplo de 3 expirada (ID: {seq_id}, iniciada há {(tempo_atual - timestamp) / 60:.1f} minutos)")
+                            # Remover arquivo expirado
+                            os.remove(ARQUIVO_CONTROLE_SEQUENCIA_M3)
+                    except ValueError:
+                        BOT2_LOGGER.error(f"Formato inválido no arquivo de controle: {dados}")
+                        # Remover arquivo inválido
+                        os.remove(ARQUIVO_CONTROLE_SEQUENCIA_M3)
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao verificar sequência múltiplo de 3 ativa: {str(e)}")
+    
+    return False, None
+
+def registrar_sequencia_m3_ativa(seq_id):
+    """
+    Registra uma sequência múltiplo de 3 ativa, criando um arquivo de controle.
+    """
+    try:
+        # Criar arquivo de controle com timestamp atual e ID da sequência
+        with open(ARQUIVO_CONTROLE_SEQUENCIA_M3, "w") as arquivo:
+            timestamp = time.time()
+            arquivo.write(f"{timestamp},{seq_id}")
+        BOT2_LOGGER.info(f"Sequência múltiplo de 3 (ID: {seq_id}) registrada com sucesso")
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao registrar sequência múltiplo de 3: {str(e)}")
+        return False
+
+def finalizar_sequencia_m3_ativa():
+    """
+    Finaliza uma sequência múltiplo de 3 ativa, removendo o arquivo de controle.
+    """
+    try:
+        if os.path.exists(ARQUIVO_CONTROLE_SEQUENCIA_M3):
+            os.remove(ARQUIVO_CONTROLE_SEQUENCIA_M3)
+            BOT2_LOGGER.info("Sequência múltiplo de 3 finalizada")
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao finalizar sequência múltiplo de 3: {str(e)}")
+        return False
 
 def executar_teste_imediato_mensagens():
     """
