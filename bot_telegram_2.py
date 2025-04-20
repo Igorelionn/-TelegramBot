@@ -3544,10 +3544,24 @@ def executar_teste_imediato_mensagens():
     Esta função será executada apenas uma vez, e depois o bot seguirá com seu fluxo normal.
     Usa um arquivo para persistir o estado entre reinicializações.
     """
+    # Arquivo de controle para verificar se o teste já foi executado
+    arquivo_controle = "teste_mensagens_executado.txt"
+    
     # Verificar se o teste já foi executado anteriormente
-    if verificar_se_teste_foi_executado():
-        return True
-        
+    if os.path.exists(arquivo_controle):
+        try:
+            # Ler a data/hora da execução anterior
+            with open(arquivo_controle, 'r') as f:
+                conteudo = f.read().strip()
+            
+            # Registrar que o teste será pulado
+            BOT2_LOGGER.info(f"🔄 Teste imediato já foi executado anteriormente ({conteudo})")
+            BOT2_LOGGER.info(f"📋 Pulando execução do teste e seguindo com fluxo normal do bot")
+            return True
+        except Exception:
+            # Se houver erro ao ler o arquivo, prosseguir com o teste
+            BOT2_LOGGER.warning("⚠️ Erro ao ler arquivo de controle, prosseguindo com o teste")
+    
     BOT2_LOGGER.info("="*70)
     BOT2_LOGGER.info("===== INICIANDO TESTE IMEDIATO =====")
     BOT2_LOGGER.info("="*70)
@@ -3611,7 +3625,15 @@ def executar_teste_imediato_mensagens():
     BOT2_LOGGER.info("="*70)
     
     # Marcar o teste como executado para evitar execuções futuras
-    marcar_teste_como_executado()
+    try:
+        # Criar ou substituir o arquivo com a data/hora atual
+        with open(arquivo_controle, 'w') as f:
+            data_hora_atual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"Teste executado em: {data_hora_atual}")
+        
+        BOT2_LOGGER.info(f"✅ Teste marcado como executado. Arquivo de controle '{arquivo_controle}' criado")
+    except Exception as e:
+        BOT2_LOGGER.error(f"❌ Erro ao criar arquivo de controle: {str(e)}")
     
     return True
 
