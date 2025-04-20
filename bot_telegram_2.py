@@ -3536,17 +3536,16 @@ globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
 
 # Variável de controle para executar o teste apenas uma vez
 TESTE_JA_EXECUTADO = False
+ARQUIVO_CONTROLE_TESTE = "teste_mensagens_executado.txt"
 
 def executar_teste_imediato_mensagens():
     """
     Executa um teste imediato das mensagens de participação e GIF promocional.
     Esta função será executada apenas uma vez, e depois o bot seguirá com seu fluxo normal.
+    Usa um arquivo para persistir o estado entre reinicializações.
     """
-    global TESTE_JA_EXECUTADO, BOT2_LOGGER
-    
-    # Se o teste já foi executado anteriormente, seguir o fluxo normal
-    if TESTE_JA_EXECUTADO:
-        BOT2_LOGGER.info("Teste já foi executado anteriormente, seguindo fluxo normal.")
+    # Verificar se o teste já foi executado anteriormente
+    if verificar_se_teste_foi_executado():
         return True
         
     BOT2_LOGGER.info("="*70)
@@ -3611,8 +3610,8 @@ def executar_teste_imediato_mensagens():
     BOT2_LOGGER.info("===== FIM DO TESTE IMEDIATO =====")
     BOT2_LOGGER.info("="*70)
     
-    # Marcar o teste como executado
-    TESTE_JA_EXECUTADO = True
+    # Marcar o teste como executado para evitar execuções futuras
+    marcar_teste_como_executado()
     
     return True
 
@@ -3625,3 +3624,53 @@ if __name__ == "__main__" and 'enviar_mensagem_participacao' in globals() and 'b
     # Após o teste, iniciar o ciclo normal do bot
     BOT2_LOGGER.info("🚀 Iniciando ciclo normal de sinais após teste inicial...")
     bot2_iniciar_ciclo_sinais()
+
+# Verificar se o teste imediato deve ser executado
+def verificar_se_teste_foi_executado():
+    """
+    Verifica se o teste imediato de mensagens já foi executado anteriormente.
+    Usa um arquivo para persistir essa informação entre execuções.
+    
+    Returns:
+        bool: True se o teste já foi executado anteriormente, False caso contrário
+    """
+    arquivo_controle = "teste_mensagens_executado.txt"
+    
+    # Verificar se o arquivo de controle existe
+    if os.path.exists(arquivo_controle):
+        try:
+            # Ler a data/hora da execução anterior
+            with open(arquivo_controle, 'r') as f:
+                conteudo = f.read().strip()
+            
+            # Registrar que o teste será pulado
+            BOT2_LOGGER.info(f"🔄 Teste imediato já foi executado anteriormente ({conteudo})")
+            BOT2_LOGGER.info(f"📋 Pulando execução do teste e seguindo com fluxo normal do bot")
+            return True
+        except Exception:
+            # Se houver erro ao ler o arquivo, assumir que o teste não foi executado
+            return False
+    
+    return False
+
+# Marcar que o teste foi executado
+def marcar_teste_como_executado():
+    """
+    Cria um arquivo de controle indicando que o teste foi executado.
+    """
+    arquivo_controle = "teste_mensagens_executado.txt"
+    
+    try:
+        # Criar ou substituir o arquivo com a data/hora atual
+        with open(arquivo_controle, 'w') as f:
+            data_hora_atual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"Teste executado em: {data_hora_atual}")
+        
+        BOT2_LOGGER.info(f"✅ Teste marcado como executado. Arquivo de controle '{arquivo_controle}' criado")
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"❌ Erro ao criar arquivo de controle: {str(e)}")
+        return False
+
+# Variável de controle para executar o teste apenas uma vez
+TESTE_JA_EXECUTADO = False
