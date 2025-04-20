@@ -3108,7 +3108,7 @@ if __name__ == "__main__":
     try:
         print(f"\n{'=' * 50}")
         print(f"  INICIANDO BOT DE SINAIS")
-        print(f"  TESTE IMEDIATO DE MENSAGENS SERÁ EXECUTADO")
+        print(f"  SISTEMA DE ENVIO AUTOMÁTICO DE SINAIS")
         print(f"{'=' * 50}\n")
         
         # Configurar captura de exceções não tratadas para logar adequadamente
@@ -3744,4 +3744,10 @@ if __name__ == "__main__" and 'enviar_mensagem_participacao' in globals() and 'b
     
     # Após o teste, iniciar o ciclo normal do bot
     BOT2_LOGGER.info("🚀 Iniciando ciclo normal de sinais após teste inicial...")
+    bot2_iniciar_ciclo_sinais()
+
+# Executar o bot de sinais
+if __name__ == "__main__" and 'enviar_mensagem_participacao' in globals() and 'bot2_enviar_gif_promo' in globals():
+    # Iniciar o ciclo normal do bot
+    BOT2_LOGGER.info("🚀 Iniciando ciclo normal de sinais...")
     bot2_iniciar_ciclo_sinais()
