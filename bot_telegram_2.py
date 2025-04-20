@@ -3091,7 +3091,7 @@ if __name__ == "__main__":
     try:
         print(f"\n{'=' * 50}")
         print(f"  INICIANDO BOT DE SINAIS")
-        print(f"  TESTE IMEDIATO DE MENSAGENS SERÁ EXECUTADO")
+        print(f"  INICIANDO CICLO NORMAL")
         print(f"{'=' * 50}\n")
         
         # Configurar captura de exceções não tratadas para logar adequadamente
