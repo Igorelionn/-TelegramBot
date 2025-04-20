@@ -3536,6 +3536,43 @@ globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
 
 # Variável de controle para executar o teste apenas uma vez
 TESTE_JA_EXECUTADO = False
+ARQUIVO_CONTROLE_TESTE = "teste_executado.txt"
+
+def verificar_teste_ja_executado():
+    """
+    Verifica se o teste já foi executado anteriormente através de um arquivo de controle.
+    Retorna True se o teste já foi executado, False caso contrário.
+    """
+    global TESTE_JA_EXECUTADO
+    
+    try:
+        # Verificar se o arquivo de controle existe
+        if os.path.exists(ARQUIVO_CONTROLE_TESTE):
+            with open(ARQUIVO_CONTROLE_TESTE, "r") as arquivo:
+                conteudo = arquivo.read().strip()
+                if conteudo == "1":
+                    BOT2_LOGGER.info("Arquivo de controle encontrado. Teste já foi executado anteriormente.")
+                    TESTE_JA_EXECUTADO = True
+                    return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao verificar arquivo de controle: {str(e)}")
+    
+    return False
+
+def marcar_teste_como_executado():
+    """
+    Marca o teste como executado, criando um arquivo de controle.
+    """
+    global TESTE_JA_EXECUTADO
+    
+    try:
+        # Criar arquivo de controle
+        with open(ARQUIVO_CONTROLE_TESTE, "w") as arquivo:
+            arquivo.write("1")
+        BOT2_LOGGER.info(f"Arquivo de controle '{ARQUIVO_CONTROLE_TESTE}' criado com sucesso.")
+        TESTE_JA_EXECUTADO = True
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao criar arquivo de controle: {str(e)}")
 
 def executar_teste_imediato_mensagens():
     """
@@ -3544,9 +3581,9 @@ def executar_teste_imediato_mensagens():
     """
     global TESTE_JA_EXECUTADO
     
-    # Se o teste já foi executado, não executar novamente
-    if TESTE_JA_EXECUTADO:
-        BOT2_LOGGER.info("Teste já foi executado anteriormente, seguindo fluxo normal.")
+    # Verificar se o teste já foi executado anteriormente
+    if verificar_teste_ja_executado():
+        BOT2_LOGGER.info("Teste já foi executado anteriormente (verificado via arquivo), seguindo fluxo normal.")
         return True
         
     BOT2_LOGGER.info("="*70)
@@ -3611,15 +3648,15 @@ def executar_teste_imediato_mensagens():
     BOT2_LOGGER.info("===== FIM DO TESTE IMEDIATO =====")
     BOT2_LOGGER.info("="*70)
     
-    # Marcar o teste como executado
-    TESTE_JA_EXECUTADO = True
+    # Marcar o teste como executado (na memória e em arquivo)
+    marcar_teste_como_executado()
     
     return True
 
 # Executar este teste imediatamente após todas as definições de funções
 if __name__ == "__main__" and 'enviar_mensagem_participacao' in globals() and 'bot2_enviar_gif_promo' in globals():
     # Verificar se já foi executado antes (para casos de reinicialização do script)
-    if not TESTE_JA_EXECUTADO:
+    if not verificar_teste_ja_executado():
         # Verificar se ambas as funções existem e estão definidas corretamente
         BOT2_LOGGER.info("🧪 Executando teste imediato de mensagens...")
         executar_teste_imediato_mensagens()
