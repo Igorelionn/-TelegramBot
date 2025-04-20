@@ -2539,31 +2539,35 @@ def enviar_sequencia_multiplo_tres():
         # Verificar se a função enviar_mensagem_participacao existe e é chamável
         if enviar_mensagem_participacao is None:
             BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Função enviar_mensagem_participacao não está definida!")
-            # Continuar com a sequência mesmo sem enviar a mensagem de participação
+            # Usar a implementação de fallback
+            BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Usando função de fallback para enviar_mensagem_participacao")
+            func_participacao = _fallback_enviar_mensagem_participacao
         else:
-            # Tentar enviar até 3 vezes com intervalo de 30 segundos
-            max_tentativas = 3
-            for tentativa in range(1, max_tentativas + 1):
-                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Tentativa {tentativa}/{max_tentativas} de enviar mensagem de participação")
-                try:
-                    resultado_participacao = enviar_mensagem_participacao()
-                    if resultado_participacao:
-                        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Mensagem de participação enviada com sucesso")
-                        break
-                    else:
-                        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar mensagem de participação")
-                except Exception as e:
-                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro ao enviar mensagem de participação: {str(e)}")
-                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔍 Detalhes: {traceback.format_exc()}")
-                
-                # Se não for a última tentativa, aguardar antes de tentar novamente
-                if tentativa < max_tentativas:
-                    time.sleep(30)  # Aguardar 30 segundos entre tentativas
-                    horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+            func_participacao = enviar_mensagem_participacao
             
-            # Verificar se todas as tentativas falharam
-            if tentativa == max_tentativas:
-                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha nas {max_tentativas} tentativas de enviar mensagem de participação. Continuando sequência...")
+        # Tentar enviar até 3 vezes com intervalo de 30 segundos
+        max_tentativas = 3
+        for tentativa in range(1, max_tentativas + 1):
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Tentativa {tentativa}/{max_tentativas} de enviar mensagem de participação")
+            try:
+                resultado_participacao = func_participacao()
+                if resultado_participacao:
+                    BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Mensagem de participação enviada com sucesso")
+                    break
+                else:
+                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar mensagem de participação")
+            except Exception as e:
+                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro ao enviar mensagem de participação: {str(e)}")
+                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔍 Detalhes: {traceback.format_exc()}")
+            
+            # Se não for a última tentativa, aguardar antes de tentar novamente
+            if tentativa < max_tentativas:
+                time.sleep(30)  # Aguardar 30 segundos entre tentativas
+                horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        
+        # Verificar se todas as tentativas falharam
+        if tentativa == max_tentativas:
+            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha nas {max_tentativas} tentativas de enviar mensagem de participação. Continuando sequência...")
         
         # Aguardar mais 8 minutos (T+35 total) para o GIF promocional
         # Esta espera é APÓS a mensagem de participação
@@ -2590,15 +2594,18 @@ def enviar_sequencia_multiplo_tres():
             # Verificar se a função bot2_enviar_gif_promo existe e é chamável
             if bot2_enviar_gif_promo is None:
                 BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Função bot2_enviar_gif_promo não está definida!")
-                # Pular para o próximo idioma sem tentar chamar a função
-                continue
+                # Usar a implementação de fallback
+                BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Usando função de fallback para bot2_enviar_gif_promo")
+                func_gif_promo = _fallback_bot2_enviar_gif_promo
+            else:
+                func_gif_promo = bot2_enviar_gif_promo
                 
             # Tentar enviar até 3 vezes com intervalo de 30 segundos
             max_tentativas = 3
             for tentativa in range(1, max_tentativas + 1):
                 BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Tentativa {tentativa}/{max_tentativas} para idioma {idioma}")
                 try:
-                    resultado_gif_promo = bot2_enviar_gif_promo(idioma)
+                    resultado_gif_promo = func_gif_promo(idioma)
                     if resultado_gif_promo:
                         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ GIF promocional enviado com sucesso para idioma {idioma}")
                         break
@@ -2638,35 +2645,39 @@ def enviar_sequencia_multiplo_tres():
         # Verificar se a função bot2_enviar_mensagem_abertura_corretora existe e é chamável
         if bot2_enviar_mensagem_abertura_corretora is None:
             BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Função bot2_enviar_mensagem_abertura_corretora não está definida!")
-            # Finalizar a sequência mesmo sem enviar a mensagem de abertura
+            # Usar a implementação de fallback
+            BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Usando função de fallback para bot2_enviar_mensagem_abertura_corretora")
+            func_abertura_corretora = _fallback_bot2_enviar_mensagem_abertura_corretora
         else:
-            # Enviar para cada idioma configurado
-            for idioma in BOT2_CANAIS_CONFIG.keys():
-                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🌐 Enviando mensagem de corretora para idioma: {idioma}")
+            func_abertura_corretora = bot2_enviar_mensagem_abertura_corretora
+            
+        # Enviar para cada idioma configurado
+        for idioma in BOT2_CANAIS_CONFIG.keys():
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🌐 Enviando mensagem de corretora para idioma: {idioma}")
+            
+            # Tentar enviar até 3 vezes com intervalo de 30 segundos
+            max_tentativas = 3
+            for tentativa in range(1, max_tentativas + 1):
+                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Tentativa {tentativa}/{max_tentativas} para idioma {idioma}")
+                try:
+                    resultado_corretora = func_abertura_corretora(idioma)
+                    if resultado_corretora:
+                        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Mensagem de corretora enviada com sucesso para idioma {idioma}")
+                        break
+                    else:
+                        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar mensagem de corretora para idioma {idioma}")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro ao enviar mensagem de corretora para idioma {idioma}: {str(e)}")
+                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔍 Detalhes: {traceback.format_exc()}")
                 
-                # Tentar enviar até 3 vezes com intervalo de 30 segundos
-                max_tentativas = 3
-                for tentativa in range(1, max_tentativas + 1):
-                    BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Tentativa {tentativa}/{max_tentativas} para idioma {idioma}")
-                    try:
-                        resultado_corretora = bot2_enviar_mensagem_abertura_corretora(idioma)
-                        if resultado_corretora:
-                            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Mensagem de corretora enviada com sucesso para idioma {idioma}")
-                            break
-                        else:
-                            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar mensagem de corretora para idioma {idioma}")
-                    except Exception as e:
-                        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro ao enviar mensagem de corretora para idioma {idioma}: {str(e)}")
-                        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔍 Detalhes: {traceback.format_exc()}")
-                    
-                    # Se não for a última tentativa, aguardar antes de tentar novamente
-                    if tentativa < max_tentativas:
-                        time.sleep(30)  # Aguardar 30 segundos entre tentativas
-                        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-                
-                # Verificar se todas as tentativas falharam
-                if tentativa == max_tentativas:
-                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha nas {max_tentativas} tentativas para idioma {idioma}.")
+                # Se não for a última tentativa, aguardar antes de tentar novamente
+                if tentativa < max_tentativas:
+                    time.sleep(30)  # Aguardar 30 segundos entre tentativas
+                    horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+            
+            # Verificar se todas as tentativas falharam
+            if tentativa == max_tentativas:
+                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha nas {max_tentativas} tentativas para idioma {idioma}.")
         
         # Calcular tempo total da sequência
         tempo_total = time.time() - inicio_sequencia
@@ -3162,6 +3173,50 @@ globals()['bot2_enviar_mensagem_abertura_corretora'] = bot2_enviar_mensagem_aber
 # Inicialização do sistema de envio de sinais
 if __name__ == "__main__":
     try:
+        # Garantir que todas as funções sejam registradas no namespace global
+        def inicializar_funcoes_globais():
+            """
+            Garante que todas as funções que precisam ser acessadas globalmente
+            sejam registradas no namespace global antes de qualquer chamada.
+            """
+            global enviar_mensagem_participacao, bot2_enviar_gif_promo, bot2_enviar_mensagem_abertura_corretora
+            
+            # As funções são definidas mais abaixo no código, mas precisamos garantir
+            # que as variáveis globais apontem para elas antes de qualquer chamada
+            # durante a execução do programa.
+            BOT2_LOGGER.info("🔄 Inicializando funções globais...")
+            
+            # Atribuir diretamente caso as funções já tenham sido definidas
+            try:
+                # Testar se as funções já estão definidas
+                if 'enviar_mensagem_participacao' in globals() and callable(globals()['enviar_mensagem_participacao']):
+                    enviar_mensagem_participacao = globals()['enviar_mensagem_participacao']
+                    BOT2_LOGGER.info("✅ Função enviar_mensagem_participacao já registrada")
+                else:
+                    BOT2_LOGGER.warning("⚠️ Função enviar_mensagem_participacao ainda não definida, será registrada posteriormente")
+                
+                if 'bot2_enviar_gif_promo' in globals() and callable(globals()['bot2_enviar_gif_promo']):
+                    bot2_enviar_gif_promo = globals()['bot2_enviar_gif_promo']
+                    BOT2_LOGGER.info("✅ Função bot2_enviar_gif_promo já registrada")
+                else:
+                    BOT2_LOGGER.warning("⚠️ Função bot2_enviar_gif_promo ainda não definida, será registrada posteriormente")
+                
+                if 'bot2_enviar_mensagem_abertura_corretora' in globals() and callable(globals()['bot2_enviar_mensagem_abertura_corretora']):
+                    bot2_enviar_mensagem_abertura_corretora = globals()['bot2_enviar_mensagem_abertura_corretora']
+                    BOT2_LOGGER.info("✅ Função bot2_enviar_mensagem_abertura_corretora já registrada")
+                else:
+                    BOT2_LOGGER.warning("⚠️ Função bot2_enviar_mensagem_abertura_corretora ainda não definida, será registrada posteriormente")
+                
+                # Registrar diretamente as funções nas variáveis globais (força a resolução)
+                globals()['enviar_mensagem_participacao'] = enviar_mensagem_participacao
+                globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
+                globals()['bot2_enviar_mensagem_abertura_corretora'] = bot2_enviar_mensagem_abertura_corretora
+                
+                BOT2_LOGGER.info("🔄 Inicialização de funções globais concluída")
+            except Exception as e:
+                BOT2_LOGGER.error(f"❌ Erro ao inicializar funções globais: {str(e)}")
+                BOT2_LOGGER.error(f"🔍 Detalhes: {traceback.format_exc()}")
+        
         # Configurar captura de exceções não tratadas para logar adequadamente
         def log_uncaught_exceptions(exctype, value, tb):
             BOT2_LOGGER.critical(f"❌ ERRO CRÍTICO NÃO TRATADO: {exctype.__name__}: {value}")
@@ -3185,6 +3240,9 @@ if __name__ == "__main__":
         # Configurar sistema de logging detalhado
         BOT2_LOGGER.info(f"🚀 INICIANDO SISTEMA DE SINAIS v2.0 ({data_inicio} {hora_inicio})")
         BOT2_LOGGER.info(f"🔧 Configurando ambiente e inicializando serviços...")
+        
+        # Inicializar funções globais antes de qualquer outra operação
+        inicializar_funcoes_globais()
         
         # Definir o horário especial diário para enviar sinais
         definir_horario_especial_diario()
@@ -3538,3 +3596,20 @@ def bot2_enviar_gif_promo(idioma="pt"):
 # Atribuir a função à variável global para garantir acesso em todos os contextos
 globals()['enviar_mensagem_participacao'] = enviar_mensagem_participacao
 globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
+
+# No início do arquivo logo após as declarações iniciais
+# Funções de fallback para quando as funções reais não estiverem disponíveis
+def _fallback_enviar_mensagem_participacao():
+    """Implementação de fallback para enviar_mensagem_participacao"""
+    BOT2_LOGGER.warning("⚠️ FALLBACK: Usando implementação de fallback para enviar_mensagem_participacao")
+    return False
+
+def _fallback_bot2_enviar_gif_promo(idioma="pt"):
+    """Implementação de fallback para bot2_enviar_gif_promo"""
+    BOT2_LOGGER.warning(f"⚠️ FALLBACK: Usando implementação de fallback para bot2_enviar_gif_promo (idioma: {idioma})")
+    return False
+
+def _fallback_bot2_enviar_mensagem_abertura_corretora(idioma=None):
+    """Implementação de fallback para bot2_enviar_mensagem_abertura_corretora"""
+    BOT2_LOGGER.warning(f"⚠️ FALLBACK: Usando implementação de fallback para bot2_enviar_mensagem_abertura_corretora (idioma: {idioma})")
+    return False
