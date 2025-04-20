@@ -2487,6 +2487,22 @@ def enviar_sequencia_multiplo_tres():
     """
     global BOT2_LOGGER, ultimo_sinal_enviado, sequencia_multiplo_tres_lock, BOT2_CANAIS_CONFIG, thread_sequencia_ativa
     
+    # Definir funções de fallback localmente para garantir que estejam disponíveis
+    def local_fallback_enviar_mensagem_participacao():
+        """Implementação de fallback para enviar_mensagem_participacao"""
+        BOT2_LOGGER.warning("⚠️ FALLBACK: Usando implementação de fallback para enviar_mensagem_participacao")
+        return False
+        
+    def local_fallback_bot2_enviar_gif_promo(idioma="pt"):
+        """Implementação de fallback para bot2_enviar_gif_promo"""
+        BOT2_LOGGER.warning(f"⚠️ FALLBACK: Usando implementação de fallback para bot2_enviar_gif_promo (idioma: {idioma})")
+        return False
+        
+    def local_fallback_bot2_enviar_mensagem_abertura_corretora(idioma=None):
+        """Implementação de fallback para bot2_enviar_mensagem_abertura_corretora"""
+        BOT2_LOGGER.warning(f"⚠️ FALLBACK: Usando implementação de fallback para bot2_enviar_mensagem_abertura_corretora (idioma: {idioma})")
+        return False
+    
     # Gerar ID único para esta sequência para rastrear nos logs
     seq_id = uuid.uuid4().hex[:8]
     
@@ -2541,7 +2557,7 @@ def enviar_sequencia_multiplo_tres():
             BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Função enviar_mensagem_participacao não está definida!")
             # Usar a implementação de fallback
             BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Usando função de fallback para enviar_mensagem_participacao")
-            func_participacao = _fallback_enviar_mensagem_participacao
+            func_participacao = local_fallback_enviar_mensagem_participacao
         else:
             func_participacao = enviar_mensagem_participacao
             
@@ -2596,7 +2612,7 @@ def enviar_sequencia_multiplo_tres():
                 BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Função bot2_enviar_gif_promo não está definida!")
                 # Usar a implementação de fallback
                 BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Usando função de fallback para bot2_enviar_gif_promo")
-                func_gif_promo = _fallback_bot2_enviar_gif_promo
+                func_gif_promo = local_fallback_bot2_enviar_gif_promo
             else:
                 func_gif_promo = bot2_enviar_gif_promo
                 
@@ -2647,7 +2663,7 @@ def enviar_sequencia_multiplo_tres():
             BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Função bot2_enviar_mensagem_abertura_corretora não está definida!")
             # Usar a implementação de fallback
             BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Usando função de fallback para bot2_enviar_mensagem_abertura_corretora")
-            func_abertura_corretora = _fallback_bot2_enviar_mensagem_abertura_corretora
+            func_abertura_corretora = local_fallback_bot2_enviar_mensagem_abertura_corretora
         else:
             func_abertura_corretora = bot2_enviar_mensagem_abertura_corretora
             
