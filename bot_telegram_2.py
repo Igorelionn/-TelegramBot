@@ -2515,6 +2515,9 @@ def enviar_sequencia_multiplo_tres():
             BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Já existe uma sequência múltiplo de 3 em execução. Ignorando solicitação.")
             return
 
+        # Marcar esta thread como ativa para evitar duplicação
+        thread_sequencia_ativa = threading.current_thread()
+
     try:
         # Iniciar o tempo para medir duração total
         inicio_sequencia = time.time()
@@ -2527,8 +2530,39 @@ def enviar_sequencia_multiplo_tres():
         # ETAPA 1: Enviar sinal normal
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔔 ETAPA 1/4: Enviando sinal normal")
         
-        # Chamar a função de envio de sinal
-        result_sinal = bot2_send_message()
+        # Verificar se o sinal já foi enviado através do ciclo normal de sinais
+        # Se sim, não enviar novamente para evitar duplicação
+        hora_atual = agora.hour
+        minuto_atual = agora.minute
+        
+        # Verificar se estamos próximos do minuto 13 (sinal regular)
+        if (minuto_atual >= 12 and minuto_atual <= 14):
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Hora atual próxima ao minuto 13, verificando se o sinal já foi enviado pelo ciclo regular")
+            
+            # Se estamos no minuto 13 ou logo após, presumimos que o sinal regular já foi ou será enviado
+            if minuto_atual >= 13:
+                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ℹ️ Minuto atual é {minuto_atual}, presumindo que o sinal já foi enviado pelo ciclo regular")
+                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Pulando envio do sinal para evitar duplicação")
+                result_sinal = True  # Presumir sucesso e continuar com o resto da sequência
+            else:
+                # Estamos no minuto 12, esperamos o sinal regular ser enviado
+                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏱️ Aguardando o envio do sinal pelo ciclo regular (minuto 13)")
+                # Esperar até o minuto 13:30 para garantir que o sinal regular foi enviado
+                tempo_espera = 0
+                while agora.minute < 13 or (agora.minute == 13 and agora.second < 30):
+                    time.sleep(5)
+                    tempo_espera += 5
+                    agora = bot2_obter_hora_brasilia()
+                    if tempo_espera % 30 == 0:  # Log a cada 30 segundos
+                        BOT2_LOGGER.info(f"[SEQUENCIA-3][{agora.strftime('%H:%M:%S')}][Seq-{seq_id}] ⏳ Ainda aguardando o minuto 13:30... ({tempo_espera}s)")
+                
+                BOT2_LOGGER.info(f"[SEQUENCIA-3][{agora.strftime('%H:%M:%S')}][Seq-{seq_id}] ✅ Sinal deve ter sido enviado pelo ciclo regular")
+                result_sinal = True  # Presumir sucesso e continuar com o resto da sequência
+        else:
+            # Não estamos próximos do minuto 13, enviar o sinal normalmente
+            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🚀 Enviando sinal através da sequência múltiplo de 3")
+            result_sinal = bot2_send_message()
+        
         if not result_sinal:
             BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar sinal normal. Abortando sequência.")
             return False
@@ -2546,7 +2580,7 @@ def enviar_sequencia_multiplo_tres():
             time.sleep(60)  # Esperar 1 minuto
             tempo_decorrido = time.time() - inicio_sequencia
             BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏳ Aguardando mensagem de participação... {minuto}/26 minutos decorridos (tempo total: {tempo_decorrido:.1f}s)")
-            
+        
         # ETAPA 2: Enviar mensagem de participação (T+26)
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
@@ -2597,7 +2631,7 @@ def enviar_sequencia_multiplo_tres():
             agora = bot2_obter_hora_brasilia()
             horario_atual = agora.strftime("%H:%M:%S")
             BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏳ Aguardando GIF promocional... {minuto}/8 minutos decorridos após mensagem de participação (tempo total: {tempo_decorrido:.1f}s)")
-            
+        
         # ETAPA 3: Enviar GIF promocional (T+35)
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
@@ -2652,7 +2686,7 @@ def enviar_sequencia_multiplo_tres():
             agora = bot2_obter_hora_brasilia()
             horario_atual = agora.strftime("%H:%M:%S")
             BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏳ Aguardando mensagem de corretora... {minuto}/20 minutos decorridos após GIF promocional (tempo total: {tempo_decorrido:.1f}s)")
-            
+        
         # ETAPA 4: Enviar mensagem de abertura de corretora (T+55)
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
@@ -2704,7 +2738,7 @@ def enviar_sequencia_multiplo_tres():
         BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Sequência múltiplo de 3 CONCLUÍDA! Tempo total: {tempo_total/60:.1f} minutos ({tempo_total:.1f}s)")
         
         return True
-        
+            
     except Exception as e:
         agora = bot2_obter_hora_brasilia()
         horario_atual = agora.strftime("%H:%M:%S")
@@ -3150,7 +3184,7 @@ def bot2_enviar_mensagem_abertura_corretora(idioma=None):
                         "chat_id": chat_id,
                         "text": mensagem,
                         "parse_mode": "HTML",
-                        "disable_web_page_preview": False
+                        "disable_web_page_preview": True
                     }
                     
                     # Enviar mensagem
