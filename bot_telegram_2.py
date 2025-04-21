@@ -118,6 +118,109 @@ LINKS_VIDEO = {
 GIF_POS_SINAL_PATH = "videos/pos_sinal/180398513446716419 (7).webp"
 URL_GIF_PROMO = "https://media.giphy.com/media/whPiIq21hxXuJn7WVX/giphy.gif"
 
+# Horários de funcionamento dos ativos
+HORARIOS_PADRAO = {
+    "BTC/USD_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "ETH/USD_OTC": {
+        "Monday": ["00:00-19:45", "20:15-23:59"],
+        "Tuesday": ["00:00-19:45", "20:15-23:59"],
+        "Wednesday": ["00:00-19:45", "20:15-23:59"],
+        "Thursday": ["00:00-19:45", "20:15-23:59"],
+        "Friday": ["00:00-19:45", "20:15-23:59"],
+        "Saturday": ["00:00-19:45", "20:15-23:59"],
+        "Sunday": ["00:00-19:45", "20:15-23:59"],
+    },
+    "EUR/JPY_OTC": {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-01:00", "01:15-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"],
+    },
+    "1000Sats_OTC": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+    },
+    "Pepe_OTC": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+    },
+    "US_500_OTC": {
+        "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+    },
+    "Gold/Silver_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "Worldcoin_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "USD/THB_OTC": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+    },
+    "CHF/JPY_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "GBP/AUD_OTC": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    }
+}
+
 # Variáveis de controle
 contador_sinais = 0  # Para rastrear os sinais múltiplos de 3
 sinais_enviados_hoje = []  # Lista para armazenar os sinais enviados hoje
@@ -129,26 +232,164 @@ def obter_hora_brasilia():
     fuso_horario_brasilia = pytz.timezone("America/Sao_Paulo")
     return datetime.now(fuso_horario_brasilia)
 
+# Função para verificar se um ativo está disponível no horário atual
+def verificar_disponibilidade_ativo(ativo):
+    """
+    Verifica se um ativo está disponível para trade no momento atual.
+    
+    Args:
+        ativo (str): Nome do ativo a ser verificado
+        
+    Returns:
+        bool: True se o ativo está disponível, False caso contrário
+    """
+    try:
+        # Obter hora atual em Brasília
+        agora = obter_hora_brasilia()
+        
+        # Dia da semana em inglês (Monday, Tuesday, etc.)
+        dia_semana = agora.strftime("%A")
+        
+        # Hora atual no formato HH:MM
+        hora_atual = agora.strftime("%H:%M")
+        
+        # Verificar se o ativo está no dicionário de horários
+        ativo_formatado = ativo.replace(" ", "_").replace("/", "_").replace("-", "_")
+        
+        # Se o ativo não estiver no dicionário de horários, consideramos disponível
+        if ativo_formatado not in HORARIOS_PADRAO:
+            BOT2_LOGGER.warning(f"Ativo {ativo} ({ativo_formatado}) não encontrado na tabela de horários. Considerando disponível.")
+            return True
+            
+        # Obter os intervalos de horário para o dia atual
+        intervalos = HORARIOS_PADRAO[ativo_formatado].get(dia_semana, [])
+        
+        # Se não houver intervalos definidos para este dia, o ativo está indisponível
+        if not intervalos:
+            BOT2_LOGGER.info(f"Ativo {ativo} não está disponível aos {dia_semana}.")
+            return False
+            
+        # Verificar se a hora atual está dentro de algum dos intervalos
+        for intervalo in intervalos:
+            inicio, fim = intervalo.split("-")
+            if inicio <= hora_atual <= fim:
+                BOT2_LOGGER.info(f"Ativo {ativo} está disponível no intervalo {intervalo}")
+                return True
+                
+        BOT2_LOGGER.info(f"Ativo {ativo} não está disponível no horário atual {hora_atual}.")
+        return False
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao verificar disponibilidade do ativo {ativo}: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        # Em caso de erro, consideramos o ativo disponível
+        return True
+
+# Função para verificar quais ativos estão disponíveis para trade
+def verificar_ativos_disponiveis():
+    """
+    Verifica quais ativos estão disponíveis para trade no momento atual.
+    
+    Returns:
+        list: Lista de ativos disponíveis para trade
+    """
+    BOT2_LOGGER.info("Verificando ativos disponíveis para trade...")
+    
+    try:
+        # Lista completa dos ativos disponíveis
+        todos_ativos = [
+            "Gold/Silver (OTC)",
+            "Worldcoin (OTC)",
+            "USD/THB (OTC)",
+            "ETH/USD (OTC)",
+            "CHF/JPY (OTC)",
+            "Pepe (OTC)",
+            "GBP/AUD (OTC)",
+            "GBP/CHF",
+            "GBP/CAD (OTC)",
+            "EUR/JPY (OTC)",
+            "AUD/CHF",
+            "GER 30 (OTC)",
+            "AUD/CHF (OTC)",
+            "EUR/AUD",
+            "USD/CAD (OTC)",
+            "BTC/USD",
+            "Amazon/Ebay (OTC)",
+            "Coca-Cola Company (OTC)",
+            "AIG (OTC)",
+            "Amazon/Alibaba (OTC)",
+            "Bitcoin Cash (OTC)",
+            "AUD/USD",
+            "DASH (OTC)",
+            "BTC/USD (OTC)",
+            "SP 35 (OTC)",
+            "TRUMP Coin (OTC)",
+            "US 100 (OTC)",
+            "EUR/CAD (OTC)",
+            "HK 33 (OTC)",
+            "Alphabet/Microsoft (OTC)",
+            "1000Sats (OTC)",
+            "USD/ZAR (OTC)",
+            "Litecoin (OTC)",
+            "Hamster Kombat (OTC)",
+            "USD Currency Index (OTC)",
+            "AUS 200 (OTC)",
+            "USD/CAD",
+            "MELANIA Coin (OTC)",
+            "JP 225 (OTC)",
+            "AUD/CAD (OTC)",
+            "AUD/JPY (OTC)",
+            "US 500 (OTC)"
+        ]
+        
+        # Filtrar apenas os ativos disponíveis no momento
+        ativos_disponiveis = [ativo for ativo in todos_ativos if verificar_disponibilidade_ativo(ativo)]
+        
+        BOT2_LOGGER.info(f"Ativos disponíveis no momento: {len(ativos_disponiveis)} de {len(todos_ativos)}")
+        
+        # Se não houver ativos disponíveis, usar alguns ativos como fallback
+        if not ativos_disponiveis:
+            BOT2_LOGGER.warning("Nenhum ativo disponível! Usando lista de fallback.")
+            fallback_ativos = [
+                "ETH/USD (OTC)",
+                "BTC/USD (OTC)",
+                "US 500 (OTC)",
+                "Gold/Silver (OTC)"
+            ]
+            return fallback_ativos
+        
+        return ativos_disponiveis
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro geral ao verificar ativos disponíveis: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        # Lista reduzida em caso de erro
+        return [
+            "EUR/USD (OTC)",
+            "Gold/Silver (OTC)",
+            "BTC/USD (OTC)",
+            "ETH/USD (OTC)"
+        ]
+
 # Função para gerar um sinal aleatório
 def gerar_sinal():
     """Gera um sinal aleatório com ativo e direção."""
-    ativos = [
-        "EUR/USD (OTC)",
-        "Gold/Silver (OTC)",
-        "BTC/USD (OTC)",
-        "ETH/USD (OTC)",
-        "AUD/JPY (OTC)",
-        "EUR/JPY (OTC)",
-        "Worldcoin (OTC)",
-        "Pepe (OTC)",
-        "1000Sats (OTC)",
-        "US 500 (OTC)"
-    ]
+    # Verificar quais ativos estão disponíveis no momento
+    ativos_disponiveis = verificar_ativos_disponiveis()
     
+    # Registrar a quantidade de ativos disponíveis
+    BOT2_LOGGER.info(f"Encontrados {len(ativos_disponiveis)} ativos disponíveis para trade")
+    
+    # Se houver menos de 3 ativos disponíveis, adicionar logs de aviso
+    if len(ativos_disponiveis) < 3:
+        BOT2_LOGGER.warning(f"Poucos ativos disponíveis: {ativos_disponiveis}")
+    
+    # Escolher um ativo aleatório dentre os disponíveis
+    ativo = random.choice(ativos_disponiveis)
     direcoes = ["CALL", "PUT"]
-    
-    ativo = random.choice(ativos)
     direcao = random.choice(direcoes)
+    
+    BOT2_LOGGER.info(f"Sinal gerado: {ativo} - {direcao}")
     
     return {
         "ativo": ativo,
