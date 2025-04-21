@@ -24,6 +24,7 @@ import threading
 from datetime import time as datetime_time
 import uuid
 import copy
+from pathlib import Path
 
 # Configuração do logger
 BOT2_LOGGER = logging.getLogger("bot2")
@@ -113,7 +114,8 @@ LINKS_VIDEO = {
 }
 
 # URLs diretas para GIFs
-URL_GIF_POS_SINAL = "https://media.giphy.com/media/eWbGux0IXOygZ7m2Of/giphy.gif"
+# URL_GIF_POS_SINAL = "https://media.giphy.com/media/eWbGux0IXOygZ7m2Of/giphy.gif"
+GIF_POS_SINAL_PATH = "videos/pos_sinal/180398513446716419 (7).webp"
 URL_GIF_PROMO = "https://media.giphy.com/media/whPiIq21hxXuJn7WVX/giphy.gif"
 
 # Variáveis de controle
@@ -165,8 +167,11 @@ def formatar_mensagem_sinal(sinal, idioma):
     # Obter horário atual
     hora_atual = obter_hora_brasilia()
     
-    # Horário de expiração (5 minutos depois)
-    hora_expiracao = hora_atual + timedelta(minutes=tempo_expiracao)
+    # Horário do sinal (2 minutos depois do envio)
+    hora_sinal = hora_atual + timedelta(minutes=2)
+    
+    # Horário de expiração (5 minutos depois do horário do sinal)
+    hora_expiracao = hora_sinal + timedelta(minutes=tempo_expiracao)
     
     # Horários de gales
     hora_gale1 = hora_expiracao + timedelta(minutes=5)
@@ -187,7 +192,7 @@ def formatar_mensagem_sinal(sinal, idioma):
         action_es = "VENTA"
     
     # Formatação de horários
-    hora_atual_str = hora_atual.strftime("%H:%M")
+    hora_sinal_str = hora_sinal.strftime("%H:%M")
     hora_expiracao_str = hora_expiracao.strftime("%H:%M")
     hora_gale1_str = hora_gale1.strftime("%H:%M")
     hora_gale2_str = hora_gale2.strftime("%H:%M")
@@ -201,7 +206,7 @@ def formatar_mensagem_sinal(sinal, idioma):
     if idioma == "pt":
         mensagem = (
             f"💰{tempo_expiracao} minutos de expiração\n"
-            f"{ativo};{hora_atual_str};{action_pt} {emoji} Digital\n\n"
+            f"{ativo};{hora_sinal_str};{action_pt} {emoji} Digital\n\n"
             f"🕐TEMPO PARA {hora_expiracao_str}\n\n"
             f"1º GALE — TEMPO PARA {hora_gale1_str}\n"
             f"2º GALE TEMPO PARA {hora_gale2_str}\n"
@@ -212,7 +217,7 @@ def formatar_mensagem_sinal(sinal, idioma):
     elif idioma == "en":
         mensagem = (
             f"💰{tempo_expiracao} minutes expiration\n"
-            f"{ativo};{hora_atual_str};{action_en} {emoji} Digital\n\n"
+            f"{ativo};{hora_sinal_str};{action_en} {emoji} Digital\n\n"
             f"🕐TIME UNTIL {hora_expiracao_str}\n\n"
             f"1st GALE — TIME UNTIL {hora_gale1_str}\n"
             f"2nd GALE TIME UNTIL {hora_gale2_str}\n"
@@ -223,7 +228,7 @@ def formatar_mensagem_sinal(sinal, idioma):
     else:  # espanhol
         mensagem = (
             f"💰{tempo_expiracao} minutos de expiración\n"
-            f"{ativo};{hora_atual_str};{action_es} {emoji} Digital\n\n"
+            f"{ativo};{hora_sinal_str};{action_es} {emoji} Digital\n\n"
             f"🕐TIEMPO HASTA {hora_expiracao_str}\n\n"
             f"1º GALE — TIEMPO HASTA {hora_gale1_str}\n"
             f"2º GALE TIEMPO HASTA {hora_gale2_str}\n"
@@ -312,66 +317,108 @@ def formatar_mensagem_abertura_corretora(idioma):
     return mensagem
 
 # Função para enviar uma mensagem para todos os canais
-def enviar_mensagem(mensagens_por_idioma, disable_preview=True):
+def enviar_mensagem(mensagens_por_idioma, disable_preview=True, tipo_mensagem="padrão"):
     """
     Envia uma mensagem para todos os canais configurados.
     
     Args:
         mensagens_por_idioma: Dicionário com mensagens formatadas por idioma
         disable_preview: Se deve desabilitar a pré-visualização de links
-    
+        tipo_mensagem: Tipo de mensagem sendo enviada (para logs)
+        
     Returns:
         bool: True se o envio foi bem sucedido, False caso contrário
     """
     try:
+        BOT2_LOGGER.info(f"Iniciando envio de mensagem tipo: {tipo_mensagem}")
+        sucessos = 0
+        falhas = 0
+        
         for idioma, canais in BOT2_CANAIS_CONFIG.items():
             mensagem = mensagens_por_idioma.get(idioma)
             if not mensagem:
-                BOT2_LOGGER.warning(f"Mensagem não disponível para o idioma {idioma}")
+                BOT2_LOGGER.warning(f"Mensagem tipo '{tipo_mensagem}' não disponível para o idioma {idioma}")
                 continue
                 
             for chat_id in canais:
                 try:
+                    BOT2_LOGGER.info(f"Tentando enviar mensagem '{tipo_mensagem}' para canal {chat_id} ({idioma})")
                     bot2.send_message(
                         chat_id=chat_id,
                         text=mensagem,
                         parse_mode="HTML",
                         disable_web_page_preview=disable_preview
                     )
-                    BOT2_LOGGER.info(f"Mensagem enviada com sucesso para o canal {chat_id} ({idioma})")
+                    BOT2_LOGGER.info(f"Mensagem '{tipo_mensagem}' enviada com sucesso para o canal {chat_id} ({idioma})")
+                    sucessos += 1
                 except Exception as e:
-                    BOT2_LOGGER.error(f"Erro ao enviar mensagem para o canal {chat_id}: {str(e)}")
-        return True
+                    BOT2_LOGGER.error(f"Erro ao enviar mensagem '{tipo_mensagem}' para o canal {chat_id}: {str(e)}")
+                    falhas += 1
+        
+        BOT2_LOGGER.info(f"Resumo do envio de mensagem '{tipo_mensagem}': {sucessos} sucessos, {falhas} falhas")
+        return sucessos > 0
     except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao enviar mensagens: {str(e)}")
+        BOT2_LOGGER.error(f"Erro geral ao enviar mensagens '{tipo_mensagem}': {str(e)}")
         BOT2_LOGGER.error(traceback.format_exc())
         return False
 
 # Função para enviar um GIF para todos os canais
-def enviar_gif(url_gif):
+def enviar_gif(gif_path_ou_url, tipo_gif="padrão"):
     """
     Envia um GIF para todos os canais configurados.
     
     Args:
-        url_gif: URL do GIF a ser enviado
+        gif_path_ou_url: Caminho local ou URL do GIF a ser enviado
+        tipo_gif: Tipo de GIF sendo enviado (para logs)
         
     Returns:
         bool: True se o envio foi bem sucedido, False caso contrário
     """
     try:
+        BOT2_LOGGER.info(f"Iniciando envio de GIF tipo: {tipo_gif}, origem: {gif_path_ou_url}")
+        sucessos = 0
+        falhas = 0
+        
+        # Verificar se o arquivo existe se for um caminho local
+        if not gif_path_ou_url.startswith("http"):
+            if not os.path.exists(gif_path_ou_url):
+                BOT2_LOGGER.error(f"Arquivo GIF não encontrado: {gif_path_ou_url}")
+                BOT2_LOGGER.info(f"Diretório atual: {os.getcwd()}")
+                BOT2_LOGGER.info(f"Conteúdo do diretório: {os.listdir(os.path.dirname(gif_path_ou_url) if os.path.dirname(gif_path_ou_url) else '.')}")
+                return False
+            else:
+                BOT2_LOGGER.info(f"Arquivo GIF encontrado: {gif_path_ou_url}")
+        
         for idioma, canais in BOT2_CANAIS_CONFIG.items():
             for chat_id in canais:
                 try:
-                    bot2.send_animation(
-                        chat_id=chat_id,
-                        animation=url_gif
-                    )
-                    BOT2_LOGGER.info(f"GIF enviado com sucesso para o canal {chat_id} ({idioma})")
+                    BOT2_LOGGER.info(f"Tentando enviar GIF '{tipo_gif}' para canal {chat_id} ({idioma})")
+                    # Verificar se é um caminho local ou URL
+                    if gif_path_ou_url.startswith("http"):
+                        # É uma URL
+                        bot2.send_animation(
+                            chat_id=chat_id,
+                            animation=gif_path_ou_url
+                        )
+                    else:
+                        # É um caminho local
+                        with open(gif_path_ou_url, 'rb') as gif:
+                            bot2.send_document(
+                                chat_id=chat_id,
+                                document=gif,
+                                visible_file_name="image.webp"
+                            )
+                    BOT2_LOGGER.info(f"GIF '{tipo_gif}' enviado com sucesso para o canal {chat_id} ({idioma})")
+                    sucessos += 1
                 except Exception as e:
-                    BOT2_LOGGER.error(f"Erro ao enviar GIF para o canal {chat_id}: {str(e)}")
-        return True
+                    BOT2_LOGGER.error(f"Erro ao enviar GIF '{tipo_gif}' para o canal {chat_id}: {str(e)}")
+                    BOT2_LOGGER.error(traceback.format_exc())
+                    falhas += 1
+        
+        BOT2_LOGGER.info(f"Resumo do envio de GIF '{tipo_gif}': {sucessos} sucessos, {falhas} falhas")
+        return sucessos > 0
     except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao enviar GIFs: {str(e)}")
+        BOT2_LOGGER.error(f"Erro geral ao enviar GIFs '{tipo_gif}': {str(e)}")
         BOT2_LOGGER.error(traceback.format_exc())
         return False
 
@@ -420,8 +467,18 @@ def enviar_sinal():
 # Função para enviar o GIF pós-sinal
 def enviar_gif_pos_sinal():
     """Envia o GIF pós-sinal para todos os canais."""
-    BOT2_LOGGER.info("Enviando GIF pós-sinal")
-    return enviar_gif(URL_GIF_POS_SINAL)
+    BOT2_LOGGER.info("Iniciando processo de envio do GIF pós-sinal")
+    try:
+        resultado = enviar_gif(GIF_POS_SINAL_PATH, "pós-sinal")
+        if resultado:
+            BOT2_LOGGER.info("Processo de envio do GIF pós-sinal concluído com sucesso")
+        else:
+            BOT2_LOGGER.error("Processo de envio do GIF pós-sinal concluído com falhas")
+        return resultado
+    except Exception as e:
+        BOT2_LOGGER.error(f"Exceção não tratada ao enviar GIF pós-sinal: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        return False
 
 # Função para iniciar a sequência de envios para sinais múltiplos de 3
 def iniciar_sequencia_multiplo_tres(sinal):
@@ -442,61 +499,99 @@ def iniciar_sequencia_multiplo_tres(sinal):
 # Função para enviar a mensagem de participação
 def enviar_mensagem_participacao():
     """Envia a mensagem de participação para todos os canais."""
-    BOT2_LOGGER.info("Enviando mensagem de participação")
+    BOT2_LOGGER.info("Iniciando processo de envio da mensagem de participação")
     
-    # Formatar mensagens para cada idioma
-    mensagens = {}
-    for idioma in BOT2_CANAIS_CONFIG.keys():
-        mensagens[idioma] = formatar_mensagem_participacao(idioma)
-    
-    enviado = enviar_mensagem(mensagens)
-    
-    if enviado:
-        BOT2_LOGGER.info("Mensagem de participação enviada com sucesso")
+    try:
+        # Formatar mensagens para cada idioma
+        mensagens = {}
+        for idioma in BOT2_CANAIS_CONFIG.keys():
+            try:
+                mensagens[idioma] = formatar_mensagem_participacao(idioma)
+                BOT2_LOGGER.info(f"Mensagem de participação formatada com sucesso para o idioma {idioma}")
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao formatar mensagem de participação para o idioma {idioma}: {str(e)}")
+                BOT2_LOGGER.error(traceback.format_exc())
         
-        # Agendar envio do GIF promocional (10 minutos depois)
-        threading.Timer(10 * 60, enviar_gif_promocional).start()
-        BOT2_LOGGER.info("Agendado envio do GIF promocional para daqui a 10 minutos")
-    else:
-        BOT2_LOGGER.error("Falha ao enviar mensagem de participação")
-    
-    return enviado
+        if not mensagens:
+            BOT2_LOGGER.error("Nenhuma mensagem de participação foi formatada com sucesso")
+            return False
+        
+        BOT2_LOGGER.info(f"Tentando enviar mensagens de participação para {len(mensagens)} idiomas")
+        enviado = enviar_mensagem(mensagens, tipo_mensagem="participação")
+        
+        if enviado:
+            BOT2_LOGGER.info("Mensagem de participação enviada com sucesso")
+            
+            # Agendar envio do GIF promocional (10 minutos depois)
+            BOT2_LOGGER.info("Agendando envio do GIF promocional para daqui a 10 minutos")
+            threading.Timer(10 * 60, enviar_gif_promocional).start()
+            BOT2_LOGGER.info("Agendado envio do GIF promocional para daqui a 10 minutos")
+        else:
+            BOT2_LOGGER.error("Falha ao enviar mensagem de participação")
+        
+        return enviado
+    except Exception as e:
+        BOT2_LOGGER.error(f"Exceção não tratada ao enviar mensagem de participação: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        return False
 
 # Função para enviar o GIF promocional
 def enviar_gif_promocional():
     """Envia o GIF promocional para todos os canais."""
-    BOT2_LOGGER.info("Enviando GIF promocional")
-    enviado = enviar_gif(URL_GIF_PROMO)
+    BOT2_LOGGER.info("Iniciando processo de envio do GIF promocional")
     
-    if enviado:
-        BOT2_LOGGER.info("GIF promocional enviado com sucesso")
+    try:
+        enviado = enviar_gif(URL_GIF_PROMO, "promocional")
         
-        # Agendar envio da mensagem de abertura da corretora (1 minuto depois)
-        threading.Timer(1 * 60, enviar_mensagem_abertura_corretora).start()
-        BOT2_LOGGER.info("Agendado envio da mensagem de abertura da corretora para daqui a 1 minuto")
-    else:
-        BOT2_LOGGER.error("Falha ao enviar GIF promocional")
-    
-    return enviado
+        if enviado:
+            BOT2_LOGGER.info("GIF promocional enviado com sucesso")
+            
+            # Agendar envio da mensagem de abertura da corretora (1 minuto depois)
+            BOT2_LOGGER.info("Agendando envio da mensagem de abertura da corretora para daqui a 1 minuto")
+            threading.Timer(1 * 60, enviar_mensagem_abertura_corretora).start()
+            BOT2_LOGGER.info("Agendado envio da mensagem de abertura da corretora para daqui a 1 minuto")
+        else:
+            BOT2_LOGGER.error("Falha ao enviar GIF promocional")
+        
+        return enviado
+    except Exception as e:
+        BOT2_LOGGER.error(f"Exceção não tratada ao enviar GIF promocional: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        return False
 
 # Função para enviar a mensagem de abertura da corretora
 def enviar_mensagem_abertura_corretora():
     """Envia a mensagem de abertura da corretora para todos os canais."""
-    BOT2_LOGGER.info("Enviando mensagem de abertura da corretora")
+    BOT2_LOGGER.info("Iniciando processo de envio da mensagem de abertura da corretora")
     
-    # Formatar mensagens para cada idioma
-    mensagens = {}
-    for idioma in BOT2_CANAIS_CONFIG.keys():
-        mensagens[idioma] = formatar_mensagem_abertura_corretora(idioma)
-    
-    enviado = enviar_mensagem(mensagens)
-    
-    if enviado:
-        BOT2_LOGGER.info("Mensagem de abertura da corretora enviada com sucesso")
-    else:
-        BOT2_LOGGER.error("Falha ao enviar mensagem de abertura da corretora")
-    
-    return enviado
+    try:
+        # Formatar mensagens para cada idioma
+        mensagens = {}
+        for idioma in BOT2_CANAIS_CONFIG.keys():
+            try:
+                mensagens[idioma] = formatar_mensagem_abertura_corretora(idioma)
+                BOT2_LOGGER.info(f"Mensagem de abertura da corretora formatada com sucesso para o idioma {idioma}")
+            except Exception as e:
+                BOT2_LOGGER.error(f"Erro ao formatar mensagem de abertura da corretora para o idioma {idioma}: {str(e)}")
+                BOT2_LOGGER.error(traceback.format_exc())
+        
+        if not mensagens:
+            BOT2_LOGGER.error("Nenhuma mensagem de abertura da corretora foi formatada com sucesso")
+            return False
+        
+        BOT2_LOGGER.info(f"Tentando enviar mensagens de abertura da corretora para {len(mensagens)} idiomas")
+        enviado = enviar_mensagem(mensagens, tipo_mensagem="abertura da corretora")
+        
+        if enviado:
+            BOT2_LOGGER.info("Mensagem de abertura da corretora enviada com sucesso")
+        else:
+            BOT2_LOGGER.error("Falha ao enviar mensagem de abertura da corretora")
+        
+        return enviado
+    except Exception as e:
+        BOT2_LOGGER.error(f"Exceção não tratada ao enviar mensagem de abertura da corretora: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        return False
 
 # Função para iniciar o bot e agendar os sinais
 def iniciar_bot():
