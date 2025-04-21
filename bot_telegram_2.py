@@ -2242,14 +2242,8 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
             bot2_contador_sinais += 1
             BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🔢 Contador incrementado: {bot2_contador_sinais}")
             
-            # Verificar se é múltiplo de 3
-            e_multiplo_3 = bot2_contador_sinais % 3 == 0
-            if e_multiplo_3:
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🎯 SINAL MÚLTIPLO DE 3 DETECTADO! Sinal #{bot2_contador_sinais} é o {bot2_contador_sinais//3}º múltiplo de 3")
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 📋 Sequência especial será ativada para o sinal #{bot2_contador_sinais}")
-            else:
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ℹ️ Sinal comum (não múltiplo de 3). Contador atual: {bot2_contador_sinais}")
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ℹ️ Próximo múltiplo de 3 será o sinal #{((bot2_contador_sinais//3)+1)*3}")
+            # Simplificando: removendo a verificação de múltiplo de 3
+            # Todos os sinais agora terão o mesmo comportamento
 
         # Lista para armazenar resultado dos envios
         resultados_envio = []
@@ -2357,107 +2351,23 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
             BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🔄 Modo de teste: enviando GIF pós-sinal imediatamente")
             bot2_enviar_gif_pos_sinal(sinal)
         else:
-            # Verificar se é múltiplo de 3 para enviar a sequência especial
-            e_multiplo_3 = bot2_contador_sinais % 3 == 0
-            BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🔢 Verificando se sinal #{bot2_contador_sinais} é múltiplo de 3: {e_multiplo_3}")
+            # Para todos os sinais, sempre enviar apenas o sinal e o GIF pós-sinal após 7 minutos
+            BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ⏱️ Agendando GIF pós-sinal para 7 minutos (T+7)")
+            BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🔍 VALIDAÇÃO: sinal={sinal}")
             
-            if e_multiplo_3:
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🔄 Sinal múltiplo de 3 detectado (#{bot2_contador_sinais})")
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 📋 Iniciando sequência especial para múltiplos de 3")
+            # Iniciar thread para envio do GIF pós-sinal usando a função simplificada
+            global thread_gif_pos_sinal_ativa
+            thread_gif_pos_sinal_ativa = threading.Thread(
+                target=enviar_gif_pos_sinal_com_delay,
+                name=f"GIF-POS-Sinal{bot2_contador_sinais}"
+            )
+            thread_gif_pos_sinal_ativa.daemon = True
+            BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🧵 Iniciando thread para GIF pós-sinal (T+7 minutos)")
+            thread_gif_pos_sinal_ativa.start()
+            BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ✅ Thread para GIF pós-sinal iniciada com sucesso ID: {thread_gif_pos_sinal_ativa.ident}")
+            
+            # Removendo a verificação sobre múltiplo de 3, pois agora todos os sinais são tratados igualmente
                 
-                # Verificar se já existe uma thread de sequência ativa
-                if hasattr(enviar_sequencia_multiplo_tres, 'thread_ativa') and enviar_sequencia_multiplo_tres.thread_ativa and enviar_sequencia_multiplo_tres.thread_ativa.is_alive():
-                    BOT2_LOGGER.warning(f"[SINAL][{horario_atual}] ⚠️ Já existe uma sequência múltipla de 3 em andamento. Não iniciando nova sequência.")
-                    
-                    # Log da thread existente para diagnóstico
-                    thread_existente = enviar_sequencia_multiplo_tres.thread_ativa
-                    BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ℹ️ Thread existente ID: {thread_existente.ident}, Nome: {thread_existente.name}, Ativa: {thread_existente.is_alive()}")
-                    
-                    # Mesmo com uma thread existente, garantimos que uma nova seja criada para este sinal múltiplo de 3
-                    BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🔄 Forçando criação de nova thread para garantir sequência do sinal #{bot2_contador_sinais}")
-                    
-                    # Iniciar thread para sequência especial de múltiplo de 3
-                    sequencia_thread = threading.Thread(
-                        target=enviar_sequencia_multiplo_tres, 
-                        name=f"Sequencia-M3-Sinal{bot2_contador_sinais}"
-                    )
-                    sequencia_thread.daemon = True
-                    sequencia_thread.start()
-                    
-                    # Armazenar referência à thread
-                    enviar_sequencia_multiplo_tres.thread_ativa = sequencia_thread
-                    
-                    BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🧵 Nova thread para sequência de múltiplo de 3 iniciada com sucesso - ID: {sequencia_thread.ident}")
-                else:
-                    # Iniciar thread para sequência especial de múltiplo de 3
-                    sequencia_thread = threading.Thread(
-                        target=enviar_sequencia_multiplo_tres,
-                        name=f"Sequencia-M3-Sinal{bot2_contador_sinais}"
-                    )
-                    sequencia_thread.daemon = True
-                    sequencia_thread.start()
-                    
-                    # Armazenar referência à thread
-                    enviar_sequencia_multiplo_tres.thread_ativa = sequencia_thread
-                    
-                    BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🧵 Thread para sequência de múltiplo de 3 iniciada com sucesso - ID: {sequencia_thread.ident}")
-                
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 📋 CRONOGRAMA COMPLETO DA SEQUÊNCIA MÚLTIPLO DE 3:")
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ⏱️ T+0: Sinal principal já enviado")
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ⏱️ T+7: GIF pós-sinal (7 minutos após o sinal)")
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ⏱️ T+27: Mensagem de participação (27 minutos após o sinal)")
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ⏱️ T+35: GIF promocional (35 minutos após o sinal)")
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ⏱️ T+36: Mensagem de abertura da corretora (36 minutos após o sinal)")
-            else:
-                # Para sinais não múltiplos de 3, apenas enviar o GIF pós-sinal após 7 minutos
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ⏱️ Agendando GIF pós-sinal para 7 minutos (T+7)")
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🔍 VALIDAÇÃO: sinal={sinal}")
-                
-                def enviar_gif_pos_sinal_apos_delay():
-                    try:
-                        # ID único para rastreamento nos logs
-                        thread_id = str(uuid.uuid4())[:8]
-                        
-                        # Capturar o sinal aqui dentro da função para garantir que estamos usando o valor correto
-                        sinal_thread = sinal  # Capturando o valor de sinal no momento da criação da thread
-                        BOT2_LOGGER.info(f"[GIF-DELAY][{bot2_obter_hora_brasilia().strftime('%H:%M:%S')}][Thread-{thread_id}] 🔍 Sinal capturado na thread: {sinal_thread}")
-                        
-                        # Aguardar 7 minutos
-                        inicio_espera = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-                        BOT2_LOGGER.info(f"[GIF-DELAY][{inicio_espera}][Thread-{thread_id}] ⏲️ Iniciando contagem de 7 minutos para o GIF pós-sinal")
-                        
-                        # Log adicional para depuração - a cada minuto
-                        for i in range(1, 8):
-                            time.sleep(60)  # 1 minuto
-                            agora_log = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-                            BOT2_LOGGER.info(f"[GIF-DELAY][{agora_log}][Thread-{thread_id}] ⏳ Aguardando... {i}/7 minutos decorridos")
-                        
-                        # Enviar o GIF pós-sinal
-                        agora = bot2_obter_hora_brasilia()
-                        horario_atual = agora.strftime("%H:%M:%S")
-                        BOT2_LOGGER.info(f"[GIF-DELAY][{horario_atual}][Thread-{thread_id}] ⏰ Tempo de espera concluído, enviando GIF pós-sinal (T+7)")
-                        
-                        # Log detalhado antes de chamar a função
-                        BOT2_LOGGER.info(f"[GIF-DELAY][{horario_atual}][Thread-{thread_id}] 🔍 Tentando enviar GIF pós-sinal. Sinal usado: {sinal_thread}")
-                        resultado = bot2_enviar_gif_pos_sinal(sinal_thread)
-                        BOT2_LOGGER.info(f"[GIF-DELAY][{horario_atual}][Thread-{thread_id}] 📊 Resultado do envio do GIF pós-sinal: {'✅ Sucesso' if resultado else '❌ Falha'}")
-                    except Exception as e:
-                        agora = bot2_obter_hora_brasilia()
-                        horario_atual = agora.strftime("%H:%M:%S")
-                        BOT2_LOGGER.error(f"[GIF-DELAY][{horario_atual}] ❌ Erro no agendamento do GIF pós-sinal: {str(e)}")
-                        BOT2_LOGGER.error(f"[GIF-DELAY][{horario_atual}] 🔍 Detalhes do erro: {traceback.format_exc()}")
-                
-                # Iniciar thread para envio do GIF pós-sinal
-                global thread_gif_pos_sinal_ativa
-                thread_gif_pos_sinal_ativa = threading.Thread(
-                    target=enviar_gif_pos_sinal_apos_delay,
-                    name=f"GIF-POS-Sinal{bot2_contador_sinais}"
-                )
-                thread_gif_pos_sinal_ativa.daemon = True
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] 🧵 Iniciando thread para GIF pós-sinal (T+7 minutos)")
-                thread_gif_pos_sinal_ativa.start()
-                BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ✅ Thread para GIF pós-sinal iniciada com sucesso ID: {thread_gif_pos_sinal_ativa.ident}")
-
         BOT2_LOGGER.info(f"[SINAL][{horario_atual}] ✅ Processamento do sinal concluído com sucesso")
         
         # Agendar a verificação do próximo sinal
@@ -2479,70 +2389,36 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
 def enviar_sequencia_multiplo_tres():
     """
     Função simplificada para enviar a sequência especial para sinais múltiplos de três.
-    Foca exclusivamente no envio do GIF promocional para os três idiomas.
+    Foca exclusivamente no envio do sinal e do GIF pós-sinal 7 minutos depois.
     """
     sequencia_id = uuid.uuid4().hex[:8]  # ID único para rastrear esta execução
     
     try:
         BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] 🚀 Iniciando sequência simplificada para múltiplo de três")
+        BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ⏱️ Agendando GIF pós-sinal para 7 minutos após o sinal")
         
-        # Lista de idiomas para enviar o GIF promocional
-        idiomas = ["pt", "en", "es"]
+        # Armazenar referência ao sinal atual para uso na thread
+        sinal_thread = ultimo_sinal_enviado
         
-        # Enviar o GIF para cada idioma, um por um
-        for idioma in idiomas:
-            BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] 🌐 Enviando GIF promocional para idioma: {idioma}")
-            
-            # Chamar diretamente a função global, garantindo acesso correto
-            try:
-                if 'bot2_enviar_gif_promo' in globals() and callable(globals()['bot2_enviar_gif_promo']):
-                    # Chamar a função diretamente do namespace global
-                    funcao_gif = globals()['bot2_enviar_gif_promo']
-                    
-                    # Tentar até 3 vezes
-                    for tentativa in range(1, 4):
-                        BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] 🔄 Tentativa {tentativa}/3 para idioma {idioma}")
-                        
-                        try:
-                            # Chamar a função com timeout
-                            resultado = funcao_gif(idioma)
-                            
-                            if resultado:
-                                BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ✅ GIF promocional enviado com sucesso para idioma {idioma}")
-                                break
-                            else:
-                                BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Falha ao enviar GIF promocional para idioma {idioma}")
-                                
-                                # Se não for a última tentativa, aguardar antes de tentar novamente
-                                if tentativa < 3:
-                                    BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ⏱️ Aguardando 5 segundos antes da próxima tentativa...")
-                                    time.sleep(5)
-                        except Exception as e:
-                            BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Erro na tentativa {tentativa} para idioma {idioma}: {str(e)}")
-                            
-                            # Se não for a última tentativa, aguardar antes de tentar novamente
-                            if tentativa < 3:
-                                BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ⏱️ Aguardando 5 segundos antes da próxima tentativa...")
-                                time.sleep(5)
-                else:
-                    BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Função bot2_enviar_gif_promo não encontrada ou não é chamável")
-                    
-                    # Usar a nova função diretamente como fallback
-                    BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] 🔄 Tentando usar novo_bot2_enviar_gif_promo como fallback")
-                    
-                    # Verificar se a nova função existe
-                    if 'novo_bot2_enviar_gif_promo' in globals() and callable(globals()['novo_bot2_enviar_gif_promo']):
-                        resultado = globals()['novo_bot2_enviar_gif_promo'](idioma)
-                        
-                        if resultado:
-                            BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ✅ GIF promocional enviado com sucesso usando fallback para idioma {idioma}")
-                        else:
-                            BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Falha ao enviar GIF promocional usando fallback para idioma {idioma}")
-                    else:
-                        BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Nenhuma função disponível para enviar GIF promocional")
-            except Exception as e:
-                BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Erro ao processar idioma {idioma}: {str(e)}")
-                BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] 🔍 Detalhes: {traceback.format_exc()}")
+        # Aguardar 7 minutos antes de enviar o GIF pós-sinal
+        inicio_espera = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ⏲️ Iniciando contagem de 7 minutos para o GIF pós-sinal (início: {inicio_espera})")
+        
+        # Log adicional para depuração - a cada minuto
+        for i in range(1, 8):
+            time.sleep(60)  # 1 minuto
+            agora_log = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+            BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ⏳ Aguardando... {i}/7 minutos decorridos (hora atual: {agora_log})")
+        
+        # Enviar o GIF pós-sinal após 7 minutos
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ⏰ Tempo de espera concluído, enviando GIF pós-sinal (T+7)")
+        
+        # Log detalhado antes de chamar a função
+        BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] 🔍 Tentando enviar GIF pós-sinal. Sinal usado: {sinal_thread}")
+        resultado = bot2_enviar_gif_pos_sinal(sinal_thread)
+        BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] 📊 Resultado do envio do GIF pós-sinal: {'✅ Sucesso' if resultado else '❌ Falha'}")
         
         BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ✅ Sequência para múltiplo de três concluída")
         return True
@@ -2900,7 +2776,7 @@ def verificar_configuracoes_bot():
 def bot2_enviar_mensagem_abertura_corretora(idioma=None):
     """
     Envia mensagem de abertura da corretora para os canais do idioma especificado.
-    Esta mensagem é enviada 55 minutos após o sinal principal (T+55) para sinais múltiplos de 3.
+    Esta mensagem é enviada 55 minutos após o sinal principal (T+55).
     
     Args:
         idioma: Idioma dos canais para enviar a mensagem (pt, en, es). 
@@ -3201,7 +3077,7 @@ if __name__ == "__main__":
 
 def enviar_mensagem_participacao():
     """
-    Envia a mensagem de participação 27 minutos após o sinal principal para sinais múltiplos de 3.
+    Envia a mensagem de participação 27 minutos após o sinal principal.
     
     Retorna: True se enviado com sucesso, False caso contrário.
     """
@@ -3346,7 +3222,7 @@ operaciones con riesgo CERO!
 def bot2_enviar_gif_promo(idioma="pt"):
     """
     Envia o GIF promocional para todos os canais do idioma especificado.
-    Este GIF é enviado 35 minutos após o sinal original (T+35) para sinais múltiplos de 3.
+    Este GIF é enviado 35 minutos após o sinal original (T+35).
     
     Args:
         idioma: Idioma dos canais para enviar o GIF (pt, en, es)
@@ -3733,3 +3609,344 @@ def teste_enviar_gif_promocional(idioma="pt"):
 
 # Registrar a função de teste no namespace global
 globals()['teste_enviar_gif_promocional'] = teste_enviar_gif_promocional
+
+def enviar_gif_pos_sinal_com_delay():
+    """
+    Função para enviar o GIF pós-sinal com um delay de 7 minutos.
+    Usado para todos os sinais, esperando 7 minutos após o envio do sinal original.
+    """
+    sequencia_id = uuid.uuid4().hex[:8]  # ID único para rastrear esta execução
+    
+    try:
+        BOT2_LOGGER.info(f"[GIF-DELAY][{sequencia_id}] 🚀 Iniciando envio de GIF pós-sinal com delay")
+        BOT2_LOGGER.info(f"[GIF-DELAY][{sequencia_id}] ⏱️ Agendando GIF pós-sinal para 7 minutos após o sinal")
+        
+        # Armazenar referência ao sinal atual para uso na thread
+        sinal_thread = ultimo_sinal_enviado
+        
+        # Aguardar 7 minutos antes de enviar o GIF pós-sinal
+        inicio_espera = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[GIF-DELAY][{sequencia_id}] ⏲️ Iniciando contagem de 7 minutos para o GIF pós-sinal (início: {inicio_espera})")
+        
+        # Log adicional para depuração - a cada minuto
+        for i in range(1, 8):
+            time.sleep(60)  # 1 minuto
+            agora_log = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+            BOT2_LOGGER.info(f"[GIF-DELAY][{sequencia_id}] ⏳ Aguardando... {i}/7 minutos decorridos (hora atual: {agora_log})")
+        
+        # Enviar o GIF pós-sinal após 7 minutos
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[GIF-DELAY][{sequencia_id}] ⏰ Tempo de espera concluído, enviando GIF pós-sinal (T+7)")
+        
+        # Log detalhado antes de chamar a função
+        BOT2_LOGGER.info(f"[GIF-DELAY][{sequencia_id}] 🔍 Tentando enviar GIF pós-sinal. Sinal usado: {sinal_thread}")
+        resultado = bot2_enviar_gif_pos_sinal(sinal_thread)
+        BOT2_LOGGER.info(f"[GIF-DELAY][{sequencia_id}] 📊 Resultado do envio do GIF pós-sinal: {'✅ Sucesso' if resultado else '❌ Falha'}")
+        
+        BOT2_LOGGER.info(f"[GIF-DELAY][{sequencia_id}] ✅ Envio de GIF pós-sinal concluído")
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"[GIF-DELAY][{sequencia_id}] ❌ Erro geral ao enviar GIF pós-sinal: {str(e)}")
+        BOT2_LOGGER.error(f"[GIF-DELAY][{sequencia_id}] 🔍 Detalhes: {traceback.format_exc()}")
+        return False
+
+def enviar_mensagem_abertura_corretora():
+    """
+    Envia mensagem de abertura da corretora.
+    Esta mensagem é enviada 1 minuto após o GIF promocional.
+    
+    Returns:
+        bool: True se a mensagem foi enviada com sucesso, False caso contrário
+    """
+    try:
+        agora = bot2_obter_hora_brasilia()
+        horario_atual = agora.strftime("%H:%M:%S")
+        BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] 🔄 Iniciando envio da mensagem de abertura da corretora")
+        
+        # Links específicos para cada idioma
+        link_pt = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
+        link_en = "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
+        link_es = "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+        
+        # Mensagens para cada idioma com os links em HTML
+        mensagem_pt = f"""👉🏼Abram a corretora Pessoal
+
+⚠FIQUEM ATENTOS⚠
+
+🔥Cadastre-se na XXBROKER agora mesmo🔥
+
+➡ <a href="{link_pt}">CLICANDO AQUI</a>"""
+
+        mensagem_en = f"""👉🏼Open the broker Everyone
+
+⚠STAY ALERT⚠
+
+🔥Sign up with XXBROKER right now🔥
+
+➡ <a href="{link_en}">CLICK HERE</a>"""
+
+        mensagem_es = f"""👉🏼Abran el bróker Amigos
+
+⚠ESTÉN ATENTOS⚠
+
+🔥Regístrese en XXBROKER ahora mismo🔥
+
+➡ <a href="{link_es}">HAGA CLIC AQUÍ</a>"""
+        
+        mensagens_enviadas = []
+        
+        # Enviar para cada idioma configurado
+        for idioma, chats in BOT2_CANAIS_CONFIG.items():
+            if not chats:
+                BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] ℹ️ Nenhum chat configurado para idioma {idioma}")
+                continue
+                
+            # Selecionar a mensagem conforme o idioma
+            if idioma == "pt":
+                mensagem = mensagem_pt
+            elif idioma == "en":
+                mensagem = mensagem_en
+            elif idioma == "es":
+                mensagem = mensagem_es
+            else:
+                mensagem = mensagem_pt  # Usar PT como fallback
+                
+            BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] 📤 Enviando mensagem de abertura para {len(chats)} canais no idioma {idioma}")
+            
+            # Enviar para cada canal deste idioma
+            for chat_id in chats:
+                try:
+                    # Construir URL da API
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                    
+                    # Montar payload
+                    payload = {
+                        "chat_id": chat_id,
+                        "text": mensagem,
+                        "parse_mode": "HTML",
+                        "disable_web_page_preview": True
+                    }
+                    
+                    # Enviar mensagem
+                    BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] 🚀 Enviando para chat_id: {chat_id}")
+                    resposta = requests.post(url, json=payload, timeout=10)
+                    
+                    if resposta.status_code == 200:
+                        BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] ✅ Mensagem de abertura enviada com sucesso para {chat_id}")
+                        mensagens_enviadas.append(True)
+                    else:
+                        BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] ❌ Erro ao enviar para {chat_id}: {resposta.status_code} - {resposta.text}")
+                        mensagens_enviadas.append(False)
+                        
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] ❌ Erro ao enviar para {chat_id}: {str(e)}")
+                    BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
+                    mensagens_enviadas.append(False)
+        
+        # Verificar se pelo menos uma mensagem foi enviada com sucesso
+        sucesso = any(mensagens_enviadas)
+        if sucesso:
+            BOT2_LOGGER.info(f"[ABERTURA][{horario_atual}] ✅ Mensagem de abertura enviada com sucesso para pelo menos um canal")
+        else:
+            BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] ❌ Falha ao enviar mensagem de abertura para todos os canais")
+            
+        return sucesso
+            
+    except Exception as e:
+        horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+        BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] ❌ Erro geral ao enviar mensagem de abertura: {str(e)}")
+        BOT2_LOGGER.error(f"[ABERTURA][{horario_atual}] 🔍 Detalhes: {traceback.format_exc()}")
+        return False
+
+def enviar_sequencia_normal():
+    """
+    Função para enviar a sequência de sinal normal (não múltiplo de 3).
+    Envia o sinal e programa o GIF pós-sinal para 7 minutos depois.
+    """
+    sequencia_id = uuid.uuid4().hex[:8]  # ID único para rastrear esta execução
+    
+    try:
+        BOT2_LOGGER.info(f"[SEQUENCIA-NORMAL][{sequencia_id}] 🚀 Iniciando sequência para sinal normal")
+        
+        # Obter hora atual
+        hora_atual = bot2_obter_hora_brasilia()
+        horario_formatado = hora_atual.strftime("%H:%M:%S")
+        
+        BOT2_LOGGER.info(f"[SEQUENCIA-NORMAL][{sequencia_id}] ⏱️ Agendando GIF pós-sinal para 7 minutos após o sinal")
+        
+        # Armazenar referência ao sinal atual para uso posterior
+        sinal_atual = ultimo_sinal_enviado
+        
+        # Iniciar thread para enviar GIF pós-sinal após 7 minutos
+        BOT2_LOGGER.info(f"[SEQUENCIA-NORMAL][{sequencia_id}] 🧵 Iniciando thread para envio do GIF pós-sinal (T+7)")
+        gif_thread = threading.Thread(target=lambda: enviar_gif_pos_sinal_com_delay())
+        gif_thread.daemon = True
+        gif_thread.start()
+        
+        BOT2_LOGGER.info(f"[SEQUENCIA-NORMAL][{sequencia_id}] ✅ Sequência para sinal normal iniciada com sucesso")
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"[SEQUENCIA-NORMAL][{sequencia_id}] ❌ Erro na sequência normal: {str(e)}")
+        BOT2_LOGGER.error(f"[SEQUENCIA-NORMAL][{sequencia_id}] 🔍 Detalhes: {traceback.format_exc()}")
+        return False
+
+def enviar_sequencia_multiplo_tres():
+    """
+    Função completa para enviar a sequência especial para sinais múltiplos de três.
+    Envia o sinal, programa o GIF pós-sinal para 7 minutos depois, programa a mensagem
+    de participação para 40 minutos depois, programa o GIF promocional para 10 minutos
+    após a mensagem de participação, e finalmente programa a mensagem de abertura.
+    """
+    sequencia_id = uuid.uuid4().hex[:8]  # ID único para rastrear esta execução
+    
+    try:
+        BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] 🚀 Iniciando sequência completa para múltiplo de três")
+        
+        # Obter hora atual
+        hora_atual = bot2_obter_hora_brasilia()
+        horario_formatado = hora_atual.strftime("%H:%M:%S")
+        
+        # Armazenar referência ao sinal atual para uso posterior
+        sinal_atual = ultimo_sinal_enviado
+        
+        # Etapa 1: Iniciar thread para enviar GIF pós-sinal após 7 minutos (T+7)
+        BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] 🧵 Iniciando thread para envio do GIF pós-sinal (T+7)")
+        gif_thread = threading.Thread(target=lambda: enviar_gif_pos_sinal_com_delay())
+        gif_thread.daemon = True
+        gif_thread.start()
+        
+        # Etapa 2: Agendar mensagem de participação para 40 minutos após o sinal (T+40)
+        def enviar_participacao_apos_40min():
+            try:
+                # Log de início
+                BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] ⏳ Iniciando espera de 40 minutos para mensagem de participação")
+                
+                # Aguardar 40 minutos
+                for i in range(1, 41):
+                    time.sleep(60)  # 1 minuto
+                    if i % 5 == 0:  # Log a cada 5 minutos
+                        agora_log = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                        BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] ⏳ Aguardando... {i}/40 minutos decorridos (hora atual: {agora_log})")
+                
+                # Enviar mensagem de participação
+                agora = bot2_obter_hora_brasilia()
+                BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] 🕒 Tempo de espera concluído, enviando mensagem de participação (T+40)")
+                resultado = enviar_mensagem_participacao()
+                BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] 📊 Resultado do envio da mensagem: {'✅ Sucesso' if resultado else '❌ Falha'}")
+                
+                # Etapa 3: Agendar GIF promocional para 10 minutos após a mensagem de participação (T+50)
+                def enviar_gif_promo_apos_10min():
+                    try:
+                        BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] ⏳ Iniciando espera de 10 minutos para GIF promocional")
+                        
+                        # Aguardar 10 minutos
+                        for i in range(1, 11):
+                            time.sleep(60)  # 1 minuto
+                            agora_log = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                            BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] ⏳ Aguardando... {i}/10 minutos para GIF promo (hora atual: {agora_log})")
+                        
+                        # Enviar GIF promocional
+                        agora = bot2_obter_hora_brasilia()
+                        BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] 🕒 Tempo de espera concluído, enviando GIF promocional (T+50)")
+                        
+                        # Enviar para cada idioma
+                        for idioma in BOT2_CANAIS_CONFIG.keys():
+                            resultado_gif = bot2_enviar_gif_promo(idioma)
+                            BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] 📊 Resultado do envio do GIF promo ({idioma}): {'✅ Sucesso' if resultado_gif else '❌ Falha'}")
+                        
+                        # Etapa 4: Agendar mensagem de abertura da corretora para 1 minuto após o GIF promocional (T+51)
+                        def enviar_abertura_apos_1min():
+                            try:
+                                BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] ⏳ Iniciando espera de 1 minuto para mensagem de abertura")
+                                
+                                # Aguardar 1 minuto
+                                time.sleep(60)
+                                
+                                # Enviar mensagem de abertura
+                                agora = bot2_obter_hora_brasilia()
+                                BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] 🕒 Tempo de espera concluído, enviando mensagem de abertura (T+51)")
+                                resultado_abertura = enviar_mensagem_abertura_corretora()
+                                BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] 📊 Resultado do envio da mensagem de abertura: {'✅ Sucesso' if resultado_abertura else '❌ Falha'}")
+                                
+                                BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] 🎉 Sequência completa para múltiplo de três finalizada!")
+                            except Exception as e:
+                                BOT2_LOGGER.error(f"[SEQUENCIA-M3][{sequencia_id}] ❌ Erro ao enviar mensagem de abertura: {str(e)}")
+                                BOT2_LOGGER.error(f"[SEQUENCIA-M3][{sequencia_id}] 🔍 Detalhes: {traceback.format_exc()}")
+                        
+                        # Iniciar thread para enviar mensagem de abertura após 1 minuto
+                        abertura_thread = threading.Thread(target=enviar_abertura_apos_1min)
+                        abertura_thread.daemon = True
+                        abertura_thread.start()
+                        
+                    except Exception as e:
+                        BOT2_LOGGER.error(f"[SEQUENCIA-M3][{sequencia_id}] ❌ Erro ao enviar GIF promocional: {str(e)}")
+                        BOT2_LOGGER.error(f"[SEQUENCIA-M3][{sequencia_id}] 🔍 Detalhes: {traceback.format_exc()}")
+                
+                # Iniciar thread para enviar GIF promocional após 10 minutos
+                gif_promo_thread = threading.Thread(target=enviar_gif_promo_apos_10min)
+                gif_promo_thread.daemon = True
+                gif_promo_thread.start()
+                
+            except Exception as e:
+                BOT2_LOGGER.error(f"[SEQUENCIA-M3][{sequencia_id}] ❌ Erro ao enviar mensagem de participação: {str(e)}")
+                BOT2_LOGGER.error(f"[SEQUENCIA-M3][{sequencia_id}] 🔍 Detalhes: {traceback.format_exc()}")
+        
+        # Iniciar thread para enviar mensagem de participação após 40 minutos
+        participacao_thread = threading.Thread(target=enviar_participacao_apos_40min)
+        participacao_thread.daemon = True
+        participacao_thread.start()
+        
+        BOT2_LOGGER.info(f"[SEQUENCIA-M3][{sequencia_id}] ✅ Sequência para múltiplo de três iniciada com sucesso")
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"[SEQUENCIA-M3][{sequencia_id}] ❌ Erro na sequência múltiplo de três: {str(e)}")
+        BOT2_LOGGER.error(f"[SEQUENCIA-M3][{sequencia_id}] 🔍 Detalhes: {traceback.format_exc()}")
+        return False
+
+# Variável para rastrear o número total de sinais enviados
+contador_sinais = 0
+
+def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=False):
+    """
+    Envia uma mensagem com um sinal para operação nos canais configurados.
+    
+    Args:
+        ignorar_anti_duplicacao: Se True, ignora a verificação anti-duplicação
+        enviar_gif_imediatamente: Se True, envia o GIF logo após o sinal
+        
+    Returns:
+        bool: True se a mensagem foi enviada com sucesso, False caso contrário
+    """
+    global ultimo_sinal_enviado, contador_sinais, BOT2_LOGGER
+    
+    try:
+        # ... existing code ...
+        
+        # Incrementar o contador de sinais
+        contador_sinais += 1
+        
+        # Determinar se este é um múltiplo de 3
+        e_multiplo_tres = contador_sinais % 3 == 0
+        
+        # ... existing code ...
+        
+        # Após o envio bem-sucedido do sinal, iniciar a sequência apropriada
+        if e_multiplo_tres:
+            BOT2_LOGGER.info(f"[SINAL] 🔢 Sinal nº {contador_sinais} é múltiplo de 3, iniciando sequência especial")
+            threading.Thread(target=enviar_sequencia_multiplo_tres).start()
+        else:
+            BOT2_LOGGER.info(f"[SINAL] 🔢 Sinal nº {contador_sinais} não é múltiplo de 3, iniciando sequência normal")
+            threading.Thread(target=enviar_sequencia_normal).start()
+        
+        # ... existing code ...
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"[SINAL] ❌ Erro ao enviar sinal: {str(e)}")
+        BOT2_LOGGER.error(f"[SINAL] 🔍 Detalhes: {traceback.format_exc()}")
+        return False
+
+# Registrar as novas funções no namespace global
+globals()['enviar_sequencia_normal'] = enviar_sequencia_normal
+globals()['enviar_sequencia_multiplo_tres'] = enviar_sequencia_multiplo_tres
+globals()['enviar_mensagem_abertura_corretora'] = enviar_mensagem_abertura_corretora
