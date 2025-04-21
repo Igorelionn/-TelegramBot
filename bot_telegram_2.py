@@ -3338,9 +3338,146 @@ globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
 # No início do arquivo logo após as declarações iniciais
 # Funções de fallback para quando as funções reais não estiverem disponíveis
 def _fallback_enviar_mensagem_participacao():
-    """Implementação de fallback para enviar_mensagem_participacao"""
-    BOT2_LOGGER.warning("⚠️ FALLBACK: Usando implementação de fallback para enviar_mensagem_participacao")
-    return False
+    """
+    Função de fallback para enviar mensagem de participação.
+    Versão completa para quando a função principal não está disponível.
+    
+    Retorna: True se enviado com sucesso, False caso contrário.
+    """
+    try:
+        BOT2_LOGGER.info("🔄 [FALLBACK] Usando função de fallback para mensagem de participação")
+        
+        # Links específicos para cada idioma
+        link_pt = "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
+        link_en = "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack="
+        link_es = "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+        
+        # Links dos vídeos para cada idioma
+        video_pt = "https://t.me/trendingbrazil/215"
+        video_en = "https://t.me/trendingenglish/226"
+        video_es = "https://t.me/trendingespanish/212"
+        
+        # Mensagens para cada idioma com os links incorporados em HTML
+        mensagem_pt = f"""⚠️⚠️PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠️⚠️
+
+1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.
+
+Você vai poder testar todos nossas
+operações com risco ZERO!
+
+👇🏻👇🏻👇🏻👇🏻
+
+<a href="{link_pt}"><b>CRIE SUA CONTA AQUI E GANHE R$10.000</b></a>
+
+—————————————————————
+
+2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!
+
+👇🏻👇🏻👇🏻👇🏻
+
+<a href="{video_pt}"><b>CLIQUE AQUI E ASSISTA O VÍDEO</b></a>"""
+
+        mensagem_en = f"""⚠️⚠️TO PARTICIPATE IN THIS SESSION, FOLLOW THE STEPS BELOW⚠️⚠️
+
+1st ✅ —> Create your broker account at the link below and GET $10,000 FOR FREE to start operating with us without having to risk your money.
+
+You will be able to test all our
+operations with ZERO risk!
+
+👇🏻👇🏻👇🏻👇🏻
+
+<a href="{link_en}"><b>CREATE YOUR ACCOUNT HERE AND GET $10,000</b></a>
+
+—————————————————————
+
+2nd ✅ —> Watch the video below and learn how to deposit and how to join us in our operations!
+
+👇🏻👇🏻👇🏻👇🏻
+
+<a href="{video_en}"><b>CLICK HERE AND WATCH THE VIDEO</b></a>"""
+
+        mensagem_es = f"""⚠️⚠️PARA PARTICIPAR EN ESTA SESIÓN, SIGA LOS PASOS A CONTINUACIÓN⚠️⚠️
+
+1º ✅ —> Cree su cuenta de corredor en el enlace a continuación y OBTENGA $10,000 GRATIS para comenzar a operar con nosotros sin tener que arriesgar su dinero.
+
+Podrás probar todas nuestras
+operaciones con riesgo CERO!
+
+👇🏻👇🏻👇🏻👇🏻
+
+<a href="{link_es}"><b>CREE SU CUENTA AQUÍ Y OBTENGA $10,000</b></a>
+
+—————————————————————
+
+2º ✅ —> ¡Mire el video a continuación y aprenda cómo depositar y cómo unirse a nosotros en nuestras operaciones!
+
+👇🏻👇🏻👇🏻👇🏻
+
+<a href="{video_es}"><b>HAGA CLIC AQUÍ Y VEA EL VIDEO</b></a>"""
+        
+        mensagens_enviadas = []
+        
+        # Enviar para cada idioma configurado
+        for idioma, chats in BOT2_CANAIS_CONFIG.items():
+            if not chats:
+                BOT2_LOGGER.info(f"[FALLBACK][PARTICIPACAO] ℹ️ Nenhum chat configurado para idioma {idioma}")
+                continue
+                
+            # Selecionar a mensagem conforme o idioma
+            if idioma == "pt":
+                mensagem = mensagem_pt
+            elif idioma == "en":
+                mensagem = mensagem_en
+            elif idioma == "es":
+                mensagem = mensagem_es
+            else:
+                mensagem = mensagem_pt  # Usar PT como fallback
+                
+            BOT2_LOGGER.info(f"[FALLBACK][PARTICIPACAO] 📤 Enviando mensagem de participação para {len(chats)} canais no idioma {idioma}")
+            
+            # Enviar para cada canal deste idioma
+            for chat_id in chats:
+                try:
+                    # Construir URL da API
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                    
+                    # Montar payload
+                    payload = {
+                        "chat_id": chat_id,
+                        "text": mensagem,
+                        "parse_mode": "HTML",
+                        "disable_web_page_preview": True
+                    }
+                    
+                    # Enviar mensagem
+                    BOT2_LOGGER.info(f"[FALLBACK][PARTICIPACAO] 🚀 Enviando para chat_id: {chat_id}")
+                    resposta = requests.post(url, json=payload, timeout=10)
+                    
+                    if resposta.status_code == 200:
+                        BOT2_LOGGER.info(f"[FALLBACK][PARTICIPACAO] ✅ Mensagem de participação enviada com sucesso para {chat_id}")
+                        mensagens_enviadas.append(True)
+                    else:
+                        BOT2_LOGGER.error(f"[FALLBACK][PARTICIPACAO] ❌ Erro ao enviar para {chat_id}: {resposta.status_code} - {resposta.text}")
+                        mensagens_enviadas.append(False)
+                        
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[FALLBACK][PARTICIPACAO] ❌ Erro ao enviar para {chat_id}: {str(e)}")
+                    BOT2_LOGGER.error(f"[FALLBACK][PARTICIPACAO] 🔍 Detalhes: {traceback.format_exc()}")
+                    mensagens_enviadas.append(False)
+        
+        # Verificar se pelo menos uma mensagem foi enviada com sucesso
+        sucesso = any(mensagens_enviadas) if mensagens_enviadas else False
+        if sucesso:
+            BOT2_LOGGER.info(f"[FALLBACK][PARTICIPACAO] ✅ Mensagem de participação enviada com sucesso para pelo menos um canal")
+        else:
+            BOT2_LOGGER.error(f"[FALLBACK][PARTICIPACAO] ❌ Falha ao enviar mensagem de participação para todos os canais")
+            
+        return sucesso
+            
+    except Exception as e:
+        BOT2_LOGGER.error(f"[FALLBACK][PARTICIPACAO] ❌ Erro geral na função fallback: {str(e)}")
+        BOT2_LOGGER.error(f"[FALLBACK][PARTICIPACAO] 🔍 Detalhes: {traceback.format_exc()}")
+        return False
 
 def _fallback_bot2_enviar_gif_promo(idioma="pt"):
     """Implementação de fallback para bot2_enviar_gif_promo"""
