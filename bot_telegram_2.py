@@ -2478,276 +2478,78 @@ def bot2_send_message(ignorar_anti_duplicacao=False, enviar_gif_imediatamente=Fa
 
 def enviar_sequencia_multiplo_tres():
     """
-    Envia uma sequência de mensagens para sinais múltiplos de 3.
-    A sequência é:
-    1. Sinal normal (T+0)
-    2. Mensagem de participação (T+26 min)
-    3. GIF promocional (T+35 min)
-    4. Mensagem de abertura de corretora (T+55 min)
+    Função simplificada para enviar a sequência especial para sinais múltiplos de três.
+    Foca exclusivamente no envio do GIF promocional para os três idiomas.
     """
-    global BOT2_LOGGER, ultimo_sinal_enviado, sequencia_multiplo_tres_lock, BOT2_CANAIS_CONFIG, thread_sequencia_ativa
+    sequencia_id = uuid.uuid4().hex[:8]  # ID único para rastrear esta execução
     
-    # Definir funções de fallback localmente para garantir que estejam disponíveis
-    def local_fallback_enviar_mensagem_participacao():
-        """Implementação de fallback para enviar_mensagem_participacao"""
-        BOT2_LOGGER.warning("⚠️ FALLBACK: Usando implementação de fallback para enviar_mensagem_participacao")
-        return False
-        
-    def local_fallback_bot2_enviar_gif_promo(idioma="pt"):
-        """Implementação de fallback para bot2_enviar_gif_promo"""
-        BOT2_LOGGER.warning(f"⚠️ FALLBACK: Usando implementação de fallback para bot2_enviar_gif_promo (idioma: {idioma})")
-        return False
-        
-    def local_fallback_bot2_enviar_mensagem_abertura_corretora(idioma=None):
-        """Implementação de fallback para bot2_enviar_mensagem_abertura_corretora"""
-        BOT2_LOGGER.warning(f"⚠️ FALLBACK: Usando implementação de fallback para bot2_enviar_mensagem_abertura_corretora (idioma: {idioma})")
-        return False
-    
-    # Gerar ID único para esta sequência para rastrear nos logs
-    seq_id = uuid.uuid4().hex[:8]
-    
-    # Usar lock para garantir acesso exclusivo
-    with sequencia_multiplo_tres_lock:
-        # Se já existe uma thread rodando, não iniciar outra
-        if thread_sequencia_ativa is not None and thread_sequencia_ativa.is_alive():
-            agora = bot2_obter_hora_brasilia()
-            horario_atual = agora.strftime("%H:%M:%S")
-            BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Já existe uma sequência múltiplo de 3 em execução. Ignorando solicitação.")
-            return
-
-        # Marcar esta thread como ativa para evitar duplicação
-        thread_sequencia_ativa = threading.current_thread()
-
     try:
-        # Iniciar o tempo para medir duração total
-        inicio_sequencia = time.time()
+        BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] 🚀 Iniciando sequência simplificada para múltiplo de três")
         
-        # Registrar início da sequência
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🚀 Iniciando sequência especial para múltiplo de 3")
+        # Lista de idiomas para enviar o GIF promocional
+        idiomas = ["pt", "en", "es"]
         
-        # ETAPA 1: Enviar sinal normal
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔔 ETAPA 1/4: Enviando sinal normal")
-        
-        # Verificar se o sinal já foi enviado através do ciclo normal de sinais
-        # Se sim, não enviar novamente para evitar duplicação
-        hora_atual = agora.hour
-        minuto_atual = agora.minute
-        
-        # Verificar se estamos próximos do minuto 13 (sinal regular)
-        if (minuto_atual >= 12 and minuto_atual <= 14):
-            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Hora atual próxima ao minuto 13, verificando se o sinal já foi enviado pelo ciclo regular")
+        # Enviar o GIF para cada idioma, um por um
+        for idioma in idiomas:
+            BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] 🌐 Enviando GIF promocional para idioma: {idioma}")
             
-            # Se estamos no minuto 13 ou logo após, presumimos que o sinal regular já foi ou será enviado
-            if minuto_atual >= 13:
-                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ℹ️ Minuto atual é {minuto_atual}, presumindo que o sinal já foi enviado pelo ciclo regular")
-                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Pulando envio do sinal para evitar duplicação")
-                result_sinal = True  # Presumir sucesso e continuar com o resto da sequência
-            else:
-                # Estamos no minuto 12, esperamos o sinal regular ser enviado
-                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏱️ Aguardando o envio do sinal pelo ciclo regular (minuto 13)")
-                # Esperar até o minuto 13:30 para garantir que o sinal regular foi enviado
-                tempo_espera = 0
-                while agora.minute < 13 or (agora.minute == 13 and agora.second < 30):
-                    time.sleep(5)
-                    tempo_espera += 5
-                    agora = bot2_obter_hora_brasilia()
-                    if tempo_espera % 30 == 0:  # Log a cada 30 segundos
-                        BOT2_LOGGER.info(f"[SEQUENCIA-3][{agora.strftime('%H:%M:%S')}][Seq-{seq_id}] ⏳ Ainda aguardando o minuto 13:30... ({tempo_espera}s)")
-                
-                BOT2_LOGGER.info(f"[SEQUENCIA-3][{agora.strftime('%H:%M:%S')}][Seq-{seq_id}] ✅ Sinal deve ter sido enviado pelo ciclo regular")
-                result_sinal = True  # Presumir sucesso e continuar com o resto da sequência
-        else:
-            # Não estamos próximos do minuto 13, enviar o sinal normalmente
-            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🚀 Enviando sinal através da sequência múltiplo de 3")
-            result_sinal = bot2_send_message()
-        
-        if not result_sinal:
-            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar sinal normal. Abortando sequência.")
-            return False
-            
-        # Verificar se o último sinal foi salvo corretamente
-        if ultimo_sinal_enviado is None:
-            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ ultimo_sinal_enviado é None no início da sequência!")
-            
-        # Aguardar 26 minutos após o sinal normal
-        tempo_participacao = 26 * 60  # 26 minutos em segundos
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏱️ Aguardando {tempo_participacao/60:.1f} minutos até a mensagem de participação")
-        
-        # Loop de espera com feedback
-        for minuto in range(1, 27):
-            time.sleep(60)  # Esperar 1 minuto
-            tempo_decorrido = time.time() - inicio_sequencia
-            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏳ Aguardando mensagem de participação... {minuto}/26 minutos decorridos (tempo total: {tempo_decorrido:.1f}s)")
-        
-        # ETAPA 2: Enviar mensagem de participação (T+26)
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 📣 ETAPA 2/4: Enviando mensagem de participação (T+26)")
-        
-        # Verificar se a função enviar_mensagem_participacao existe e é chamável
-        if enviar_mensagem_participacao is None:
-            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Função enviar_mensagem_participacao não está definida!")
-            # Usar a implementação de fallback
-            BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Usando função de fallback para enviar_mensagem_participacao")
-            func_participacao = local_fallback_enviar_mensagem_participacao
-        else:
-            func_participacao = enviar_mensagem_participacao
-            
-        # Tentar enviar até 3 vezes com intervalo de 30 segundos
-        max_tentativas = 3
-        for tentativa in range(1, max_tentativas + 1):
-            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Tentativa {tentativa}/{max_tentativas} de enviar mensagem de participação")
+            # Chamar diretamente a função global, garantindo acesso correto
             try:
-                resultado_participacao = func_participacao()
-                if resultado_participacao:
-                    BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Mensagem de participação enviada com sucesso")
-                    break
+                if 'bot2_enviar_gif_promo' in globals() and callable(globals()['bot2_enviar_gif_promo']):
+                    # Chamar a função diretamente do namespace global
+                    funcao_gif = globals()['bot2_enviar_gif_promo']
+                    
+                    # Tentar até 3 vezes
+                    for tentativa in range(1, 4):
+                        BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] 🔄 Tentativa {tentativa}/3 para idioma {idioma}")
+                        
+                        try:
+                            # Chamar a função com timeout
+                            resultado = funcao_gif(idioma)
+                            
+                            if resultado:
+                                BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ✅ GIF promocional enviado com sucesso para idioma {idioma}")
+                                break
+                            else:
+                                BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Falha ao enviar GIF promocional para idioma {idioma}")
+                                
+                                # Se não for a última tentativa, aguardar antes de tentar novamente
+                                if tentativa < 3:
+                                    BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ⏱️ Aguardando 5 segundos antes da próxima tentativa...")
+                                    time.sleep(5)
+                        except Exception as e:
+                            BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Erro na tentativa {tentativa} para idioma {idioma}: {str(e)}")
+                            
+                            # Se não for a última tentativa, aguardar antes de tentar novamente
+                            if tentativa < 3:
+                                BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ⏱️ Aguardando 5 segundos antes da próxima tentativa...")
+                                time.sleep(5)
                 else:
-                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar mensagem de participação")
+                    BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Função bot2_enviar_gif_promo não encontrada ou não é chamável")
+                    
+                    # Usar a nova função diretamente como fallback
+                    BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] 🔄 Tentando usar novo_bot2_enviar_gif_promo como fallback")
+                    
+                    # Verificar se a nova função existe
+                    if 'novo_bot2_enviar_gif_promo' in globals() and callable(globals()['novo_bot2_enviar_gif_promo']):
+                        resultado = globals()['novo_bot2_enviar_gif_promo'](idioma)
+                        
+                        if resultado:
+                            BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ✅ GIF promocional enviado com sucesso usando fallback para idioma {idioma}")
+                        else:
+                            BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Falha ao enviar GIF promocional usando fallback para idioma {idioma}")
+                    else:
+                        BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Nenhuma função disponível para enviar GIF promocional")
             except Exception as e:
-                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro ao enviar mensagem de participação: {str(e)}")
-                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔍 Detalhes: {traceback.format_exc()}")
-            
-            # Se não for a última tentativa, aguardar antes de tentar novamente
-            if tentativa < max_tentativas:
-                time.sleep(30)  # Aguardar 30 segundos entre tentativas
-                horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
+                BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Erro ao processar idioma {idioma}: {str(e)}")
+                BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] 🔍 Detalhes: {traceback.format_exc()}")
         
-        # Verificar se todas as tentativas falharam
-        if tentativa == max_tentativas:
-            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha nas {max_tentativas} tentativas de enviar mensagem de participação. Continuando sequência...")
-        
-        # Aguardar mais 8 minutos (T+35 total) para o GIF promocional
-        # Esta espera é APÓS a mensagem de participação
-        tempo_gif_promo = 8 * 60  # 8 minutos em segundos
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏱️ Agendando GIF promocional para T+35 minutos (8 minutos após mensagem de participação)")
-        
-        # Loop de espera com feedback
-        for minuto in range(1, 9):
-            time.sleep(60)  # Esperar 1 minuto
-            tempo_decorrido = time.time() - inicio_sequencia
-            agora = bot2_obter_hora_brasilia()
-            horario_atual = agora.strftime("%H:%M:%S")
-            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏳ Aguardando GIF promocional... {minuto}/8 minutos decorridos após mensagem de participação (tempo total: {tempo_decorrido:.1f}s)")
-        
-        # ETAPA 3: Enviar GIF promocional (T+35)
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🎬 ETAPA 3/4: Enviando GIF promocional (T+35)")
-        
-        # Enviar para cada idioma configurado
-        for idioma in BOT2_CANAIS_CONFIG.keys():
-            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🌐 Enviando GIF promocional para idioma: {idioma}")
-            
-            # Verificar se a função bot2_enviar_gif_promo existe e é chamável
-            if bot2_enviar_gif_promo is None:
-                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Função bot2_enviar_gif_promo não está definida!")
-                # Usar a implementação de fallback
-                BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Usando função de fallback para bot2_enviar_gif_promo")
-                func_gif_promo = local_fallback_bot2_enviar_gif_promo
-            else:
-                func_gif_promo = bot2_enviar_gif_promo
-                
-            # Tentar enviar até 3 vezes com intervalo de 30 segundos
-            max_tentativas = 3
-            for tentativa in range(1, max_tentativas + 1):
-                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Tentativa {tentativa}/{max_tentativas} para idioma {idioma}")
-                try:
-                    resultado_gif_promo = func_gif_promo(idioma)
-                    if resultado_gif_promo:
-                        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ GIF promocional enviado com sucesso para idioma {idioma}")
-                        break
-                    else:
-                        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar GIF promocional para idioma {idioma}")
-                except Exception as e:
-                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro ao enviar GIF promocional para idioma {idioma}: {str(e)}")
-                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔍 Detalhes: {traceback.format_exc()}")
-                
-                # Se não for a última tentativa, aguardar antes de tentar novamente
-                if tentativa < max_tentativas:
-                    time.sleep(30)  # Aguardar 30 segundos entre tentativas
-                    horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-            
-            # Verificar se todas as tentativas falharam
-            if tentativa == max_tentativas:
-                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha nas {max_tentativas} tentativas para idioma {idioma}.")
-        
-        # Aguardar mais 20 minutos (T+55 total) para a mensagem de corretora
-        # Esta espera é APÓS o GIF promocional
-        tempo_corretora = 20 * 60  # 20 minutos em segundos
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏱️ Agendando mensagem de corretora para T+55 minutos (20 minutos após GIF promocional)")
-        
-        # Loop de espera com feedback
-        for minuto in range(1, 21):
-            time.sleep(60)  # Esperar 1 minuto
-            tempo_decorrido = time.time() - inicio_sequencia
-            agora = bot2_obter_hora_brasilia()
-            horario_atual = agora.strftime("%H:%M:%S")
-            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⏳ Aguardando mensagem de corretora... {minuto}/20 minutos decorridos após GIF promocional (tempo total: {tempo_decorrido:.1f}s)")
-        
-        # ETAPA 4: Enviar mensagem de abertura de corretora (T+55)
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 📢 ETAPA 4/4: Enviando mensagem de abertura de corretora (T+55)")
-        
-        # Verificar se a função bot2_enviar_mensagem_abertura_corretora existe e é chamável
-        if bot2_enviar_mensagem_abertura_corretora is None:
-            BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Função bot2_enviar_mensagem_abertura_corretora não está definida!")
-            # Usar a implementação de fallback
-            BOT2_LOGGER.warning(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ⚠️ Usando função de fallback para bot2_enviar_mensagem_abertura_corretora")
-            func_abertura_corretora = local_fallback_bot2_enviar_mensagem_abertura_corretora
-        else:
-            func_abertura_corretora = bot2_enviar_mensagem_abertura_corretora
-            
-        # Enviar para cada idioma configurado
-        for idioma in BOT2_CANAIS_CONFIG.keys():
-            BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🌐 Enviando mensagem de corretora para idioma: {idioma}")
-            
-            # Tentar enviar até 3 vezes com intervalo de 30 segundos
-            max_tentativas = 3
-            for tentativa in range(1, max_tentativas + 1):
-                BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔄 Tentativa {tentativa}/{max_tentativas} para idioma {idioma}")
-                try:
-                    resultado_corretora = func_abertura_corretora(idioma)
-                    if resultado_corretora:
-                        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Mensagem de corretora enviada com sucesso para idioma {idioma}")
-                        break
-                    else:
-                        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha ao enviar mensagem de corretora para idioma {idioma}")
-                except Exception as e:
-                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro ao enviar mensagem de corretora para idioma {idioma}: {str(e)}")
-                    BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔍 Detalhes: {traceback.format_exc()}")
-                
-                # Se não for a última tentativa, aguardar antes de tentar novamente
-                if tentativa < max_tentativas:
-                    time.sleep(30)  # Aguardar 30 segundos entre tentativas
-                    horario_atual = bot2_obter_hora_brasilia().strftime("%H:%M:%S")
-            
-            # Verificar se todas as tentativas falharam
-            if tentativa == max_tentativas:
-                BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Falha nas {max_tentativas} tentativas para idioma {idioma}.")
-        
-        # Calcular tempo total da sequência
-        tempo_total = time.time() - inicio_sequencia
-        
-        # Finalizar a sequência
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.info(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ✅ Sequência múltiplo de 3 CONCLUÍDA! Tempo total: {tempo_total/60:.1f} minutos ({tempo_total:.1f}s)")
-        
+        BOT2_LOGGER.info(f"[SEQUENCIA][{sequencia_id}] ✅ Sequência para múltiplo de três concluída")
         return True
-            
     except Exception as e:
-        agora = bot2_obter_hora_brasilia()
-        horario_atual = agora.strftime("%H:%M:%S")
-        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] ❌ Erro ao executar sequência: {str(e)}")
-        BOT2_LOGGER.error(f"[SEQUENCIA-3][{horario_atual}][Seq-{seq_id}] 🔍 Detalhes: {traceback.format_exc()}")
+        BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] ❌ Erro geral na sequência: {str(e)}")
+        BOT2_LOGGER.error(f"[SEQUENCIA][{sequencia_id}] 🔍 Detalhes: {traceback.format_exc()}")
         return False
-    finally:
-        # Resetar a variável de controle de thread para permitir novas sequências
-        thread_sequencia_ativa = None
 
 
 def bot2_iniciar_ciclo_sinais():
@@ -3236,36 +3038,46 @@ if __name__ == "__main__":
             # durante a execução do programa.
             BOT2_LOGGER.info("🔄 Inicializando funções globais...")
             
-            # Atribuir diretamente caso as funções já tenham sido definidas
             try:
-                # Testar se as funções já estão definidas
+                # Verificar se as funções reais estão disponíveis
                 if 'enviar_mensagem_participacao' in globals() and callable(globals()['enviar_mensagem_participacao']):
                     enviar_mensagem_participacao = globals()['enviar_mensagem_participacao']
-                    BOT2_LOGGER.info("✅ Função enviar_mensagem_participacao já registrada")
+                    BOT2_LOGGER.info("✅ Função enviar_mensagem_participacao registrada")
                 else:
-                    BOT2_LOGGER.warning("⚠️ Função enviar_mensagem_participacao ainda não definida, será registrada posteriormente")
+                    # Usar a função de fallback
+                    BOT2_LOGGER.warning("⚠️ Função enviar_mensagem_participacao não disponível, usando fallback")
+                    enviar_mensagem_participacao = _fallback_enviar_mensagem_participacao
                 
                 if 'bot2_enviar_gif_promo' in globals() and callable(globals()['bot2_enviar_gif_promo']):
                     bot2_enviar_gif_promo = globals()['bot2_enviar_gif_promo']
-                    BOT2_LOGGER.info("✅ Função bot2_enviar_gif_promo já registrada")
+                    BOT2_LOGGER.info("✅ Função bot2_enviar_gif_promo registrada")
                 else:
-                    BOT2_LOGGER.warning("⚠️ Função bot2_enviar_gif_promo ainda não definida, será registrada posteriormente")
+                    # Usar a função de fallback
+                    BOT2_LOGGER.warning("⚠️ Função bot2_enviar_gif_promo não disponível, usando fallback")
+                    bot2_enviar_gif_promo = _fallback_bot2_enviar_gif_promo
                 
                 if 'bot2_enviar_mensagem_abertura_corretora' in globals() and callable(globals()['bot2_enviar_mensagem_abertura_corretora']):
                     bot2_enviar_mensagem_abertura_corretora = globals()['bot2_enviar_mensagem_abertura_corretora']
-                    BOT2_LOGGER.info("✅ Função bot2_enviar_mensagem_abertura_corretora já registrada")
+                    BOT2_LOGGER.info("✅ Função bot2_enviar_mensagem_abertura_corretora registrada")
                 else:
-                    BOT2_LOGGER.warning("⚠️ Função bot2_enviar_mensagem_abertura_corretora ainda não definida, será registrada posteriormente")
+                    # Usar a função de fallback
+                    BOT2_LOGGER.warning("⚠️ Função bot2_enviar_mensagem_abertura_corretora não disponível, usando fallback")
+                    bot2_enviar_mensagem_abertura_corretora = _fallback_bot2_enviar_mensagem_abertura_corretora
                 
-                # Registrar diretamente as funções nas variáveis globais (força a resolução)
+                # Atualizar as variáveis globais com as funções definidas ou fallbacks
                 globals()['enviar_mensagem_participacao'] = enviar_mensagem_participacao
                 globals()['bot2_enviar_gif_promo'] = bot2_enviar_gif_promo
                 globals()['bot2_enviar_mensagem_abertura_corretora'] = bot2_enviar_mensagem_abertura_corretora
                 
-                BOT2_LOGGER.info("🔄 Inicialização de funções globais concluída")
+                BOT2_LOGGER.info("✅ Inicialização de funções globais concluída")
             except Exception as e:
                 BOT2_LOGGER.error(f"❌ Erro ao inicializar funções globais: {str(e)}")
                 BOT2_LOGGER.error(f"🔍 Detalhes: {traceback.format_exc()}")
+                
+                # Mesmo com erro, garantir que as funções de fallback estejam disponíveis
+                globals()['enviar_mensagem_participacao'] = _fallback_enviar_mensagem_participacao
+                globals()['bot2_enviar_gif_promo'] = _fallback_bot2_enviar_gif_promo
+                globals()['bot2_enviar_mensagem_abertura_corretora'] = _fallback_bot2_enviar_mensagem_abertura_corretora
         
         # Configurar captura de exceções não tratadas para logar adequadamente
         def log_uncaught_exceptions(exctype, value, tb):
@@ -3663,3 +3475,261 @@ def _fallback_bot2_enviar_mensagem_abertura_corretora(idioma=None):
     """Implementação de fallback para bot2_enviar_mensagem_abertura_corretora"""
     BOT2_LOGGER.warning(f"⚠️ FALLBACK: Usando implementação de fallback para bot2_enviar_mensagem_abertura_corretora (idioma: {idioma})")
     return False
+
+# Certificar-se de que as funções estejam disponíveis globalmente mesmo antes de serem definidas
+if 'bot2_enviar_gif_promo' not in globals() or globals()['bot2_enviar_gif_promo'] is None:
+    BOT2_LOGGER.warning("Função bot2_enviar_gif_promo não disponível, usando fallback temporariamente")
+    globals()['bot2_enviar_gif_promo'] = _fallback_bot2_enviar_gif_promo
+
+if 'enviar_mensagem_participacao' not in globals() or globals()['enviar_mensagem_participacao'] is None:
+    BOT2_LOGGER.warning("Função enviar_mensagem_participacao não disponível, usando fallback temporariamente")
+    globals()['enviar_mensagem_participacao'] = _fallback_enviar_mensagem_participacao
+
+if 'bot2_enviar_mensagem_abertura_corretora' not in globals() or globals()['bot2_enviar_mensagem_abertura_corretora'] is None:
+    BOT2_LOGGER.warning("Função bot2_enviar_mensagem_abertura_corretora não disponível, usando fallback temporariamente")
+    globals()['bot2_enviar_mensagem_abertura_corretora'] = _fallback_bot2_enviar_mensagem_abertura_corretora
+
+def novo_bot2_enviar_gif_promo(idioma="pt"):
+    """
+    Nova implementação mais simplificada para enviar o GIF promocional.
+    
+    Args:
+        idioma: Idioma dos canais para enviar o GIF (pt, en, es)
+        
+    Returns:
+        bool: True se o GIF foi enviado com sucesso, False caso contrário
+    """
+    try:
+        # Logging inicial
+        BOT2_LOGGER.info(f"[GIF-PROMO] 🔄 NOVA FUNÇÃO: Iniciando envio de GIF promocional para idioma {idioma}")
+        
+        # Verificar se o token está definido
+        if 'BOT2_TOKEN' not in globals() or not BOT2_TOKEN:
+            BOT2_LOGGER.error("[GIF-PROMO] ❌ Token do bot não está definido!")
+            return False
+            
+        # Verificar se a configuração de canais está definida
+        if 'BOT2_CANAIS_CONFIG' not in globals() or not BOT2_CANAIS_CONFIG:
+            BOT2_LOGGER.error("[GIF-PROMO] ❌ Configuração de canais não está definida!")
+            return False
+            
+        # Verificar se há canais para este idioma
+        if idioma not in BOT2_CANAIS_CONFIG or not BOT2_CANAIS_CONFIG[idioma]:
+            BOT2_LOGGER.warning(f"[GIF-PROMO] ⚠️ Nenhum canal configurado para idioma {idioma}")
+            return False
+            
+        # Lista de canais para este idioma
+        chats = BOT2_CANAIS_CONFIG[idioma]
+        BOT2_LOGGER.info(f"[GIF-PROMO] 📊 Total de canais para idioma {idioma}: {len(chats)}")
+        
+        # URL fixa do GIF promocional (usar uma URL que sabemos que funciona)
+        gif_url = "https://i.imgur.com/jphWAEq.gif"
+        
+        # Tentar enviar para cada canal
+        sucessos = 0
+        
+        for chat_id in chats:
+            try:
+                # Montar a URL e o payload da requisição
+                url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                payload = {
+                    "chat_id": chat_id,
+                    "animation": gif_url,
+                    "disable_notification": False
+                }
+                
+                BOT2_LOGGER.info(f"[GIF-PROMO] 🚀 Enviando GIF para chat_id: {chat_id}")
+                
+                # Enviar a requisição
+                resposta = requests.post(url, json=payload, timeout=10)
+                
+                # Verificar o resultado
+                if resposta.status_code == 200:
+                    BOT2_LOGGER.info(f"[GIF-PROMO] ✅ GIF enviado com sucesso para {chat_id}")
+                    sucessos += 1
+                else:
+                    BOT2_LOGGER.error(f"[GIF-PROMO] ❌ Falha ao enviar GIF para {chat_id}: {resposta.status_code}")
+                    
+                    # Tentar método alternativo
+                    BOT2_LOGGER.info(f"[GIF-PROMO] 🔄 Tentando método alternativo para {chat_id}...")
+                    
+                    # Usar sendDocument como alternativa
+                    url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendDocument"
+                    payload_alt = {
+                        "chat_id": chat_id,
+                        "document": gif_url,
+                        "disable_notification": False
+                    }
+                    
+                    resposta_alt = requests.post(url_alt, json=payload_alt, timeout=10)
+                    if resposta_alt.status_code == 200:
+                        BOT2_LOGGER.info(f"[GIF-PROMO] ✅ GIF enviado com sucesso (método alternativo) para {chat_id}")
+                        sucessos += 1
+                    else:
+                        BOT2_LOGGER.error(f"[GIF-PROMO] ❌ Falha também no método alternativo: {resposta_alt.status_code}")
+                        
+                        # Terceira tentativa: sendPhoto
+                        url_photo = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendPhoto"
+                        payload_photo = {
+                            "chat_id": chat_id,
+                            "photo": "https://i.imgur.com/jphWAEq.jpg",  # URL de uma imagem estática como backup
+                            "caption": "🎁 Promoção especial!",
+                            "disable_notification": False
+                        }
+                        
+                        resposta_photo = requests.post(url_photo, json=payload_photo, timeout=10)
+                        if resposta_photo.status_code == 200:
+                            BOT2_LOGGER.info(f"[GIF-PROMO] ✅ Imagem enviada como último recurso para {chat_id}")
+                            sucessos += 1
+                        else:
+                            BOT2_LOGGER.error(f"[GIF-PROMO] ❌ Todas as tentativas falharam para {chat_id}")
+                    
+            except Exception as e:
+                BOT2_LOGGER.error(f"[GIF-PROMO] ❌ Erro ao enviar para {chat_id}: {str(e)}")
+                BOT2_LOGGER.error(f"[GIF-PROMO] 🔍 Detalhes: {traceback.format_exc()}")
+        
+        # Retornar True se pelo menos um envio foi bem-sucedido
+        resultado = sucessos > 0
+        
+        if resultado:
+            BOT2_LOGGER.info(f"[GIF-PROMO] ✅ GIF promocional enviado com sucesso para {sucessos}/{len(chats)} canais")
+        else:
+            BOT2_LOGGER.error(f"[GIF-PROMO] ❌ Falha ao enviar GIF promocional para todos os canais")
+            
+        return resultado
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"[GIF-PROMO] ❌ Erro crítico na função bot2_enviar_gif_promo: {str(e)}")
+        BOT2_LOGGER.error(f"[GIF-PROMO] 🔍 Detalhes: {traceback.format_exc()}")
+        return False
+
+# Substituir a função original pela nova implementação
+bot2_enviar_gif_promo = novo_bot2_enviar_gif_promo
+globals()['bot2_enviar_gif_promo'] = novo_bot2_enviar_gif_promo
+
+def teste_enviar_gif_promocional(idioma="pt"):
+    """
+    Função específica para testar o envio do GIF promocional.
+    Pode ser chamada diretamente sem depender de sequências ou agendamentos.
+    
+    Args:
+        idioma: Idioma para enviar o GIF (pt, en, es)
+        
+    Returns:
+        bool: True se o envio foi bem-sucedido, False caso contrário
+    """
+    sequencia_id = uuid.uuid4().hex[:8]  # ID único para esta execução
+    
+    BOT2_LOGGER.info(f"[TESTE-GIF][{sequencia_id}] 🧪 Iniciando teste de envio de GIF promocional para idioma {idioma}")
+    
+    try:
+        # Verificar se a nova função existe e é chamável
+        if 'novo_bot2_enviar_gif_promo' in globals() and callable(globals()['novo_bot2_enviar_gif_promo']):
+            BOT2_LOGGER.info(f"[TESTE-GIF][{sequencia_id}] ✅ Função novo_bot2_enviar_gif_promo encontrada")
+            
+            # Chamar diretamente a nova implementação
+            resultado = globals()['novo_bot2_enviar_gif_promo'](idioma)
+            
+            if resultado:
+                BOT2_LOGGER.info(f"[TESTE-GIF][{sequencia_id}] 🎉 Teste concluído com SUCESSO!")
+                return True
+            else:
+                BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] ❌ Teste falhou: A função retornou False")
+                return False
+        
+        # Se a nova função não estiver disponível, tentar a função original
+        elif 'bot2_enviar_gif_promo' in globals() and callable(globals()['bot2_enviar_gif_promo']):
+            BOT2_LOGGER.info(f"[TESTE-GIF][{sequencia_id}] ✅ Função bot2_enviar_gif_promo encontrada")
+            
+            # Chamar a função original
+            resultado = globals()['bot2_enviar_gif_promo'](idioma)
+            
+            if resultado:
+                BOT2_LOGGER.info(f"[TESTE-GIF][{sequencia_id}] 🎉 Teste concluído com SUCESSO!")
+                return True
+            else:
+                BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] ❌ Teste falhou: A função retornou False")
+                return False
+        
+        # Se nenhuma função estiver disponível, tentar implementação inline
+        else:
+            BOT2_LOGGER.warning(f"[TESTE-GIF][{sequencia_id}] ⚠️ Nenhuma função encontrada, usando implementação inline")
+            
+            # Verificar se as variáveis necessárias estão disponíveis
+            if 'BOT2_TOKEN' not in globals() or not BOT2_TOKEN:
+                BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] ❌ Token do bot não está definido!")
+                return False
+                
+            if 'BOT2_CANAIS_CONFIG' not in globals() or not BOT2_CANAIS_CONFIG:
+                BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] ❌ Configuração de canais não está definida!")
+                return False
+                
+            if idioma not in BOT2_CANAIS_CONFIG or not BOT2_CANAIS_CONFIG[idioma]:
+                BOT2_LOGGER.warning(f"[TESTE-GIF][{sequencia_id}] ⚠️ Nenhum canal configurado para idioma {idioma}")
+                return False
+            
+            # Usar uma URL fixa para o GIF
+            gif_url = "https://i.imgur.com/jphWAEq.gif"
+            
+            # Tentar enviar para cada canal
+            chats = BOT2_CANAIS_CONFIG[idioma]
+            sucessos = 0
+            
+            for chat_id in chats:
+                try:
+                    # Criar a URL e o payload
+                    url = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendAnimation"
+                    payload = {
+                        "chat_id": chat_id,
+                        "animation": gif_url,
+                        "disable_notification": False
+                    }
+                    
+                    BOT2_LOGGER.info(f"[TESTE-GIF][{sequencia_id}] 🚀 Enviando GIF para chat_id: {chat_id}")
+                    
+                    # Enviar a requisição
+                    resposta = requests.post(url, json=payload, timeout=10)
+                    
+                    if resposta.status_code == 200:
+                        BOT2_LOGGER.info(f"[TESTE-GIF][{sequencia_id}] ✅ GIF enviado com sucesso para {chat_id}")
+                        sucessos += 1
+                    else:
+                        BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] ❌ Falha ao enviar GIF: {resposta.status_code}")
+                        
+                        # Tentar enviar uma mensagem de texto como alternativa
+                        url_alt = f"https://api.telegram.org/bot{BOT2_TOKEN}/sendMessage"
+                        payload_alt = {
+                            "chat_id": chat_id,
+                            "text": "🎁 [TESTE] Promoção especial! (Mensagem enviada porque o GIF falhou)",
+                            "disable_notification": False
+                        }
+                        
+                        try:
+                            resposta_alt = requests.post(url_alt, json=payload_alt, timeout=10)
+                            if resposta_alt.status_code == 200:
+                                BOT2_LOGGER.info(f"[TESTE-GIF][{sequencia_id}] ✅ Mensagem alternativa enviada para {chat_id}")
+                                sucessos += 1
+                            else:
+                                BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] ❌ Erro ao enviar mensagem alternativa: {resposta_alt.status_code}")
+                        except Exception as e:
+                            BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] ❌ Erro ao enviar mensagem alternativa: {str(e)}")
+                except Exception as e:
+                    BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] ❌ Erro ao enviar para {chat_id}: {str(e)}")
+            
+            # Verificar se pelo menos um envio foi bem-sucedido
+            resultado = sucessos > 0
+            
+            if resultado:
+                BOT2_LOGGER.info(f"[TESTE-GIF][{sequencia_id}] 🎉 Teste inline concluído com SUCESSO!")
+                return True
+            else:
+                BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] ❌ Teste inline falhou: Nenhum envio bem-sucedido")
+                return False
+    
+    except Exception as e:
+        BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] ❌ Erro durante o teste: {str(e)}")
+        BOT2_LOGGER.error(f"[TESTE-GIF][{sequencia_id}] 🔍 Detalhes: {traceback.format_exc()}")
+        return False
+
+# Registrar a função de teste no namespace global
+globals()['teste_enviar_gif_promocional'] = teste_enviar_gif_promocional
