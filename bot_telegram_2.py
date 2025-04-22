@@ -116,7 +116,22 @@ LINKS_VIDEO = {
 # URLs diretas para GIFs
 # URL_GIF_POS_SINAL = "https://media.giphy.com/media/eWbGux0IXOygZ7m2Of/giphy.gif"
 GIF_POS_SINAL_PATH = "videos/pos_sinal/180398513446716419 (7).webp"
-URL_GIF_PROMO = "https://media.giphy.com/media/whPiIq21hxXuJn7WVX/giphy.gif"
+GIF_POS_SINAL_OTIMIZADO_PATH = "videos/pos_sinal/pos_sinal_otimizado.webp"  # Versão otimizada alternativa
+# Atualizado para usar o arquivo do GitHub
+GIF_PROMO_PATH = "videos/promo/siren-lights (2).mp4"  # Arquivo do GitHub
+
+"""
+INSTRUÇÕES PARA OTIMIZAR GIFs:
+1. Baixe o GIF original do Giphy
+2. Use um conversor online como ezgif.com para:
+   - Redimensionar: largura máxima de 300-400px 
+   - Otimizar: reduzir qualidade para 70-80%
+   - Converter para formato WebP ou MP4 (mais leve que GIF)
+3. Salve o arquivo otimizado em:
+   - videos/promo/siren-lights (2).mp4 (para o promocional)
+   - videos/pos_sinal/pos_sinal_otimizado.webp (para o pós-sinal)
+4. Tamanho máximo recomendado: 1MB para melhor compatibilidade com celulares
+"""
 
 # Horários de funcionamento dos ativos
 HORARIOS_PADRAO = {
@@ -911,6 +926,11 @@ def enviar_gif(gif_path_ou_url, tipo_gif="padrão"):
                 return False
             else:
                 BOT2_LOGGER.info(f"Arquivo GIF encontrado: {gif_path_ou_url}")
+                
+                # Verificar tamanho do arquivo
+                tamanho_arquivo = os.path.getsize(gif_path_ou_url) / (1024 * 1024)  # Tamanho em MB
+                if tamanho_arquivo > 2:
+                    BOT2_LOGGER.warning(f"ALERTA: O arquivo GIF é muito grande ({tamanho_arquivo:.2f}MB). Recomendado otimizar para menos de 1MB.")
         
         for idioma, canais in BOT2_CANAIS_CONFIG.items():
             for chat_id in canais:
@@ -924,13 +944,28 @@ def enviar_gif(gif_path_ou_url, tipo_gif="padrão"):
                             animation=gif_path_ou_url
                         )
                     else:
-                        # É um caminho local
-                        with open(gif_path_ou_url, 'rb') as gif:
-                            bot2.send_document(
-                                chat_id=chat_id,
-                                document=gif,
-                                visible_file_name="image.webp"
-                            )
+                        # Verificar a extensão do arquivo
+                        extensao = os.path.splitext(gif_path_ou_url)[1].lower()
+                        
+                        # GIF promocional enviado como animação, GIF pós-sinal como documento
+                        with open(gif_path_ou_url, 'rb') as arquivo:
+                            if tipo_gif == "pós-sinal":
+                                # Enviar GIF pós-sinal como documento (como era originalmente)
+                                BOT2_LOGGER.info(f"Enviando como documento: {gif_path_ou_url}")
+                                bot2.send_document(
+                                    chat_id=chat_id,
+                                    document=arquivo,
+                                    visible_file_name="image.webp"
+                                )
+                            else:
+                                # Enviar outros GIFs (promocional) como animação
+                                BOT2_LOGGER.info(f"Enviando como animação/GIF: {gif_path_ou_url}")
+                                bot2.send_animation(
+                                    chat_id=chat_id,
+                                    animation=arquivo,
+                                    caption=None  # Sem legenda
+                                )
+                            
                     BOT2_LOGGER.info(f"GIF '{tipo_gif}' enviado com sucesso para o canal {chat_id} ({idioma})")
                     sucessos += 1
                 except Exception as e:
@@ -992,7 +1027,18 @@ def enviar_gif_pos_sinal():
     """Envia o GIF pós-sinal para todos os canais."""
     BOT2_LOGGER.info("Iniciando processo de envio do GIF pós-sinal")
     try:
-        resultado = enviar_gif(GIF_POS_SINAL_PATH, "pós-sinal")
+        # Tentar primeiro a versão otimizada
+        if os.path.exists(GIF_POS_SINAL_OTIMIZADO_PATH):
+            BOT2_LOGGER.info("Usando versão otimizada do GIF pós-sinal")
+            resultado = enviar_gif(GIF_POS_SINAL_OTIMIZADO_PATH, "pós-sinal")
+        # Caso contrário, usar o padrão
+        elif os.path.exists(GIF_POS_SINAL_PATH):
+            BOT2_LOGGER.info("Usando versão padrão do GIF pós-sinal")
+            resultado = enviar_gif(GIF_POS_SINAL_PATH, "pós-sinal")
+        else:
+            BOT2_LOGGER.error(f"Nenhum arquivo GIF pós-sinal encontrado: nem {GIF_POS_SINAL_OTIMIZADO_PATH} nem {GIF_POS_SINAL_PATH}")
+            return False
+            
         if resultado:
             BOT2_LOGGER.info("Processo de envio do GIF pós-sinal concluído com sucesso")
         else:
@@ -1064,7 +1110,15 @@ def enviar_gif_promocional():
     BOT2_LOGGER.info("Iniciando processo de envio do GIF promocional")
     
     try:
-        enviado = enviar_gif(URL_GIF_PROMO, "promocional")
+        # Verificar se o arquivo local existe
+        if os.path.exists(GIF_PROMO_PATH):
+            enviado = enviar_gif(GIF_PROMO_PATH, "promocional")
+            BOT2_LOGGER.info(f"Usando arquivo do GitHub: {GIF_PROMO_PATH}")
+        else:
+            # Usar URL como fallback (não recomendado por causa do tamanho)
+            fallback_url = "https://media.giphy.com/media/whPiIq21hxXuJn7WVX/giphy.gif"
+            BOT2_LOGGER.warning(f"Arquivo local {GIF_PROMO_PATH} não encontrado. Usando URL de fallback.")
+            enviado = enviar_gif(fallback_url, "promocional")
         
         if enviado:
             BOT2_LOGGER.info("GIF promocional enviado com sucesso")
