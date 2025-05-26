@@ -114,9 +114,6 @@ LINKS_VIDEO = {
 }
 
 # URLs diretas para GIFs
-# URL_GIF_POS_SINAL = "https://media.giphy.com/media/eWbGux0IXOygZ7m2Of/giphy.gif"
-GIF_POS_SINAL_PATH = "videos/pos_sinal/180398513446716419 (7).webp"
-GIF_POS_SINAL_OTIMIZADO_PATH = "videos/pos_sinal/pos_sinal_otimizado.webp"  # Versão otimizada alternativa
 # Atualizado para usar o arquivo do GitHub
 GIF_PROMO_PATH = "videos/promo/siren-lights (2).mp4"  # Arquivo do GitHub
 
@@ -129,7 +126,6 @@ INSTRUÇÕES PARA OTIMIZAR GIFs:
    - Converter para formato WebP ou MP4 (mais leve que GIF)
 3. Salve o arquivo otimizado em:
    - videos/promo/siren-lights (2).mp4 (para o promocional)
-   - videos/pos_sinal/pos_sinal_otimizado.webp (para o pós-sinal)
 4. Tamanho máximo recomendado: 1MB para melhor compatibilidade com celulares
 """
 
@@ -1009,10 +1005,6 @@ def enviar_sinal():
     if enviado:
         BOT2_LOGGER.info("Sinal enviado com sucesso")
         
-        # Agendar envio do GIF pós-sinal (7 minutos depois)
-        threading.Timer(7 * 60, enviar_gif_pos_sinal).start()
-        BOT2_LOGGER.info("Agendado envio do GIF pós-sinal para daqui a 7 minutos")
-        
         # Se for múltiplo de 3, agendar a sequência especial
         if contador_sinais % 3 == 0:
             threading.Timer(7 * 60, lambda: iniciar_sequencia_multiplo_tres(sinal)).start()
@@ -1021,33 +1013,6 @@ def enviar_sinal():
         BOT2_LOGGER.error("Falha ao enviar o sinal")
     
     return enviado
-
-# Função para enviar o GIF pós-sinal
-def enviar_gif_pos_sinal():
-    """Envia o GIF pós-sinal para todos os canais."""
-    BOT2_LOGGER.info("Iniciando processo de envio do GIF pós-sinal")
-    try:
-        # Tentar primeiro a versão otimizada
-        if os.path.exists(GIF_POS_SINAL_OTIMIZADO_PATH):
-            BOT2_LOGGER.info("Usando versão otimizada do GIF pós-sinal")
-            resultado = enviar_gif(GIF_POS_SINAL_OTIMIZADO_PATH, "pós-sinal")
-        # Caso contrário, usar o padrão
-        elif os.path.exists(GIF_POS_SINAL_PATH):
-            BOT2_LOGGER.info("Usando versão padrão do GIF pós-sinal")
-            resultado = enviar_gif(GIF_POS_SINAL_PATH, "pós-sinal")
-        else:
-            BOT2_LOGGER.error(f"Nenhum arquivo GIF pós-sinal encontrado: nem {GIF_POS_SINAL_OTIMIZADO_PATH} nem {GIF_POS_SINAL_PATH}")
-            return False
-            
-        if resultado:
-            BOT2_LOGGER.info("Processo de envio do GIF pós-sinal concluído com sucesso")
-        else:
-            BOT2_LOGGER.error("Processo de envio do GIF pós-sinal concluído com falhas")
-        return resultado
-    except Exception as e:
-        BOT2_LOGGER.error(f"Exceção não tratada ao enviar GIF pós-sinal: {str(e)}")
-        BOT2_LOGGER.error(traceback.format_exc())
-        return False
 
 # Função para iniciar a sequência de envios para sinais múltiplos de 3
 def iniciar_sequencia_multiplo_tres(sinal):
@@ -1058,8 +1023,6 @@ def iniciar_sequencia_multiplo_tres(sinal):
         sinal: O sinal que foi enviado
     """
     BOT2_LOGGER.info("Iniciando sequência para sinal múltiplo de 3")
-    
-    # O GIF pós-sinal já está agendado na função enviar_sinal
     
     # Agendar envio da mensagem de participação (40 minutos após o sinal)
     threading.Timer(40 * 60, enviar_mensagem_participacao).start()
