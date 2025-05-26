@@ -114,6 +114,7 @@ LINKS_VIDEO = {
 }
 
 # URLs diretas para GIFs
+# GIF pós-sinal removido
 # Atualizado para usar o arquivo do GitHub
 GIF_PROMO_PATH = "videos/promo/siren-lights (2).mp4"  # Arquivo do GitHub
 
@@ -1005,6 +1006,8 @@ def enviar_sinal():
     if enviado:
         BOT2_LOGGER.info("Sinal enviado com sucesso")
         
+        # GIF pós-sinal removido
+        
         # Se for múltiplo de 3, agendar a sequência especial
         if contador_sinais % 3 == 0:
             threading.Timer(7 * 60, lambda: iniciar_sequencia_multiplo_tres(sinal)).start()
@@ -1013,6 +1016,12 @@ def enviar_sinal():
         BOT2_LOGGER.error("Falha ao enviar o sinal")
     
     return enviado
+
+# Função para enviar o GIF pós-sinal - removida
+def enviar_gif_pos_sinal():
+    """Função de envio do GIF pós-sinal removida."""
+    BOT2_LOGGER.info("Função de envio do GIF pós-sinal foi removida.")
+    return True
 
 # Função para iniciar a sequência de envios para sinais múltiplos de 3
 def iniciar_sequencia_multiplo_tres(sinal):
