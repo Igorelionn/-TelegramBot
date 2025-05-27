@@ -1008,10 +1008,9 @@ def enviar_sinal():
         
         # GIF pós-sinal removido
         
-        # Se for múltiplo de 3, agendar a sequência especial
-        if contador_sinais % 3 == 0:
-            threading.Timer(7 * 60, lambda: iniciar_sequencia_multiplo_tres(sinal)).start()
-            BOT2_LOGGER.info("Agendada sequência especial para sinal múltiplo de 3")
+        # Sequência especial para todos os sinais (não apenas múltiplos de 3)
+        threading.Timer(7 * 60, lambda: iniciar_sequencia_especial(sinal)).start()
+        BOT2_LOGGER.info("Agendada sequência especial para todos os sinais")
     else:
         BOT2_LOGGER.error("Falha ao enviar o sinal")
     
@@ -1023,15 +1022,15 @@ def enviar_gif_pos_sinal():
     BOT2_LOGGER.info("Função de envio do GIF pós-sinal foi removida.")
     return True
 
-# Função para iniciar a sequência de envios para sinais múltiplos de 3
-def iniciar_sequencia_multiplo_tres(sinal):
+# Função para iniciar a sequência de envios para todos os sinais
+def iniciar_sequencia_especial(sinal):
     """
-    Inicia a sequência de envios especial para os sinais múltiplos de 3.
+    Inicia a sequência de envios especial para todos os sinais.
     
     Args:
         sinal: O sinal que foi enviado
     """
-    BOT2_LOGGER.info("Iniciando sequência para sinal múltiplo de 3")
+    BOT2_LOGGER.info("Iniciando sequência especial para o sinal")
     
     # Agendar envio da mensagem de participação (40 minutos após o sinal)
     threading.Timer(40 * 60, enviar_mensagem_participacao).start()
