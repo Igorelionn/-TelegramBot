@@ -513,7 +513,7 @@ HORARIOS_PADRAO = {
 }
 
 # Variáveis de controle
-contador_sinais = 0  # Para rastrear os sinais múltiplos de 3
+contador_sinais = 0  # Para rastrear o número de sinais enviados
 sinais_enviados_hoje = []  # Lista para armazenar os sinais enviados hoje
 ultimo_sinal = None  # Armazenar o último sinal enviado
 
@@ -774,9 +774,9 @@ def formatar_mensagem_sinal(sinal, idioma):
         
     return mensagem
 
-# Função para formatar a mensagem de participação (múltiplos de 3)
+# Função para formatar a mensagem de participação
 def formatar_mensagem_participacao(idioma):
-    """Formata a mensagem de participação para os sinais múltiplos de 3."""
+    """Formata a mensagem de participação para o idioma especificado."""
     link_corretora = LINKS_CORRETORA[idioma]
     link_video = LINKS_VIDEO[idioma]
     
@@ -993,7 +993,7 @@ def enviar_sinal():
     
     # Registrar informações do sinal
     BOT2_LOGGER.info(f"Sinal #{contador_sinais}: {sinal['ativo']} - {sinal['direcao']}")
-    BOT2_LOGGER.info(f"Este é um sinal {'múltiplo de 3' if contador_sinais % 3 == 0 else 'normal'}")
+    BOT2_LOGGER.info("Todos os sinais receberão a sequência especial")
     
     # Formatar mensagens para cada idioma
     mensagens = {}
