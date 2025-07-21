@@ -775,131 +775,8 @@ def formatar_mensagem_abertura_corretora(idioma):
         
     return mensagem
 
-# Função para enviar uma mensagem para todos os canais
-def enviar_mensagem(mensagens_por_idioma, disable_preview=True, tipo_mensagem="padrão"):
-    """
-    Envia uma mensagem para todos os canais configurados.
-    
-    Args:
-        mensagens_por_idioma: Dicionário com mensagens formatadas por idioma
-        disable_preview: Se deve desabilitar a pré-visualização de links
-        tipo_mensagem: Tipo de mensagem sendo enviada (para logs)
-        
-    Returns:
-        bool: True se o envio foi bem sucedido, False caso contrário
-    """
-    try:
-        BOT2_LOGGER.info(f"Iniciando envio de mensagem tipo: {tipo_mensagem}")
-        sucessos = 0
-        falhas = 0
-        
-        for idioma, canais in BOT2_CANAIS_CONFIG.items():
-            mensagem = mensagens_por_idioma.get(idioma)
-            if not mensagem:
-                BOT2_LOGGER.warning(f"Mensagem tipo '{tipo_mensagem}' não disponível para o idioma {idioma}")
-                continue
-                
-            for chat_id in canais:
-                try:
-                    BOT2_LOGGER.info(f"Tentando enviar mensagem '{tipo_mensagem}' para canal {chat_id} ({idioma})")
-                    bot2.send_message(
-                        chat_id=chat_id,
-                        text=mensagem,
-                        parse_mode="HTML",
-                        disable_web_page_preview=disable_preview
-                    )
-                    BOT2_LOGGER.info(f"Mensagem '{tipo_mensagem}' enviada com sucesso para o canal {chat_id} ({idioma})")
-                    sucessos += 1
-                except Exception as e:
-                    BOT2_LOGGER.error(f"Erro ao enviar mensagem '{tipo_mensagem}' para o canal {chat_id}: {str(e)}")
-                    falhas += 1
-        
-        BOT2_LOGGER.info(f"Resumo do envio de mensagem '{tipo_mensagem}': {sucessos} sucessos, {falhas} falhas")
-        return sucessos > 0
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro geral ao enviar mensagens '{tipo_mensagem}': {str(e)}")
-        BOT2_LOGGER.error(traceback.format_exc())
-        return False
-
-# Função para enviar um GIF para todos os canais
-def enviar_gif(gif_path_ou_url, tipo_gif="padrão"):
-    """
-    Envia um GIF para todos os canais configurados.
-    
-    Args:
-        gif_path_ou_url: Caminho local ou URL do GIF a ser enviado
-        tipo_gif: Tipo de GIF sendo enviado (para logs)
-        
-    Returns:
-        bool: True se o envio foi bem sucedido, False caso contrário
-    """
-    try:
-        BOT2_LOGGER.info(f"Iniciando envio de GIF tipo: {tipo_gif}, origem: {gif_path_ou_url}")
-        sucessos = 0
-        falhas = 0
-        
-        # Verificar se o arquivo existe se for um caminho local
-        if not gif_path_ou_url.startswith("http"):
-            if not os.path.exists(gif_path_ou_url):
-                BOT2_LOGGER.error(f"Arquivo GIF não encontrado: {gif_path_ou_url}")
-                BOT2_LOGGER.info(f"Diretório atual: {os.getcwd()}")
-                BOT2_LOGGER.info(f"Conteúdo do diretório: {os.listdir(os.path.dirname(gif_path_ou_url) if os.path.dirname(gif_path_ou_url) else '.')}")
-                return False
-            else:
-                BOT2_LOGGER.info(f"Arquivo GIF encontrado: {gif_path_ou_url}")
-                
-                # Verificar tamanho do arquivo
-                tamanho_arquivo = os.path.getsize(gif_path_ou_url) / (1024 * 1024)  # Tamanho em MB
-                if tamanho_arquivo > 2:
-                    BOT2_LOGGER.warning(f"ALERTA: O arquivo GIF é muito grande ({tamanho_arquivo:.2f}MB). Recomendado otimizar para menos de 1MB.")
-        
-        for idioma, canais in BOT2_CANAIS_CONFIG.items():
-            for chat_id in canais:
-                try:
-                    BOT2_LOGGER.info(f"Tentando enviar GIF '{tipo_gif}' para canal {chat_id} ({idioma})")
-                    # Verificar se é um caminho local ou URL
-                    if gif_path_ou_url.startswith("http"):
-                        # É uma URL
-                        bot2.send_animation(
-                            chat_id=chat_id,
-                            animation=gif_path_ou_url
-                        )
-                    else:
-                        # Verificar a extensão do arquivo
-                        extensao = os.path.splitext(gif_path_ou_url)[1].lower()
-                        
-                        # GIF promocional enviado como animação, GIF pós-sinal como documento
-                        with open(gif_path_ou_url, 'rb') as arquivo:
-                            if tipo_gif == "pós-sinal":
-                                # Enviar GIF pós-sinal como documento (como era originalmente)
-                                BOT2_LOGGER.info(f"Enviando como documento: {gif_path_ou_url}")
-                                bot2.send_document(
-                                    chat_id=chat_id,
-                                    document=arquivo,
-                                    visible_file_name="image.webp"
-                                )
-                            else:
-                                # Enviar outros GIFs (promocional) como animação
-                                BOT2_LOGGER.info(f"Enviando como animação/GIF: {gif_path_ou_url}")
-                                bot2.send_animation(
-                                    chat_id=chat_id,
-                                    animation=arquivo,
-                                    caption=None  # Sem legenda
-                                )
-                            
-                    BOT2_LOGGER.info(f"GIF '{tipo_gif}' enviado com sucesso para o canal {chat_id} ({idioma})")
-                    sucessos += 1
-                except Exception as e:
-                    BOT2_LOGGER.error(f"Erro ao enviar GIF '{tipo_gif}' para o canal {chat_id}: {str(e)}")
-                    BOT2_LOGGER.error(traceback.format_exc())
-                    falhas += 1
-        
-        BOT2_LOGGER.info(f"Resumo do envio de GIF '{tipo_gif}': {sucessos} sucessos, {falhas} falhas")
-        return sucessos > 0
-    except Exception as e:
-        BOT2_LOGGER.error(f"Erro geral ao enviar GIFs '{tipo_gif}': {str(e)}")
-        BOT2_LOGGER.error(traceback.format_exc())
-        return False
+# As funções enviar_mensagem e enviar_gif foram removidas por não serem mais necessárias
+# O código agora envia mensagens diretamente para o canal em português
 
 # Função que envia o sinal para todos os canais
 def enviar_sinal():
@@ -917,28 +794,33 @@ def enviar_sinal():
     
     # Registrar informações do sinal
     BOT2_LOGGER.info(f"Sinal #{contador_sinais}: {sinal['ativo']} - {sinal['direcao']}")
-    BOT2_LOGGER.info("Todos os sinais receberão a sequência especial")
+    BOT2_LOGGER.info("Enviando sinal único")
     
-    # Formatar mensagens para cada idioma
-    mensagens = {}
-    for idioma in BOT2_CANAIS_CONFIG.keys():
-        mensagens[idioma] = formatar_mensagem_sinal(sinal, idioma)
+    # Formatar mensagem apenas para português
+    mensagem = formatar_mensagem_sinal(sinal, "pt")
     
-    # Enviar o sinal
-    enviado = enviar_mensagem(mensagens)
-    
-    if enviado:
-        BOT2_LOGGER.info("Sinal enviado com sucesso")
+    # Enviar o sinal apenas para o canal em português
+    try:
+        chat_id = BOT2_CANAIS_CONFIG["pt"][0]  # Pegar apenas o primeiro canal em português
+        BOT2_LOGGER.info(f"Tentando enviar sinal para canal {chat_id}")
         
-        # GIF pós-sinal removido
+        bot2.send_message(
+            chat_id=chat_id,
+            text=mensagem,
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
         
-        # Sequência especial para todos os sinais (não apenas múltiplos de 3)
+        BOT2_LOGGER.info(f"Sinal enviado com sucesso para o canal {chat_id}")
+        
+        # Sequência especial para todos os sinais
         threading.Timer(7 * 60, lambda: iniciar_sequencia_especial(sinal)).start()
-        BOT2_LOGGER.info("Agendada sequência especial para todos os sinais")
-    else:
-        BOT2_LOGGER.error("Falha ao enviar o sinal")
-    
-    return enviado
+        BOT2_LOGGER.info("Agendada sequência especial para o sinal")
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao enviar sinal para o canal: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        return False
 
 # Função para enviar o GIF pós-sinal - removida
 def enviar_gif_pos_sinal():
@@ -962,106 +844,103 @@ def iniciar_sequencia_especial(sinal):
 
 # Função para enviar a mensagem de participação
 def enviar_mensagem_participacao():
-    """Envia a mensagem de participação para todos os canais."""
+    """Envia a mensagem de participação para o canal."""
     BOT2_LOGGER.info("Iniciando processo de envio da mensagem de participação")
     
     try:
-        # Formatar mensagens para cada idioma
-        mensagens = {}
-        for idioma in BOT2_CANAIS_CONFIG.keys():
-            try:
-                mensagens[idioma] = formatar_mensagem_participacao(idioma)
-                BOT2_LOGGER.info(f"Mensagem de participação formatada com sucesso para o idioma {idioma}")
-            except Exception as e:
-                BOT2_LOGGER.error(f"Erro ao formatar mensagem de participação para o idioma {idioma}: {str(e)}")
-                BOT2_LOGGER.error(traceback.format_exc())
+        # Formatar mensagem de participação para português
+        mensagem = formatar_mensagem_participacao("pt")
+        BOT2_LOGGER.info("Mensagem de participação formatada com sucesso")
         
-        if not mensagens:
-            BOT2_LOGGER.error("Nenhuma mensagem de participação foi formatada com sucesso")
-            return False
+        # Enviar para o canal em português
+        chat_id = BOT2_CANAIS_CONFIG["pt"][0]
+        BOT2_LOGGER.info(f"Tentando enviar mensagem de participação para canal {chat_id}")
         
-        BOT2_LOGGER.info(f"Tentando enviar mensagens de participação para {len(mensagens)} idiomas")
-        enviado = enviar_mensagem(mensagens, tipo_mensagem="participação")
+        bot2.send_message(
+            chat_id=chat_id,
+            text=mensagem,
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
         
-        if enviado:
-            BOT2_LOGGER.info("Mensagem de participação enviada com sucesso")
-            
-            # Agendar envio do GIF promocional (10 minutos depois)
-            BOT2_LOGGER.info("Agendando envio do GIF promocional para daqui a 10 minutos")
-            threading.Timer(10 * 60, enviar_gif_promocional).start()
-            BOT2_LOGGER.info("Agendado envio do GIF promocional para daqui a 10 minutos")
-        else:
-            BOT2_LOGGER.error("Falha ao enviar mensagem de participação")
+        BOT2_LOGGER.info(f"Mensagem de participação enviada com sucesso para o canal {chat_id}")
         
-        return enviado
+        # Agendar envio do GIF promocional (10 minutos depois)
+        BOT2_LOGGER.info("Agendando envio do GIF promocional para daqui a 10 minutos")
+        threading.Timer(10 * 60, enviar_gif_promocional).start()
+        BOT2_LOGGER.info("Agendado envio do GIF promocional para daqui a 10 minutos")
+        return True
+        
     except Exception as e:
-        BOT2_LOGGER.error(f"Exceção não tratada ao enviar mensagem de participação: {str(e)}")
+        BOT2_LOGGER.error(f"Exceção ao enviar mensagem de participação: {str(e)}")
         BOT2_LOGGER.error(traceback.format_exc())
         return False
 
 # Função para enviar o GIF promocional
 def enviar_gif_promocional():
-    """Envia o GIF promocional para todos os canais."""
+    """Envia o GIF promocional para o canal."""
     BOT2_LOGGER.info("Iniciando processo de envio do GIF promocional")
     
     try:
+        chat_id = BOT2_CANAIS_CONFIG["pt"][0]
+        
         # Verificar se o arquivo local existe
         if os.path.exists(GIF_PROMO_PATH):
-            enviado = enviar_gif(GIF_PROMO_PATH, "promocional")
-            BOT2_LOGGER.info(f"Usando arquivo do GitHub: {GIF_PROMO_PATH}")
+            BOT2_LOGGER.info(f"Usando arquivo: {GIF_PROMO_PATH}")
+            with open(GIF_PROMO_PATH, 'rb') as arquivo:
+                bot2.send_animation(
+                    chat_id=chat_id,
+                    animation=arquivo,
+                    caption=None
+                )
         else:
-            # Usar URL como fallback (não recomendado por causa do tamanho)
+            # Usar URL como fallback
             fallback_url = "https://media.giphy.com/media/whPiIq21hxXuJn7WVX/giphy.gif"
             BOT2_LOGGER.warning(f"Arquivo local {GIF_PROMO_PATH} não encontrado. Usando URL de fallback.")
-            enviado = enviar_gif(fallback_url, "promocional")
+            bot2.send_animation(
+                chat_id=chat_id,
+                animation=fallback_url
+            )
         
-        if enviado:
-            BOT2_LOGGER.info("GIF promocional enviado com sucesso")
-            
-            # Agendar envio da mensagem de abertura da corretora (1 minuto depois)
-            BOT2_LOGGER.info("Agendando envio da mensagem de abertura da corretora para daqui a 1 minuto")
-            threading.Timer(1 * 60, enviar_mensagem_abertura_corretora).start()
-            BOT2_LOGGER.info("Agendado envio da mensagem de abertura da corretora para daqui a 1 minuto")
-        else:
-            BOT2_LOGGER.error("Falha ao enviar GIF promocional")
+        BOT2_LOGGER.info(f"GIF promocional enviado com sucesso para o canal {chat_id}")
         
-        return enviado
+        # Agendar envio da mensagem de abertura da corretora (1 minuto depois)
+        BOT2_LOGGER.info("Agendando envio da mensagem de abertura da corretora para daqui a 1 minuto")
+        threading.Timer(1 * 60, enviar_mensagem_abertura_corretora).start()
+        BOT2_LOGGER.info("Agendado envio da mensagem de abertura da corretora para daqui a 1 minuto")
+        return True
+        
     except Exception as e:
-        BOT2_LOGGER.error(f"Exceção não tratada ao enviar GIF promocional: {str(e)}")
+        BOT2_LOGGER.error(f"Exceção ao enviar GIF promocional: {str(e)}")
         BOT2_LOGGER.error(traceback.format_exc())
         return False
 
 # Função para enviar a mensagem de abertura da corretora
 def enviar_mensagem_abertura_corretora():
-    """Envia a mensagem de abertura da corretora para todos os canais."""
+    """Envia a mensagem de abertura da corretora para o canal."""
     BOT2_LOGGER.info("Iniciando processo de envio da mensagem de abertura da corretora")
     
     try:
-        # Formatar mensagens para cada idioma
-        mensagens = {}
-        for idioma in BOT2_CANAIS_CONFIG.keys():
-            try:
-                mensagens[idioma] = formatar_mensagem_abertura_corretora(idioma)
-                BOT2_LOGGER.info(f"Mensagem de abertura da corretora formatada com sucesso para o idioma {idioma}")
-            except Exception as e:
-                BOT2_LOGGER.error(f"Erro ao formatar mensagem de abertura da corretora para o idioma {idioma}: {str(e)}")
-                BOT2_LOGGER.error(traceback.format_exc())
+        # Formatar mensagem de abertura da corretora para português
+        mensagem = formatar_mensagem_abertura_corretora("pt")
+        BOT2_LOGGER.info("Mensagem de abertura da corretora formatada com sucesso")
         
-        if not mensagens:
-            BOT2_LOGGER.error("Nenhuma mensagem de abertura da corretora foi formatada com sucesso")
-            return False
+        # Enviar para o canal em português
+        chat_id = BOT2_CANAIS_CONFIG["pt"][0]
+        BOT2_LOGGER.info(f"Tentando enviar mensagem de abertura da corretora para canal {chat_id}")
         
-        BOT2_LOGGER.info(f"Tentando enviar mensagens de abertura da corretora para {len(mensagens)} idiomas")
-        enviado = enviar_mensagem(mensagens, tipo_mensagem="abertura da corretora")
+        bot2.send_message(
+            chat_id=chat_id,
+            text=mensagem,
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
         
-        if enviado:
-            BOT2_LOGGER.info("Mensagem de abertura da corretora enviada com sucesso")
-        else:
-            BOT2_LOGGER.error("Falha ao enviar mensagem de abertura da corretora")
+        BOT2_LOGGER.info(f"Mensagem de abertura da corretora enviada com sucesso para o canal {chat_id}")
+        return True
         
-        return enviado
     except Exception as e:
-        BOT2_LOGGER.error(f"Exceção não tratada ao enviar mensagem de abertura da corretora: {str(e)}")
+        BOT2_LOGGER.error(f"Exceção ao enviar mensagem de abertura da corretora: {str(e)}")
         BOT2_LOGGER.error(traceback.format_exc())
         return False
 
