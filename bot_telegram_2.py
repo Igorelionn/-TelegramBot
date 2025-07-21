@@ -89,7 +89,7 @@ bot2 = telebot.TeleBot(BOT2_TOKEN)
 
 # Configuração dos canais para cada idioma
 BOT2_CANAIS_CONFIG = {
-    "pt": [-1002592398378]  # Canal para mensagens em português
+    "pt": [-1002716945366]  # Canal para mensagens em português
 }
 
 # Lista de IDs dos canais para facilitar iteração
