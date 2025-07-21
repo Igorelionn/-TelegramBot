@@ -1,838 +1,980 @@
-import { ArrowDownRight, ArrowUpRight, Target, Shield, TrendingUp, BarChart2, Clock, Percent, RefreshCw, Check, X, LineChart, BarChart, TrendingDown, Activity, AlertTriangle, ChevronUp, ChevronDown, BarChart4, BookOpen, ChevronRight, Loader2, ChevronsUp, Tag } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchTradingSignals, fetchCorrelationData, fetchOnChainMetrics, fetchOrderBookData, tradingSignalService } from "@/services";
-import { getLatestPrices } from "@/services/getSimulatedPrices";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { useNavigate } from "react-router-dom";
-import { SignalType, SignalStrength } from "@/services/types";
-import type { TradingSignal as ServiceTradingSignal } from "@/services/types";
-import type { TradingSignal } from "@/types/tradingSignals";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
-import { useEffect, useState, useCallback, useRef } from "react";
-import { notificationService } from "@/services/notificationService";
-import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { TimeZoneSelector } from "@/components/dashboard/TimeZoneSelector";
-import { useTimeZone } from "@/contexts/TimeZoneContext";
-import { motion, AnimatePresence } from "framer-motion";
+# -*- coding: utf-8 -*-
+"""
+Bot de envio de sinais para canais do Telegram
+Por: Trending Brasil
+Versão: 3.0
+"""
 
-// Tempo de expiração em minutos para todos os sinais
-const SIGNAL_EXPIRY_TIME = 5; 
+# Importar bibliotecas necessárias
+import traceback
+import socket
+import pytz
+from datetime import datetime, timedelta, time as dt_time
+import json
+import random
+import time
+import schedule
+import requests
+import logging
+import sys
+import os
+from functools import lru_cache
+import telebot
+import threading
+from datetime import time as datetime_time
+import uuid
+import copy
+from pathlib import Path
 
-// Tempo entre o horário de Reentrada 2 e o próximo sinal
-const TIME_BETWEEN_SIGNALS = 10;
+# Configuração do logger
+BOT2_LOGGER = logging.getLogger("bot2")
+BOT2_LOGGER.setLevel(logging.INFO)
+bot2_formatter = logging.Formatter(
+    "%(asctime)s - BOT2 - %(levelname)s - %(message)s")
 
-// Tempo de espera antes de processar automaticamente um sinal (10 minutos em ms)
-const AUTO_COMPLETE_TIMEOUT = 10 * 60 * 1000;
+# Evitar duplicação de handlers
+if not BOT2_LOGGER.handlers:
+    # Handler para arquivo (pode usar UTF-8)
+    bot2_file_handler = logging.FileHandler("bot_telegram_bot2_logs.log", encoding='utf-8')
+    bot2_file_handler.setFormatter(bot2_formatter)
+    BOT2_LOGGER.addHandler(bot2_file_handler)
 
-// Modo de teste para processamento rápido (30 segundos)
-const TEST_MODE = true;
-const TEST_TIMEOUT = 30 * 1000;
-
-// Obter o tempo de expiração dependendo do modo
-const getExpirationTimeout = () => {
-  return TEST_MODE ? TEST_TIMEOUT : AUTO_COMPLETE_TIMEOUT;
-};
-
-// Variável para controlar a contagem de sinais processados (para gerar 1 perda a cada 10 ganhos)
-let signalProcessCount = 0;
-
-// Função auxiliar para encontrar o próximo horário válido
-const findNextValidEntryTime = (currentTime: string, existingTimes: string[]): string => {
-  const [hoursStr, minutesStr] = currentTime.split(':');
-  let hours = parseInt(hoursStr);
-  let minutes = parseInt(minutesStr);
-  
-  // Tentar horários até encontrar um válido
-  for (let attempt = 0; attempt < 24; attempt++) {
-    // Avançar 10 minutos, mantendo o último dígito em 3 ou 7
-    minutes += 10;
-    if (minutes >= 60) {
-      hours = (hours + 1) % 24;
-      minutes = minutes % 60;
-    }
+    # Handler para console (sem emojis para evitar problemas de codificação)
+    class NoEmojiFormatter(logging.Formatter):
+        """Formatter que remove emojis e outros caracteres Unicode incompatíveis com Windows console"""
+        def format(self, record):
+            # Primeiro obter a mensagem formatada normalmente
+            msg = super().format(record)
+            # Substitua emojis comuns por equivalentes ASCII
+            emoji_map = {
+                '🚀': '[ROCKET]',
+                '🔧': '[CONFIG]',
+                '✅': '[OK]',
+                '❌': '[ERRO]',
+                '⚠️': '[AVISO]',
+                '🔄': '[RELOAD]',
+                '📅': '[DATA]',
+                '🔍': '[BUSCA]',
+                '📊': '[STATS]',
+                '📋': '[LISTA]',
+                '🌐': '[GLOBAL]',
+                '📣': '[ANUNCIO]',
+                '🎬': '[VIDEO]',
+                '⏱️': '[TEMPO]',
+                '⏳': '[ESPERA]',
+                '🟢': '[VERDE]',
+                '🔒': '[LOCK]',
+                '🔓': '[UNLOCK]',
+                '📤': '[ENVIO]',
+                '⚙️': '[ENGRENAGEM]',
+                '🛑': '[PARAR]',
+                '🆔': '[ID]',
+            }
+            
+            for emoji, replacement in emoji_map.items():
+                msg = msg.replace(emoji, replacement)
+                
+            return msg
     
-    // Ajustar último dígito para 3 ou 7
-    const lastDigit = minutes % 10;
-    if (lastDigit !== 3 && lastDigit !== 7) {
-      minutes = Math.floor(minutes / 10) * 10 + (Math.random() < 0.5 ? 3 : 7);
-    }
-    
-    // Formatar o novo horário
-    const newTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    
-    // Verificar se o novo horário tem pelo menos 10 minutos de diferença de todos os existentes
-    let isValid = true;
-    for (const existingTime of existingTimes) {
-      if (getTimeDifferenceInMinutes(existingTime, newTime) < 10) {
-        isValid = false;
-        break;
-      }
-    }
-    
-    if (isValid) {
-      return newTime;
-    }
-  }
-  
-  // Fallback: retornar tempo original se não encontrar um válido após várias tentativas
-  return currentTime;
-};
+    console_formatter = NoEmojiFormatter("%(asctime)s - BOT2 - %(levelname)s - %(message)s")
+    bot2_console_handler = logging.StreamHandler()
+    bot2_console_handler.setFormatter(console_formatter)
+    BOT2_LOGGER.addHandler(bot2_console_handler)
 
-// Função para calcular a diferença em minutos entre dois horários no formato "HH:MM"
-const getTimeDifferenceInMinutes = (time1: string, time2: string): number => {
-  const [hours1, minutes1] = time1.split(':').map(Number);
-  const [hours2, minutes2] = time2.split(':').map(Number);
-  
-  const totalMinutes1 = hours1 * 60 + minutes1;
-  const totalMinutes2 = hours2 * 60 + minutes2;
-  
-  return Math.abs(totalMinutes1 - totalMinutes2);
-};
+# Credenciais Telegram
+BOT2_TOKEN = "7997585882:AAFDyG-BYskj1gyAbh17X5jd6DDClXdluww"
 
-// Função para calcular o próximo horário baseado nas regras definidas
-const calculateNextTime = (baseTime: string, addMinutes: number): string => {
-  const [hoursStr, minutesStr] = baseTime.split(':');
-  let hours = parseInt(hoursStr);
-  let minutes = parseInt(minutesStr) + addMinutes;
-  
-  // Ajustar para o próximo dia se necessário
-  if (minutes >= 60) {
-    hours = (hours + Math.floor(minutes / 60)) % 24;
-    minutes = minutes % 60;
-  }
-  
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-};
+# Inicialização do bot
+bot2 = telebot.TeleBot(BOT2_TOKEN)
 
-// Tempo de cache em milissegundos (10 minutos)
-const CACHE_DURATION = 10 * 60 * 1000;
-
-// Chave para armazenar sinais no localStorage
-const SIGNALS_CACHE_KEY = 'trending_signals_cache';
-
-// Chave para armazenar todos os sinais do dia no localStorage
-const DAILY_SIGNALS_CACHE_KEY = 'trending_daily_signals_cache';
-
-// Cache global para evitar regeneração de sinais entre trocas de aba
-let globalSignalsCache = null;
-
-// Cache global para sinais do dia todo
-let globalDailySignalsCache = null;
-
-// Função auxiliar para obter o slot de tempo atual (a cada 10 min)
-const getInitialTimeSlot = (): string => {
-  const now = new Date();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const minuteSlot = Math.floor(minutes / 10);
-  return `${hours.toString().padStart(2, '0')}:${minuteSlot}`;
-};
-
-// Verificar se temos sinais do dia no localStorage
-const checkDailySignalsCache = () => {
-  // Verificar primeiro o cache global
-  if (globalDailySignalsCache && globalDailySignalsCache.timestamp) {
-    const now = Date.now();
-    // Verificar se o cache ainda é do mesmo dia
-    const cacheDate = new Date(globalDailySignalsCache.timestamp);
-    const currentDate = new Date();
-    
-    if (cacheDate.toDateString() === currentDate.toDateString()) {
-      console.log('Usando sinais do dia do cache global');
-      return globalDailySignalsCache;
-    }
-  }
-
-  try {
-    const cachedData = localStorage.getItem(DAILY_SIGNALS_CACHE_KEY);
-    if (cachedData) {
-      const parsedData = JSON.parse(cachedData);
-      const now = Date.now();
-      
-      // Verificar se o cache é do dia atual
-      const cacheDate = new Date(parsedData.timestamp);
-      const currentDate = new Date();
-      
-      if (cacheDate.toDateString() === currentDate.toDateString()) {
-        console.log('Usando sinais do dia do localStorage');
-        // Atualizar o cache global
-        globalDailySignalsCache = {
-          valid: true,
-          data: parsedData.data,
-          timestamp: parsedData.timestamp,
-          timeSlots: parsedData.timeSlots
-        };
-        return globalDailySignalsCache;
-      }
-    }
-  } catch (error) {
-    console.error('Erro ao verificar sinais do dia no localStorage:', error);
-  }
-  return { valid: false, data: null, timestamp: 0, timeSlots: [] };
-};
-
-// Verificar se temos sinais armazenados no localStorage
-const checkLocalStorageSignals = () => {
-  // Verificar primeiro o cache global
-  if (globalSignalsCache && globalSignalsCache.timestamp) {
-    const now = Date.now();
-    if ((now - globalSignalsCache.timestamp) <= CACHE_DURATION) {
-      console.log('Usando sinais do cache global - evitando regeneração em troca de aba');
-      return globalSignalsCache;
-    }
-  }
-
-  try {
-    const cachedData = localStorage.getItem(SIGNALS_CACHE_KEY);
-    if (cachedData) {
-      const parsedData = JSON.parse(cachedData);
-      const now = Date.now();
-      
-      // Garantir que usamos os sinais do slot atual, mesmo que tenham sido
-      // gerados anteriormente na mesma sessão de navegação
-      const currentTimeSlot = getInitialTimeSlot();
-      if (parsedData.timeSlot === currentTimeSlot) {
-        console.log(`Usando sinais do localStorage para o slot ${currentTimeSlot}`);
-        // Atualizar o cache global
-        globalSignalsCache = {
-          valid: true,
-          data: parsedData.data,
-          timestamp: parsedData.timestamp,
-          timeSlot: parsedData.timeSlot
-        };
-        return globalSignalsCache;
-      }
-    }
-  } catch (error) {
-    console.error('Erro ao verificar sinais no localStorage:', error);
-  }
-  return { valid: false, data: null, timestamp: 0, timeSlot: '' };
-};
-
-// Salvar cache no localStorage e no cache global
-const saveSignalsToLocalStorage = (signals, timestamp, timeSlot) => {
-  try {
-    const dataToSave = {
-      data: signals,
-      timestamp,
-      timeSlot
-    };
-    
-    localStorage.setItem(SIGNALS_CACHE_KEY, JSON.stringify(dataToSave));
-    
-    // Atualizar o cache global
-    globalSignalsCache = {
-      valid: true,
-      data: signals,
-      timestamp,
-      timeSlot
-    };
-    
-    console.log('Sinais salvos no localStorage e cache global');
-  } catch (error) {
-    console.error('Erro ao salvar sinais no localStorage:', error);
-  }
-};
-
-// Salvar cache dos sinais diários no localStorage e no cache global
-const saveDailySignalsToLocalStorage = (signals, timeSlots) => {
-  try {
-    const dataToSave = {
-      data: signals,
-      timestamp: Date.now(),
-      timeSlots
-    };
-    
-    localStorage.setItem(DAILY_SIGNALS_CACHE_KEY, JSON.stringify(dataToSave));
-    
-    // Atualizar o cache global
-    globalDailySignalsCache = {
-      valid: true,
-      data: signals,
-      timestamp: dataToSave.timestamp,
-      timeSlots
-    };
-    
-    console.log('Sinais do dia salvos no localStorage e cache global');
-  } catch (error) {
-    console.error('Erro ao salvar sinais do dia no localStorage:', error);
-  }
-};
-
-const isAssetAlreadyUsedInGroup = (signalGroup: EnrichedSignal[], asset: string): boolean => {
-  return signalGroup.some(signal => signal.symbol === asset);
-};
-
-// Função para gerar a sequência de sinais para o dia todo, começando à meia-noite
-const generateDailySignals = async () => {
-  console.log('Gerando sinais para o dia todo...');
-  const dailySignals = [];
-  const timeSlots = [];
-  
-  // Definir a hora inicial como meia-noite (00:03)
-  let currentEntryTime = "00:03";
-  
-  // Gerar sinais para o dia todo
-  while (true) {
-    // Calcular os horários para este sinal
-    const entryTime = currentEntryTime;
-    const expiryTime = calculateNextTime(entryTime, SIGNAL_EXPIRY_TIME);
-    const gale1Time = expiryTime; // Reentrada 1 é igual ao horário de expiração
-    const gale2Time = calculateNextTime(gale1Time, SIGNAL_EXPIRY_TIME); // Reentrada 2 é Reentrada 1 + tempo de expiração
-    
-    // Adicionar este sinal ao conjunto
-    const signal = createSignalObject({
-      entry_time: entryTime,
-      expiry_time_str: expiryTime,
-      gale1_time: gale1Time,
-      gale2_time: gale2Time
-    });
-    
-    dailySignals.push(signal);
-    timeSlots.push(entryTime);
-    
-    // Definir o horário de entrada do próximo sinal (10 minutos após a Reentrada 2)
-    currentEntryTime = calculateNextTime(gale2Time, TIME_BETWEEN_SIGNALS);
-    
-    // Verificar se já passamos da meia-noite do próximo dia
-    const [hours] = currentEntryTime.split(':').map(Number);
-    if (hours === 0 && dailySignals.length > 1) {
-      // Já chegamos ao próximo dia, então paramos
-      break;
-    }
-  }
-  
-  console.log(`Gerados ${dailySignals.length} sinais para o dia`);
-  
-  // Salvar os sinais gerados
-  saveDailySignalsToLocalStorage(dailySignals, timeSlots);
-  
-  return {
-    signals: dailySignals,
-    timeSlots
-  };
-};
-
-// Função para criar um objeto de sinal com os horários especificados
-const createSignalObject = ({ entry_time, expiry_time_str, gale1_time, gale2_time }) => {
-  // Lista de ativos disponíveis
-  const availableAssets = ["BTCUSD", "ETHUSD", "XRPUSD", "ADAUSD", "SOLUSD", "AVAXUSD", "MATICUSD", "LINKUSD", "DOTUSD", "DOGEUSD"];
-  
-  // Selecionar um ativo aleatório
-  const assetIndex = Math.floor(Math.random() * availableAssets.length);
-  const symbol = availableAssets[assetIndex];
-  
-  // Determinar aleatoriamente se é compra ou venda com tipo explícito
-  const signalType: 'BUY' | 'SELL' = Math.random() > 0.5 ? 'BUY' : 'SELL';
-  
-  // Determinar a força do sinal com tipo correto
-  const strengthValue: SignalStrength = Math.random() > 0.7 
-    ? SignalStrength.STRONG 
-    : (Math.random() > 0.4 ? SignalStrength.MODERATE : SignalStrength.WEAK);
-  
-  // Gerar os demais dados do sinal
-  return {
-    id: `signal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    symbol,
-    type: SignalType.TECHNICAL,
-    signal: signalType,
-    reason: "Análise técnica baseada em padrões de preço e volume",
-    strength: strengthValue,
-    timestamp: new Date().toISOString(),
-    price: signalType === 'BUY' ? 100 + Math.random() * 10 : 100 - Math.random() * 10,
-    entry_price: 100,
-    stop_loss: signalType === 'BUY' ? 95 : 105,
-    target_price: signalType === 'BUY' ? 110 : 90,
-    success_rate: 70 + Math.random() * 20,
-    timeframe: "5m",
-    expiry: `${SIGNAL_EXPIRY_TIME}m`,
-    risk_reward: "1:2",
-    status: 'active' as const,
-    qualityScore: 70 + Math.random() * 30,
-    entry_time,
-    expiry_time_str,
-    gale1_time,
-    gale2_time,
-    exchange: "Binance",
-    categoria: "Tendência",
-    entryTimestamp: 0, // Será definido quando o sinal estiver ativo
-    processed: false
-  };
-};
-
-// Nossa interface EnrichedSignal personalizada
-interface EnrichedSignal {
-  id: string;
-  symbol: string;
-  type: SignalType;
-  signal: 'BUY' | 'SELL';
-  reason: string;
-  strength: SignalStrength;
-  timestamp: string;
-  price: number;
-  entry_price: number;
-  stop_loss: number;
-  target_price: number;
-  success_rate: number;
-  timeframe: string;
-  expiry: string;
-  risk_reward: string;
-  status: 'active' | 'completed' | 'cancelled';
-  qualityScore: number;
-  entry_time?: string;
-  expiry_time_str?: string;
-  gale1_time?: string;
-  gale2_time?: string;
-  exchange?: string;
-  categoria?: string;
-  newsAnalysis?: any;
-  correlationAnalysis?: any;
-  onChainMetrics?: any;
-  orderBookAnalysis?: any;
-  entryTimestamp?: number; // Timestamp para cálculo de tempo decorrido
-  processed?: boolean; // Indica se o sinal já foi processado (ganho/perda)
-  result?: 'success' | 'failure'; // Resultado do sinal após processamento
-  isAnimating?: boolean; // Indica se o sinal está em animação
-  [key: string]: any; // Permite campos adicionais
+# Configuração dos canais para cada idioma
+BOT2_CANAIS_CONFIG = {
+    "pt": [-1002592398378]  # Canal para mensagens em português
 }
 
-// Obter os sinais atuais com base no horário atual
-const getCurrentTimeSlotSignals = (signalsArray: any[], timeSlots: string[]) => {
-  // Obter o horário atual
-  const now = new Date();
-  const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-  
-  // Encontrar o slot de tempo mais próximo que já passou
-  let closestPastTimeSlot = null;
-  let closestFutureTimeSlot = null;
-  
-  for (const timeSlot of timeSlots) {
-    // Verificar se este horário já passou
-    if (isTimeEarlierOrEqual(timeSlot, currentTimeStr)) {
-      // Se ainda não temos um slot mais próximo ou este é mais recente
-      if (!closestPastTimeSlot || isTimeEarlierOrEqual(closestPastTimeSlot, timeSlot)) {
-        closestPastTimeSlot = timeSlot;
-      }
-    } else {
-      // Este é um slot futuro
-      if (!closestFutureTimeSlot || isTimeEarlierOrEqual(timeSlot, closestFutureTimeSlot)) {
-        closestFutureTimeSlot = timeSlot;
-      }
-    }
-  }
-  
-  // Se não encontramos um slot passado, usar o último do dia anterior
-  if (!closestPastTimeSlot && timeSlots.length > 0) {
-    closestPastTimeSlot = timeSlots[timeSlots.length - 1];
-  }
-  
-  console.log(`Horário atual: ${currentTimeStr}, Slot mais próximo: ${closestPastTimeSlot}`);
-  
-  // Retornar os sinais para este slot de tempo
-  if (closestPastTimeSlot) {
-    // Começar a partir do sinal encontrado e pegar os 3 próximos
-    const startIndex = timeSlots.indexOf(closestPastTimeSlot);
-    let signalsToShow = [];
-    
-    // Obter o primeiro sinal do slot mais próximo
-    if (startIndex >= 0 && startIndex < signalsArray.length) {
-      signalsToShow.push(signalsArray[startIndex]);
-    }
-    
-    // Obter os próximos dois sinais, considerando a rotação ao final da lista
-    for (let i = 1; i <= 2; i++) {
-      const nextIndex = (startIndex + i) % signalsArray.length;
-      if (nextIndex >= 0 && nextIndex < signalsArray.length) {
-        signalsToShow.push(signalsArray[nextIndex]);
-      }
-    }
-    
-    // Adicionar mais sinais se não tivermos 3 ainda
-    while (signalsToShow.length < 3 && signalsArray.length > 0) {
-      signalsToShow.push({...signalsArray[0]});
-    }
-    
-    return signalsToShow.slice(0, 3);
-  }
-  
-  // Fallback: criar 3 sinais genéricos se não encontrarmos nada
-  return [
-    createSignalObject({
-      entry_time: currentTimeStr,
-      expiry_time_str: calculateNextTime(currentTimeStr, SIGNAL_EXPIRY_TIME),
-      gale1_time: calculateNextTime(currentTimeStr, SIGNAL_EXPIRY_TIME),
-      gale2_time: calculateNextTime(currentTimeStr, SIGNAL_EXPIRY_TIME * 2)
-    }),
-    createSignalObject({
-      entry_time: calculateNextTime(currentTimeStr, 10),
-      expiry_time_str: calculateNextTime(calculateNextTime(currentTimeStr, 10), SIGNAL_EXPIRY_TIME),
-      gale1_time: calculateNextTime(calculateNextTime(currentTimeStr, 10), SIGNAL_EXPIRY_TIME),
-      gale2_time: calculateNextTime(calculateNextTime(currentTimeStr, 10), SIGNAL_EXPIRY_TIME * 2)
-    }),
-    createSignalObject({
-      entry_time: calculateNextTime(currentTimeStr, 20),
-      expiry_time_str: calculateNextTime(calculateNextTime(currentTimeStr, 20), SIGNAL_EXPIRY_TIME),
-      gale1_time: calculateNextTime(calculateNextTime(currentTimeStr, 20), SIGNAL_EXPIRY_TIME),
-      gale2_time: calculateNextTime(calculateNextTime(currentTimeStr, 20), SIGNAL_EXPIRY_TIME * 2)
-    })
-  ];
-};
+# Lista de IDs dos canais para facilitar iteração
+BOT2_CHAT_IDS = []
+for idioma, chats in BOT2_CANAIS_CONFIG.items():
+    BOT2_CHAT_IDS.extend(chats)
 
-// Função para verificar se um horário é anterior ou igual a outro
-const isTimeEarlierOrEqual = (time1, time2) => {
-  const [hours1, minutes1] = time1.split(':').map(Number);
-  const [hours2, minutes2] = time2.split(':').map(Number);
-  
-  if (hours1 < hours2) return true;
-  if (hours1 > hours2) return false;
-  return minutes1 <= minutes2;
-};
+# Links para cada idioma
+LINKS_CORRETORA = {
+    "pt": "https://www.homebroker.com/ref/cDOWMjSI/"
+}
 
-const SignalsCard = () => {
-  const { t, language } = useLanguage();
-  const { timeZone } = useTimeZone();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  
-  // Estado para os sinais atuais na interface
-  const [signals, setSignals] = useState<EnrichedSignal[]>([]);
-  
-  // Estado para os sinais do dia inteiro
-  const [dailySignals, setDailySignals] = useState<EnrichedSignal[]>([]);
-  
-  // Estado para os slots de tempo do dia
-  const [timeSlots, setTimeSlots] = useState<string[]>([]);
-  
-  // Estado para controlar a animação dos sinais
-  const [animatingSignalIndex, setAnimatingSignalIndex] = useState<number | null>(null);
-  
-  // Referência para o contador de tempo
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Método para inicializar os sinais
-  useEffect(() => {
-    // Verificar se já temos sinais gerados para o dia
-    const cachedDailySignals = checkDailySignalsCache();
-    
-    if (cachedDailySignals.valid && cachedDailySignals.data) {
-      console.log('Usando sinais do dia do cache');
-      setDailySignals(cachedDailySignals.data);
-      setTimeSlots(cachedDailySignals.timeSlots);
-      
-      // Obter os sinais atuais com base no horário
-      const currentSignals = getCurrentTimeSlotSignals(cachedDailySignals.data, cachedDailySignals.timeSlots);
-      setSignals(currentSignals);
-    } else {
-      console.log('Gerando novos sinais para o dia');
-      // Gerar novos sinais para o dia todo
-      generateDailySignals().then(({ signals: generatedSignals, timeSlots: generatedTimeSlots }) => {
-        setDailySignals(generatedSignals);
-        setTimeSlots(generatedTimeSlots);
-        
-        // Obter os sinais atuais com base no horário
-        const currentSignals = getCurrentTimeSlotSignals(generatedSignals, generatedTimeSlots);
-        setSignals(currentSignals);
-      });
-    }
-    
-    // Iniciar a verificação periódica dos sinais
-    const intervalId = setInterval(() => {
-      checkSignalProgression();
-    }, 1000);
-    
-    return () => clearInterval(intervalId);
-  }, []);
-  
-  // Método para verificar a progressão dos sinais
-  const checkSignalProgression = () => {
-    const now = new Date();
-    const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-    
-    // Verificar se algum sinal completou sua Reentrada 2
-    const updatedSignals = [...signals];
-    let needsUpdate = false;
-    
-    for (let i = 0; i < updatedSignals.length; i++) {
-      const signal = updatedSignals[i];
-      
-      // Verificar se este sinal já completou a Reentrada 2 e passou 1 minuto
-      if (!signal.processed && signal.gale2_time) {
-        const gale2Time = signal.gale2_time;
-        const animationTime = calculateNextTime(gale2Time, 1); // 1 minuto após Reentrada 2
-        const completionTime = calculateNextTime(animationTime, 5); // 5 minutos após o início da animação
-        
-        // Verificar se é hora de iniciar a animação
-        if (isCurrentTimeAfter(currentTimeStr, animationTime) && !signal.isAnimating) {
-          console.log(`Iniciando animação para o sinal ${i}`);
-          updatedSignals[i] = {
-            ...signal,
-            isAnimating: true
-          };
-          setAnimatingSignalIndex(i);
-          needsUpdate = true;
-        }
-        
-        // Verificar se a animação terminou e é hora de processar o resultado
-        if (signal.isAnimating && isCurrentTimeAfter(currentTimeStr, completionTime) && !signal.processed) {
-          console.log(`Processando resultado para o sinal ${i}`);
-          
-          // Determinar se é ganho ou perda (9 ganhos para 1 perda)
-          signalProcessCount++;
-          const isSuccess = signalProcessCount % 11 !== 0; // 10 ganhos para 1 perda
-          
-          updatedSignals[i] = {
-            ...signal,
-            processed: true,
-            result: isSuccess ? 'success' : 'failure'
-          };
-          needsUpdate = true;
-          
-          // Após processar o resultado, agendar a rotação dos sinais
-          setTimeout(() => {
-            rotateSignals();
-          }, 3000); // Esperar 3 segundos antes de rotacionar
-        }
-      }
-    }
-    
-    if (needsUpdate) {
-      setSignals(updatedSignals);
-    }
-  };
-  
-  // Função para verificar se o horário atual é posterior a um horário específico
-  const isCurrentTimeAfter = (currentTime, targetTime) => {
-    // Extrair horas, minutos e segundos dos horários
-    const [currentHours, currentMinutes, currentSeconds] = currentTime.split(':').map(Number);
-    const [targetHours, targetMinutes] = targetTime.split(':').map(Number);
-    
-    // Converter para segundos totais para comparação
-    const currentTotalSeconds = currentHours * 3600 + currentMinutes * 60 + (currentSeconds || 0);
-    const targetTotalSeconds = targetHours * 3600 + targetMinutes * 60;
-    
-    return currentTotalSeconds > targetTotalSeconds;
-  };
-  
-  // Método para rotacionar os sinais após um resultado
-  const rotateSignals = () => {
-    // Remover o primeiro sinal e mover os outros para cima
-    const newSignals = [...signals.slice(1)];
-    
-    // Encontrar o próximo sinal a ser adicionado
-    if (dailySignals.length > 0 && timeSlots.length > 0) {
-      // Encontrar o horário de entrada do último sinal visível
-      const lastSignal = newSignals[newSignals.length - 1];
-      const nextEntryTime = calculateNextTime(lastSignal.gale2_time, TIME_BETWEEN_SIGNALS);
-      
-      // Encontrar um sinal que tenha esse horário de entrada no conjunto de sinais diários
-      const nextSignalIndex = dailySignals.findIndex(s => s.entry_time === nextEntryTime);
-      
-      if (nextSignalIndex >= 0) {
-        // Usar o sinal encontrado
-        newSignals.push({...dailySignals[nextSignalIndex]});
-      } else {
-        // Criar um novo sinal com o horário calculado
-        newSignals.push(createSignalObject({
-          entry_time: nextEntryTime,
-          expiry_time_str: calculateNextTime(nextEntryTime, SIGNAL_EXPIRY_TIME),
-          gale1_time: calculateNextTime(nextEntryTime, SIGNAL_EXPIRY_TIME),
-          gale2_time: calculateNextTime(nextEntryTime, SIGNAL_EXPIRY_TIME * 2)
-        }));
-      }
-    }
-    
-    // Resetar animação
-    setAnimatingSignalIndex(null);
-    
-    // Atualizar sinais
-    setSignals(newSignals);
-  };
-  
-  // No componente de renderização, adicionar uma classe especial para sinais em animação
-  const getSignalCardClass = (signal: EnrichedSignal, index: number) => {
-    let className = "bg-card rounded-lg p-4 transition-all duration-300 relative overflow-hidden";
-    
-    if (signal.processed && signal.result) {
-      className += signal.result === 'success' 
-        ? " signal-completed-win" 
-        : " signal-completed-loss";
-    } else if (index === animatingSignalIndex) {
-      className += " animate-pulse border border-primary/50";
-    } else {
-      className += " border border-border/40 hover:border-border/70";
-    }
-    
-    return className;
-  };
-  
-  // Renderização do sinal com animação
-  const renderSignalResult = (signal: EnrichedSignal) => {
-    if (!signal.processed || !signal.result) return null;
-    
-    return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-10">
-        <div className={`result-icon ${signal.result === 'success' ? 'win-icon' : 'loss-icon'}`}>
-          {signal.result === 'success' ? (
-            <Check className="h-8 w-8 text-green-500" />
-          ) : (
-            <X className="h-8 w-8 text-red-500" />
-          )}
-        </div>
-        <div className="result-text">
-          {signal.result === 'success' ? (
-            <span className="text-green-500">WIN</span>
-          ) : (
-            <span className="text-red-500">LOSS</span>
-          )}
-        </div>
-      </div>
-    );
-  };
-  
-  // Ir para a página de sinais quando clicar em "Ver mais"
-  const handleSeeMore = () => {
-    navigate('/signals');
-  };
-  
-  // Renderizar temporizador para o sinal
-  const renderTimer = (signal: EnrichedSignal) => {
-    if (signal.processed) return null;
-    
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentTimeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
-    
-    let timerLabel = "";
-    let targetTime = "";
-    
-    // Definir o texto e o horário alvo com base no estado atual do sinal
-    if (signal.entry_time && isTimeEarlierOrEqual(currentTimeStr, signal.entry_time)) {
-      timerLabel = t("Entrada em");
-      targetTime = signal.entry_time;
-    } else if (signal.expiry_time_str && isTimeEarlierOrEqual(currentTimeStr, signal.expiry_time_str)) {
-      timerLabel = t("Expiração em");
-      targetTime = signal.expiry_time_str;
-    } else if (signal.gale1_time && isTimeEarlierOrEqual(currentTimeStr, signal.gale1_time)) {
-      timerLabel = t("Reentrada 1 em");
-      targetTime = signal.gale1_time;
-    } else if (signal.gale2_time && isTimeEarlierOrEqual(currentTimeStr, signal.gale2_time)) {
-      timerLabel = t("Reentrada 2 em");
-      targetTime = signal.gale2_time;
-    } else {
-      timerLabel = t("Processando");
-      return (
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-          <RefreshCw className="w-3 h-3 animate-spin" />
-          <span>{timerLabel}...</span>
-        </div>
-      );
-    }
-    
-    // Calcular a diferença de tempo
-    const [targetHour, targetMinute] = targetTime.split(":").map(Number);
-    const targetDate = new Date();
-    targetDate.setHours(targetHour, targetMinute, 0, 0);
-    
-    const timeDiffMs = targetDate.getTime() - now.getTime();
-    
-    // Se já passou o horário, não mostrar o timer
-    if (timeDiffMs <= 0) return null;
-    
-    // Converter para minutos e segundos
-    const minutes = Math.floor(timeDiffMs / 60000);
-    const seconds = Math.floor((timeDiffMs % 60000) / 1000);
-    
-    return (
-      <div className="flex items-center gap-1.5 text-xs text-gray-400">
-        <Clock className="w-3 h-3" />
-        <span>{timerLabel}: {minutes}m {seconds}s</span>
-      </div>
-    );
-  };
-  
-  // Renderizar o componente completo
-  return (
-    <Card className="h-full">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle>
-            {t("Sinais de Trading")}
-          </CardTitle>
-          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={handleSeeMore}>
-            {t("Ver mais")}
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-4">
-        <div className="space-y-3">
-          {signals.length > 0 ? (
-            signals.map((signal, index) => (
-              <div key={signal.id} className={getSignalCardClass(signal, index)}>
-                {renderSignalResult(signal)}
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="font-semibold">{signal.symbol}</span>
-                      <Badge variant={signal.signal === 'BUY' ? 'secondary' : 'destructive'} className="ml-2">
-                        {signal.signal === 'BUY' ? t('COMPRA') : t('VENDA')}
-                      </Badge>
-                    </div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {t("Entrada")}: <span className="font-medium">{signal.entry_time}</span>
-                    </div>
-                    <div className="flex flex-col mt-1 gap-0.5">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        <span>{t("Expiração")}: {signal.expiry_time_str} ({signal.timeframe})</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        <span>{t("Reentrada 1")}: {signal.gale1_time}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        <span>{t("Reentrada 2")}: {signal.gale2_time}</span>
-                      </div>
-                      {renderTimer(signal)}
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <div className="flex items-center gap-1">
-                      {signal.signal === 'BUY' ? (
-                        <ArrowUpRight className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <ArrowDownRight className="h-4 w-4 text-red-500" />
-                      )}
-                      <span className={signal.signal === 'BUY' ? "text-green-500" : "text-red-500"}>
-                        {signal.signal === 'BUY' ? '+' : '-'}{Math.floor(Math.random() * 2) + 1}.{Math.floor(Math.random() * 100).toString().padStart(2, '0')}%
-                      </span>
-                    </div>
-                    <div className="mt-1 text-xs text-muted-foreground text-right">
-                      {t("Taxa de sucesso")}: {signal.success_rate.toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-4 text-center">
-              <Loader2 className="w-8 h-8 mx-auto animate-spin text-primary/50" />
-              <p className="mt-2 text-sm text-muted-foreground">{t("Carregando sinais...")}</p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
+# URLs dos vídeos para cada idioma
+LINKS_VIDEO = {
+    "pt": "https://t.me/trendingbrazil/215"
+}
 
-export default SignalsCard;
+# URLs diretas para GIFs
+# GIF pós-sinal removido
+# Atualizado para usar o arquivo do GitHub
+GIF_PROMO_PATH = "videos/promo/siren-lights (2).mp4"  # Arquivo do GitHub
+
+"""
+INSTRUÇÕES PARA OTIMIZAR GIFs:
+1. Baixe o GIF original do Giphy
+2. Use um conversor online como ezgif.com para:
+   - Redimensionar: largura máxima de 300-400px 
+   - Otimizar: reduzir qualidade para 70-80%
+   - Converter para formato WebP ou MP4 (mais leve que GIF)
+3. Salve o arquivo otimizado em:
+   - videos/promo/siren-lights (2).mp4 (para o promocional)
+4. Tamanho máximo recomendado: 1MB para melhor compatibilidade com celulares
+"""
+
+# Horários de funcionamento dos ativos
+HORARIOS_PADRAO = {
+    "BTC_USD_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "ETH_USD_(OTC)": {
+        "Monday": ["00:00-19:45", "20:15-23:59"],
+        "Tuesday": ["00:00-19:45", "20:15-23:59"],
+        "Wednesday": ["00:00-19:45", "20:15-23:59"],
+        "Thursday": ["00:00-19:45", "20:15-23:59"],
+        "Friday": ["00:00-19:45", "20:15-23:59"],
+        "Saturday": ["00:00-19:45", "20:15-23:59"],
+        "Sunday": ["00:00-19:45", "20:15-23:59"],
+    },
+    "EUR_JPY_(OTC)": {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-01:00", "01:15-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"],
+    },
+    "1000Sats_(OTC)": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+    },
+    "Pepe_(OTC)": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+    },
+    "US_500_(OTC)": {
+        "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+    },
+    "Gold_Silver_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "Worldcoin_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "USD_THB_(OTC)": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+    },
+    "CHF_JPY_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "GBP_AUD_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "GBP_CHF": {
+        "Monday": ["00:00-16:00"],
+        "Tuesday": ["00:00-16:00"],
+        "Wednesday": ["00:00-16:00"],
+        "Thursday": ["00:00-16:00"],
+        "Friday": ["00:00-14:00"],
+        "Saturday": [],
+        "Sunday": [],
+    },
+    "GBP_CAD_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "AUD_CHF": {
+        "Monday": ["00:00-16:00"],
+        "Tuesday": ["00:00-16:00"],
+        "Wednesday": ["00:00-16:00"],
+        "Thursday": ["00:00-16:00"],
+        "Friday": ["00:00-14:00"],
+        "Saturday": [],
+        "Sunday": [],
+    },
+    "GER_30_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "AUD_CHF_(OTC)": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+    },
+    "EUR_AUD": {
+        "Monday": ["00:00-16:00"],
+        "Tuesday": ["00:00-16:00"],
+        "Wednesday": ["00:00-16:00"],
+        "Thursday": ["00:00-16:00"],
+        "Friday": ["00:00-14:00"],
+        "Saturday": [],
+        "Sunday": [],
+    },
+    "USD_CAD_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "BTC_USD": {
+        "Monday": ["03:00-15:00"],
+        "Tuesday": ["03:00-15:00"],
+        "Wednesday": ["03:00-15:00"],
+        "Thursday": ["03:00-15:00"],
+        "Friday": ["03:00-15:00"],
+        "Saturday": [],
+        "Sunday": [],
+    },
+    "USD_CAD": {
+        "Monday": ["03:00-15:00"],
+        "Tuesday": ["03:00-15:00", "21:00-23:59"],
+        "Wednesday": ["00:00-15:00"],
+        "Thursday": ["03:00-15:00"],
+        "Friday": ["03:00-15:00"],
+        "Saturday": [],
+        "Sunday": [],
+    },
+    "AUD_JPY_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "AUD_USD": {
+        "Monday": ["00:00-16:00"],
+        "Tuesday": ["00:00-16:00"],
+        "Wednesday": ["00:00-16:00"],
+        "Thursday": ["00:00-16:00"],
+        "Friday": ["00:00-14:00"],
+        "Saturday": [],
+        "Sunday": [],
+    },
+    "Bitcoin_Cash_(OTC)": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+    },
+    "MELANIA_Coin_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "US_100_(OTC)": {
+        "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+    },
+    "AUD_CAD_(OTC)": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+    },
+    "Amazon_Ebay_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "Coca_Cola_Company_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "AIG_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "Amazon_Alibaba_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "DASH_(OTC)": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+    },
+    "SP_35_(OTC)": {
+        "Monday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Tuesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Wednesday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Thursday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-11:30", "12:00-17:30", "18:00-23:59"],
+    },
+    "TRUMP_Coin_(OTC)": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+    },
+    "EUR_CAD_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "HK_33_(OTC)": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+    },
+    "Alphabet_Microsoft_(OTC)": {
+        "Monday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Tuesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Wednesday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Thursday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Friday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Saturday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+        "Sunday": ["00:00-05:00", "05:30-12:00", "12:30-23:59"],
+    },
+    "USD_ZAR_(OTC)": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+    },
+    "Litecoin_(OTC)": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+    },
+    "Hamster_Kombat_(OTC)": {
+        "Monday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Tuesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Wednesday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Thursday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Friday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Saturday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+        "Sunday": ["00:00-05:05", "05:10-12:05", "12:10-23:59"],
+    },
+    "USD_Currency_Index_(OTC)": {
+        "Monday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-10:00", "10:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"],
+    },
+    "AUS_200_(OTC)": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+    },
+    "JP_225_(OTC)": {
+        "Monday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Tuesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Wednesday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Thursday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Friday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Saturday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+        "Sunday": ["00:00-03:00", "03:30-22:00", "22:30-23:59"],
+    }
+}
+
+# Variáveis de controle
+contador_sinais = 0  # Para rastrear o número de sinais enviados
+sinais_enviados_hoje = []  # Lista para armazenar os sinais enviados hoje
+ultimo_sinal = None  # Armazenar o último sinal enviado
+
+# Função para obter a hora atual no fuso horário de Brasília
+def obter_hora_brasilia():
+    """Retorna a hora atual no fuso horário de Brasília."""
+    fuso_horario_brasilia = pytz.timezone("America/Sao_Paulo")
+    return datetime.now(fuso_horario_brasilia)
+
+# Função para verificar se um ativo está disponível no horário atual
+def verificar_disponibilidade_ativo(ativo):
+    """
+    Verifica se um ativo está disponível para trade no momento atual.
+    
+    Args:
+        ativo (str): Nome do ativo a ser verificado
+        
+    Returns:
+        bool: True se o ativo está disponível, False caso contrário
+    """
+    try:
+        # Obter hora atual em Brasília
+        agora = obter_hora_brasilia()
+        
+        # Dia da semana em inglês (Monday, Tuesday, etc.)
+        dia_semana = agora.strftime("%A")
+        
+        # Hora atual no formato HH:MM
+        hora_atual = agora.strftime("%H:%M")
+        
+        # Verificar se o ativo está no dicionário de horários
+        ativo_formatado = ativo.replace(" ", "_").replace("/", "_").replace("-", "_")
+        
+        # Logging do nome formatado do ativo
+        BOT2_LOGGER.debug(f"Verificando disponibilidade do ativo: {ativo} (formatado como {ativo_formatado})")
+        
+        # Se o ativo não estiver no dicionário de horários, consideramos disponível
+        if ativo_formatado not in HORARIOS_PADRAO:
+            BOT2_LOGGER.warning(f"Ativo {ativo} ({ativo_formatado}) não encontrado na tabela de horários. Considerando disponível.")
+            return True
+            
+        # Obter os intervalos de horário para o dia atual
+        intervalos = HORARIOS_PADRAO[ativo_formatado].get(dia_semana, [])
+        
+        # Se não houver intervalos definidos para este dia, o ativo está indisponível
+        if not intervalos:
+            BOT2_LOGGER.info(f"Ativo {ativo} não está disponível aos {dia_semana}.")
+            return False
+            
+        # Verificar se a hora atual está dentro de algum dos intervalos
+        for intervalo in intervalos:
+            inicio, fim = intervalo.split("-")
+            if inicio <= hora_atual <= fim:
+                BOT2_LOGGER.info(f"Ativo {ativo} está disponível no intervalo {intervalo}")
+                return True
+                
+        BOT2_LOGGER.info(f"Ativo {ativo} não está disponível no horário atual {hora_atual}.")
+        return False
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao verificar disponibilidade do ativo {ativo}: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        # Em caso de erro, consideramos o ativo disponível
+        return True
+
+# Função para verificar quais ativos estão disponíveis para trade
+def verificar_ativos_disponiveis():
+    """
+    Verifica quais ativos estão disponíveis para trade no momento atual.
+    
+    Returns:
+        list: Lista de ativos disponíveis para trade
+    """
+    BOT2_LOGGER.info("Verificando ativos disponíveis para trade...")
+    
+    try:
+        # Lista completa dos ativos disponíveis
+        todos_ativos = [
+            "Gold/Silver (OTC)",
+            "Worldcoin (OTC)",
+            "USD/THB (OTC)",
+            "ETH/USD (OTC)",
+            "CHF/JPY (OTC)",
+            "Pepe (OTC)",
+            "GBP/AUD (OTC)",
+            "GBP/CHF",
+            "GBP/CAD (OTC)",
+            "EUR/JPY (OTC)",
+            "AUD/CHF",
+            "GER 30 (OTC)",
+            "AUD/CHF (OTC)",
+            "EUR/AUD",
+            "USD/CAD (OTC)",
+            "BTC/USD",
+            "Amazon/Ebay (OTC)",
+            "Coca-Cola Company (OTC)",
+            "AIG (OTC)",
+            "Amazon/Alibaba (OTC)",
+            "Bitcoin Cash (OTC)",
+            "AUD/USD",
+            "DASH (OTC)",
+            "BTC/USD (OTC)",
+            "SP 35 (OTC)",
+            "TRUMP Coin (OTC)",
+            "US 100 (OTC)",
+            "EUR/CAD (OTC)",
+            "HK 33 (OTC)",
+            "Alphabet/Microsoft (OTC)",
+            "1000Sats (OTC)",
+            "USD/ZAR (OTC)",
+            "Litecoin (OTC)",
+            "Hamster Kombat (OTC)",
+            "USD Currency Index (OTC)",
+            "AUS 200 (OTC)",
+            "USD/CAD",
+            "MELANIA Coin (OTC)",
+            "JP 225 (OTC)",
+            "AUD/CAD (OTC)",
+            "AUD/JPY (OTC)",
+            "US 500 (OTC)"
+        ]
+        
+        # Filtrar apenas os ativos disponíveis no momento
+        ativos_disponiveis = [ativo for ativo in todos_ativos if verificar_disponibilidade_ativo(ativo)]
+        
+        BOT2_LOGGER.info(f"Ativos disponíveis no momento: {len(ativos_disponiveis)} de {len(todos_ativos)}")
+        
+        # Se não houver ativos disponíveis, usar alguns ativos como fallback
+        if not ativos_disponiveis:
+            BOT2_LOGGER.warning("Nenhum ativo disponível! Usando lista de fallback.")
+            fallback_ativos = [
+                "ETH/USD (OTC)",
+                "BTC/USD (OTC)",
+                "US 500 (OTC)",
+                "Gold/Silver (OTC)"
+            ]
+            return fallback_ativos
+        
+        return ativos_disponiveis
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro geral ao verificar ativos disponíveis: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        # Lista reduzida em caso de erro
+        return [
+            "EUR/USD (OTC)",
+            "Gold/Silver (OTC)",
+            "BTC/USD (OTC)",
+            "ETH/USD (OTC)"
+        ]
+
+# Função para gerar um sinal aleatório
+def gerar_sinal():
+    """Gera um sinal aleatório com ativo e direção."""
+    # Verificar quais ativos estão disponíveis no momento
+    ativos_disponiveis = verificar_ativos_disponiveis()
+    
+    # Registrar a quantidade de ativos disponíveis
+    BOT2_LOGGER.info(f"Encontrados {len(ativos_disponiveis)} ativos disponíveis para trade")
+    
+    # Se houver menos de 3 ativos disponíveis, adicionar logs de aviso
+    if len(ativos_disponiveis) < 3:
+        BOT2_LOGGER.warning(f"Poucos ativos disponíveis: {ativos_disponiveis}")
+    
+    # Escolher um ativo aleatório dentre os disponíveis
+    ativo = random.choice(ativos_disponiveis)
+    direcoes = ["CALL", "PUT"]
+    direcao = random.choice(direcoes)
+    
+    BOT2_LOGGER.info(f"Sinal gerado: {ativo} - {direcao}")
+    
+    return {
+        "ativo": ativo,
+        "direcao": direcao,
+        "tempo_expiracao": 5,  # 5 minutos de expiração
+        "hora_criacao": obter_hora_brasilia()
+    }
+
+# Função para formatar a mensagem de sinal
+def formatar_mensagem_sinal(sinal, idioma):
+    """Formata a mensagem de sinal para o idioma especificado."""
+    ativo = sinal["ativo"]
+    direcao = sinal["direcao"]
+    tempo_expiracao = sinal["tempo_expiracao"]
+    
+    # Obter horário atual
+    hora_atual = obter_hora_brasilia()
+    
+    # Horário do sinal (2 minutos depois do envio)
+    hora_sinal = hora_atual + timedelta(minutes=2)
+    
+    # Horário de expiração (5 minutos depois do horário do sinal)
+    hora_expiracao = hora_sinal + timedelta(minutes=tempo_expiracao)
+    
+    # Horários de gales
+    hora_gale1 = hora_expiracao + timedelta(minutes=5)
+    hora_gale2 = hora_gale1 + timedelta(minutes=5)
+    hora_gale3 = hora_gale2 + timedelta(minutes=5)
+    
+    # Emoji baseado na direção
+    emoji = "🟩" if direcao == "CALL" else "🟥"
+    
+    # Texto da direção
+    action = "COMPRA" if direcao == "CALL" else "VENDA"
+    
+    # Formatação de horários
+    hora_sinal_str = hora_sinal.strftime("%H:%M")
+    hora_expiracao_str = hora_expiracao.strftime("%H:%M")
+    hora_gale1_str = hora_gale1.strftime("%H:%M")
+    hora_gale2_str = hora_gale2.strftime("%H:%M")
+    hora_gale3_str = hora_gale3.strftime("%H:%M")
+    
+    # Obter links específicos para o idioma
+    link_corretora = LINKS_CORRETORA[idioma]
+    link_video = LINKS_VIDEO[idioma]
+    
+    # Mensagem em português
+    mensagem = (
+        f"💰{tempo_expiracao} minutos de expiração\n"
+        f"{ativo};{hora_sinal_str};{action} {emoji} Digital\n\n"
+        f"🕐TEMPO PARA {hora_expiracao_str}\n\n"
+        f"1º GALE — TEMPO PARA {hora_gale1_str}\n"
+        f"2º GALE TEMPO PARA {hora_gale2_str}\n"
+        f"3º GALE TEMPO PARA {hora_gale3_str}\n\n"
+        f'📲 <a href="{link_corretora}">Clique para abrir a corretora</a>\n'
+        f'🙋‍♂️ Não sabe operar ainda? <a href="{link_video}">Clique aqui</a>'
+    )
+        
+    return mensagem
+
+# Função para formatar a mensagem de participação
+def formatar_mensagem_participacao(idioma):
+    """Formata a mensagem de participação para o idioma especificado."""
+    link_corretora = LINKS_CORRETORA[idioma]
+    link_video = LINKS_VIDEO[idioma]
+    
+    # Mensagem em português
+    mensagem = (
+        "⚠⚠PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠⚠\n\n"
+        "1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
+        "Você vai poder testar todos nossas\n"
+        "operações com risco ZERO!\n\n"
+        "👇🏻👇🏻👇🏻👇🏻\n\n"
+        f'<a href="{link_corretora}">CRIE SUA CONTA AQUI E GANHE R$10.000</a>\n\n'
+        "—————————————————————\n\n"
+        "2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!\n\n"
+        "👇🏻👇🏻👇🏻👇🏻\n\n"
+        f'<a href="{link_video}">CLIQUE AQUI E ASSISTA O VÍDEO</a>'
+    )
+        
+    return mensagem
+
+# Função para formatar a mensagem de abertura da corretora
+def formatar_mensagem_abertura_corretora(idioma):
+    """Formata a mensagem de abertura da corretora para o idioma especificado."""
+    link_corretora = LINKS_CORRETORA[idioma]
+    
+    # Mensagem em português
+    mensagem = (
+        "👉🏼Abram a corretora Pessoal\n\n"
+        "⚠FIQUEM ATENTOS⚠\n\n"
+        "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+        f'➡ <a href="{link_corretora}">CLICANDO AQUI</a>'
+    )
+        
+    return mensagem
+
+# As funções enviar_mensagem e enviar_gif foram removidas por não serem mais necessárias
+# O código agora envia mensagens diretamente para o canal em português
+
+# Função que envia o sinal para todos os canais
+def enviar_sinal():
+    """Envia um sinal para todos os canais configurados."""
+    global contador_sinais, ultimo_sinal
+    
+    BOT2_LOGGER.info("Iniciando envio de sinal")
+    
+    # Incrementar o contador de sinais
+    contador_sinais += 1
+    
+    # Gerar um novo sinal
+    sinal = gerar_sinal()
+    ultimo_sinal = sinal
+    
+    # Registrar informações do sinal
+    BOT2_LOGGER.info(f"Sinal #{contador_sinais}: {sinal['ativo']} - {sinal['direcao']}")
+    BOT2_LOGGER.info("Enviando sinal único")
+    
+    # Formatar mensagem apenas para português
+    mensagem = formatar_mensagem_sinal(sinal, "pt")
+    
+    # Enviar o sinal apenas para o canal em português
+    try:
+        chat_id = BOT2_CANAIS_CONFIG["pt"][0]  # Pegar apenas o primeiro canal em português
+        BOT2_LOGGER.info(f"Tentando enviar sinal para canal {chat_id}")
+        
+        bot2.send_message(
+            chat_id=chat_id,
+            text=mensagem,
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
+        
+        BOT2_LOGGER.info(f"Sinal enviado com sucesso para o canal {chat_id}")
+        
+        # Sequência especial para todos os sinais
+        threading.Timer(7 * 60, lambda: iniciar_sequencia_especial(sinal)).start()
+        BOT2_LOGGER.info("Agendada sequência especial para o sinal")
+        return True
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao enviar sinal para o canal: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        return False
+
+# Função para enviar o GIF pós-sinal - removida
+def enviar_gif_pos_sinal():
+    """Função de envio do GIF pós-sinal removida."""
+    BOT2_LOGGER.info("Função de envio do GIF pós-sinal foi removida.")
+    return True
+
+# Função para iniciar a sequência de envios para todos os sinais
+def iniciar_sequencia_especial(sinal):
+    """
+    Inicia a sequência de envios especial para todos os sinais.
+    
+    Args:
+        sinal: O sinal que foi enviado
+    """
+    BOT2_LOGGER.info("Iniciando sequência especial para o sinal")
+    
+    # Agendar envio da mensagem de participação (40 minutos após o sinal)
+    threading.Timer(40 * 60, enviar_mensagem_participacao).start()
+    BOT2_LOGGER.info("Agendado envio da mensagem de participação para daqui a 40 minutos")
+
+# Função para enviar a mensagem de participação
+def enviar_mensagem_participacao():
+    """Envia a mensagem de participação para o canal."""
+    BOT2_LOGGER.info("Iniciando processo de envio da mensagem de participação")
+    
+    try:
+        # Formatar mensagem de participação para português
+        mensagem = formatar_mensagem_participacao("pt")
+        BOT2_LOGGER.info("Mensagem de participação formatada com sucesso")
+        
+        # Enviar para o canal em português
+        chat_id = BOT2_CANAIS_CONFIG["pt"][0]
+        BOT2_LOGGER.info(f"Tentando enviar mensagem de participação para canal {chat_id}")
+        
+        bot2.send_message(
+            chat_id=chat_id,
+            text=mensagem,
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
+        
+        BOT2_LOGGER.info(f"Mensagem de participação enviada com sucesso para o canal {chat_id}")
+        
+        # Agendar envio do GIF promocional (10 minutos depois)
+        BOT2_LOGGER.info("Agendando envio do GIF promocional para daqui a 10 minutos")
+        threading.Timer(10 * 60, enviar_gif_promocional).start()
+        BOT2_LOGGER.info("Agendado envio do GIF promocional para daqui a 10 minutos")
+        return True
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Exceção ao enviar mensagem de participação: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        return False
+
+# Função para enviar o GIF promocional
+def enviar_gif_promocional():
+    """Envia o GIF promocional para o canal."""
+    BOT2_LOGGER.info("Iniciando processo de envio do GIF promocional")
+    
+    try:
+        chat_id = BOT2_CANAIS_CONFIG["pt"][0]
+        
+        # Verificar se o arquivo local existe
+        if os.path.exists(GIF_PROMO_PATH):
+            BOT2_LOGGER.info(f"Usando arquivo: {GIF_PROMO_PATH}")
+            with open(GIF_PROMO_PATH, 'rb') as arquivo:
+                bot2.send_animation(
+                    chat_id=chat_id,
+                    animation=arquivo,
+                    caption=None
+                )
+        else:
+            # Usar URL como fallback
+            fallback_url = "https://media.giphy.com/media/whPiIq21hxXuJn7WVX/giphy.gif"
+            BOT2_LOGGER.warning(f"Arquivo local {GIF_PROMO_PATH} não encontrado. Usando URL de fallback.")
+            bot2.send_animation(
+                chat_id=chat_id,
+                animation=fallback_url
+            )
+        
+        BOT2_LOGGER.info(f"GIF promocional enviado com sucesso para o canal {chat_id}")
+        
+        # Agendar envio da mensagem de abertura da corretora (1 minuto depois)
+        BOT2_LOGGER.info("Agendando envio da mensagem de abertura da corretora para daqui a 1 minuto")
+        threading.Timer(1 * 60, enviar_mensagem_abertura_corretora).start()
+        BOT2_LOGGER.info("Agendado envio da mensagem de abertura da corretora para daqui a 1 minuto")
+        return True
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Exceção ao enviar GIF promocional: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        return False
+
+# Função para enviar a mensagem de abertura da corretora
+def enviar_mensagem_abertura_corretora():
+    """Envia a mensagem de abertura da corretora para o canal."""
+    BOT2_LOGGER.info("Iniciando processo de envio da mensagem de abertura da corretora")
+    
+    try:
+        # Formatar mensagem de abertura da corretora para português
+        mensagem = formatar_mensagem_abertura_corretora("pt")
+        BOT2_LOGGER.info("Mensagem de abertura da corretora formatada com sucesso")
+        
+        # Enviar para o canal em português
+        chat_id = BOT2_CANAIS_CONFIG["pt"][0]
+        BOT2_LOGGER.info(f"Tentando enviar mensagem de abertura da corretora para canal {chat_id}")
+        
+        bot2.send_message(
+            chat_id=chat_id,
+            text=mensagem,
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
+        
+        BOT2_LOGGER.info(f"Mensagem de abertura da corretora enviada com sucesso para o canal {chat_id}")
+        return True
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Exceção ao enviar mensagem de abertura da corretora: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        return False
+
+# Função para iniciar o bot e agendar os sinais
+def iniciar_bot():
+    """Inicia o bot e agenda o envio de sinais para cada hora."""
+    BOT2_LOGGER.info("Iniciando bot...")
+    
+    # Agendar envio de sinais para minuto 13 de cada hora
+    for hora in range(24):
+        # Formato: HH:MM (exemplo: "09:13")
+        horario = f"{hora:02d}:13"
+        schedule.every().day.at(horario).do(enviar_sinal)
+        BOT2_LOGGER.info(f"Agendado envio de sinal para {horario}")
+    
+    BOT2_LOGGER.info("Bot iniciado com sucesso. Executando loop de agendamento...")
+    
+    # Loop para verificar os agendamentos
+    while True:
+        try:
+            schedule.run_pending()
+            time.sleep(1)
+        except Exception as e:
+            BOT2_LOGGER.error(f"Erro no loop principal: {str(e)}")
+            BOT2_LOGGER.error(traceback.format_exc())
+            time.sleep(10)  # Esperar um pouco antes de continuar
+
+# Executar o bot se este arquivo for executado diretamente
+if __name__ == "__main__":
+    try:
+        BOT2_LOGGER.info("Iniciando execução do bot")
+        iniciar_bot()
+    except KeyboardInterrupt:
+        BOT2_LOGGER.info("Bot interrompido pelo usuário")
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao iniciar o bot: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
