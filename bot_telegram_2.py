@@ -89,9 +89,9 @@ bot2 = telebot.TeleBot(BOT2_TOKEN)
 
 # Configuração dos canais para cada idioma
 BOT2_CANAIS_CONFIG = {
-    "pt": [-1002424874613],  # Canal para mensagens em português
-    "en": [-1002453956387],  # Canal para mensagens em inglês
-    "es": [-1002446547846]   # Canal para mensagens em espanhol
+    "pt": [-1002592398378],  # Canal para mensagens em português
+    "en": [],  # Canal para mensagens em inglês
+    "es": []   # Canal para mensagens em espanhol
 }
 
 # Lista de IDs dos canais para facilitar iteração
@@ -1142,7 +1142,7 @@ def enviar_mensagem_abertura_corretora():
         return False
 
 # Função para iniciar o bot e agendar os sinais
-def iniciar_bot():
+def iniciar_bot-():
     """Inicia o bot e agenda o envio de sinais para cada hora."""
     BOT2_LOGGER.info("Iniciando bot...")
     
