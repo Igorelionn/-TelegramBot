@@ -89,9 +89,7 @@ bot2 = telebot.TeleBot(BOT2_TOKEN)
 
 # Configuração dos canais para cada idioma
 BOT2_CANAIS_CONFIG = {
-    "pt": [-1002592398378],  # Canal para mensagens em português
-    "en": [],  # Canal para mensagens em inglês
-    "es": []   # Canal para mensagens em espanhol
+    "pt": [-1002592398378]  # Canal para mensagens em português
 }
 
 # Lista de IDs dos canais para facilitar iteração
@@ -101,16 +99,12 @@ for idioma, chats in BOT2_CANAIS_CONFIG.items():
 
 # Links para cada idioma
 LINKS_CORRETORA = {
-    "pt": "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack=",
-    "en": "https://trade.xxbroker.com/register?aff=741727&aff_model=revenue&afftrack=",
-    "es": "https://trade.xxbroker.com/register?aff=741726&aff_model=revenue&afftrack="
+    "pt": "https://trade.xxbroker.com/register?aff=741613&aff_model=revenue&afftrack="
 }
 
 # URLs dos vídeos para cada idioma
 LINKS_VIDEO = {
-    "pt": "https://t.me/trendingbrazil/215",
-    "en": "https://t.me/trendingenglish/226",
-    "es": "https://t.me/trendingespanish/212"
+    "pt": "https://t.me/trendingbrazil/215"
 }
 
 # URLs diretas para GIFs
@@ -716,15 +710,8 @@ def formatar_mensagem_sinal(sinal, idioma):
     # Emoji baseado na direção
     emoji = "🟩" if direcao == "CALL" else "🟥"
     
-    # Texto da direção para cada idioma
-    if direcao == "CALL":
-        action_pt = "COMPRA"
-        action_en = "BUY"
-        action_es = "COMPRA"
-    else:
-        action_pt = "VENDA"
-        action_en = "SELL"
-        action_es = "VENTA"
+    # Texto da direção
+    action = "COMPRA" if direcao == "CALL" else "VENDA"
     
     # Formatação de horários
     hora_sinal_str = hora_sinal.strftime("%H:%M")
@@ -737,40 +724,17 @@ def formatar_mensagem_sinal(sinal, idioma):
     link_corretora = LINKS_CORRETORA[idioma]
     link_video = LINKS_VIDEO[idioma]
     
-    # Mensagens por idioma
-    if idioma == "pt":
-        mensagem = (
-            f"💰{tempo_expiracao} minutos de expiração\n"
-            f"{ativo};{hora_sinal_str};{action_pt} {emoji} Digital\n\n"
-            f"🕐TEMPO PARA {hora_expiracao_str}\n\n"
-            f"1º GALE — TEMPO PARA {hora_gale1_str}\n"
-            f"2º GALE TEMPO PARA {hora_gale2_str}\n"
-            f"3º GALE TEMPO PARA {hora_gale3_str}\n\n"
-            f'📲 <a href="{link_corretora}">Clique para abrir a corretora</a>\n'
-            f'🙋‍♂️ Não sabe operar ainda? <a href="{link_video}">Clique aqui</a>'
-        )
-    elif idioma == "en":
-        mensagem = (
-            f"💰{tempo_expiracao} minutes expiration\n"
-            f"{ativo};{hora_sinal_str};{action_en} {emoji} Digital\n\n"
-            f"🕐TIME UNTIL {hora_expiracao_str}\n\n"
-            f"1st GALE — TIME UNTIL {hora_gale1_str}\n"
-            f"2nd GALE TIME UNTIL {hora_gale2_str}\n"
-            f"3rd GALE TIME UNTIL {hora_gale3_str}\n\n"
-            f'📲 <a href="{link_corretora}">Click to open broker</a>\n'
-            f'🙋‍♂️ Don\'t know how to trade yet? <a href="{link_video}">Click here</a>'
-        )
-    else:  # espanhol
-        mensagem = (
-            f"💰{tempo_expiracao} minutos de expiración\n"
-            f"{ativo};{hora_sinal_str};{action_es} {emoji} Digital\n\n"
-            f"🕐TIEMPO HASTA {hora_expiracao_str}\n\n"
-            f"1º GALE — TIEMPO HASTA {hora_gale1_str}\n"
-            f"2º GALE TIEMPO HASTA {hora_gale2_str}\n"
-            f"3º GALE TIEMPO HASTA {hora_gale3_str}\n\n"
-            f'📲 <a href="{link_corretora}">Haga clic para abrir el corredor</a>\n'
-            f'🙋‍♂️ ¿No sabe operar todavía? <a href="{link_video}">Haga clic aquí</a>'
-        )
+    # Mensagem em português
+    mensagem = (
+        f"💰{tempo_expiracao} minutos de expiração\n"
+        f"{ativo};{hora_sinal_str};{action} {emoji} Digital\n\n"
+        f"🕐TEMPO PARA {hora_expiracao_str}\n\n"
+        f"1º GALE — TEMPO PARA {hora_gale1_str}\n"
+        f"2º GALE TEMPO PARA {hora_gale2_str}\n"
+        f"3º GALE TEMPO PARA {hora_gale3_str}\n\n"
+        f'📲 <a href="{link_corretora}">Clique para abrir a corretora</a>\n'
+        f'🙋‍♂️ Não sabe operar ainda? <a href="{link_video}">Clique aqui</a>'
+    )
         
     return mensagem
 
@@ -780,45 +744,19 @@ def formatar_mensagem_participacao(idioma):
     link_corretora = LINKS_CORRETORA[idioma]
     link_video = LINKS_VIDEO[idioma]
     
-    if idioma == "pt":
-        mensagem = (
-            "⚠⚠PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠⚠\n\n"
-            "1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
-            "Você vai poder testar todos nossas\n"
-            "operações com risco ZERO!\n\n"
-            "👇🏻👇🏻👇🏻👇🏻\n\n"
-            f'<a href="{link_corretora}">CRIE SUA CONTA AQUI E GANHE R$10.000</a>\n\n'
-            "—————————————————————\n\n"
-            "2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!\n\n"
-            "👇🏻👇🏻👇🏻👇🏻\n\n"
-            f'<a href="{link_video}">CLIQUE AQUI E ASSISTA O VÍDEO</a>'
-        )
-    elif idioma == "en":
-        mensagem = (
-            "⚠⚠TO PARTICIPATE IN THIS SESSION, FOLLOW THE STEPS BELOW⚠⚠\n\n"
-            "1st ✅ —> Create your broker account at the link below and GET $10,000 FOR FREE to start trading with us without having to risk your money.\n\n"
-            "You will be able to test all our\n"
-            "operations with ZERO risk!\n\n"
-            "👇🏻👇🏻👇🏻👇🏻\n\n"
-            f'<a href="{link_corretora}">CREATE YOUR ACCOUNT HERE AND GET $10,000</a>\n\n'
-            "—————————————————————\n\n"
-            "2nd ✅ —> Watch the video below and learn how to deposit and how to enter with us in our operations!\n\n"
-            "👇🏻👇🏻👇🏻👇🏻\n\n"
-            f'<a href="{link_video}">CLICK HERE AND WATCH THE VIDEO</a>'
-        )
-    else:  # espanhol
-        mensagem = (
-            "⚠⚠PARA PARTICIPAR EN ESTA SESIÓN, SIGA LOS PASOS A CONTINUACIÓN⚠⚠\n\n"
-            "1º ✅ —> Cree su cuenta de corredor en el enlace a continuación y OBTENGA $10,000 GRATIS para comenzar a operar con nosotros sin tener que arriesgar su dinero.\n\n"
-            "Podrá probar todas nuestras\n"
-            "operaciones con riesgo CERO!\n\n"
-            "👇🏻👇🏻👇🏻👇🏻\n\n"
-            f'<a href="{link_corretora}">CREE SU CUENTA AQUÍ Y OBTENGA $10,000</a>\n\n'
-            "—————————————————————\n\n"
-            "2º ✅ —> ¡Mire el video a continuación y aprenda cómo depositar y cómo ingresar con nosotros en nuestras operaciones!\n\n"
-            "👇🏻👇🏻👇🏻👇🏻\n\n"
-            f'<a href="{link_video}">HAGA CLIC AQUÍ Y MIRE EL VIDEO</a>'
-        )
+    # Mensagem em português
+    mensagem = (
+        "⚠⚠PARA PARTICIPAR DESTA SESSÃO, SIGA O PASSO A PASSO ABAIXO⚠⚠\n\n"
+        "1º ✅ —>  Crie sua conta na corretora no link abaixo e GANHE $10.000 DE GRAÇA pra começar a operar com a gente sem ter que arriscar seu dinheiro.\n\n"
+        "Você vai poder testar todos nossas\n"
+        "operações com risco ZERO!\n\n"
+        "👇🏻👇🏻👇🏻👇🏻\n\n"
+        f'<a href="{link_corretora}">CRIE SUA CONTA AQUI E GANHE R$10.000</a>\n\n'
+        "—————————————————————\n\n"
+        "2º ✅ —>  Assista o vídeo abaixo e aprenda como depositar e como entrar com a gente nas nossas operações!\n\n"
+        "👇🏻👇🏻👇🏻👇🏻\n\n"
+        f'<a href="{link_video}">CLIQUE AQUI E ASSISTA O VÍDEO</a>'
+    )
         
     return mensagem
 
@@ -827,27 +765,13 @@ def formatar_mensagem_abertura_corretora(idioma):
     """Formata a mensagem de abertura da corretora para o idioma especificado."""
     link_corretora = LINKS_CORRETORA[idioma]
     
-    if idioma == "pt":
-        mensagem = (
-            "👉🏼Abram a corretora Pessoal\n\n"
-            "⚠FIQUEM ATENTOS⚠\n\n"
-            "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
-            f'➡ <a href="{link_corretora}">CLICANDO AQUI</a>'
-        )
-    elif idioma == "en":
-        mensagem = (
-            "👉🏼Open the broker now\n\n"
-            "⚠STAY ALERT⚠\n\n"
-            "🔥Register at XXBROKER right now🔥\n\n"
-            f'➡ <a href="{link_corretora}">CLICK HERE</a>'
-        )
-    else:  # espanhol
-        mensagem = (
-            "👉🏼Abran el corredor ahora\n\n"
-            "⚠ESTÉN ATENTOS⚠\n\n"
-            "🔥Regístrese en XXBROKER ahora mismo🔥\n\n"
-            f'➡ <a href="{link_corretora}">HACIENDO CLIC AQUÍ</a>'
-        )
+    # Mensagem em português
+    mensagem = (
+        "👉🏼Abram a corretora Pessoal\n\n"
+        "⚠FIQUEM ATENTOS⚠\n\n"
+        "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+        f'➡ <a href="{link_corretora}">CLICANDO AQUI</a>'
+    )
         
     return mensagem
 
@@ -1142,7 +1066,7 @@ def enviar_mensagem_abertura_corretora():
         return False
 
 # Função para iniciar o bot e agendar os sinais
-def iniciar_bot-():
+def iniciar_bot():
     """Inicia o bot e agenda o envio de sinais para cada hora."""
     BOT2_LOGGER.info("Iniciando bot...")
     
