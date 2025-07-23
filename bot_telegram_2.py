@@ -632,7 +632,7 @@ def gerar_sinal():
     return {
         "ativo": ativo,
         "direcao": direcao,
-        "tempo_expiracao": 5,  # 5 minutos de expiração
+        "tempo_expiracao": 1,  # 1 minuto de expiração (alterado de 5 para 1)
         "hora_criacao": obter_hora_brasilia()
     }
 
@@ -641,21 +641,20 @@ def formatar_mensagem_sinal(sinal, idioma):
     """Formata a mensagem de sinal para o idioma especificado."""
     ativo = sinal["ativo"]
     direcao = sinal["direcao"]
-    tempo_expiracao = sinal["tempo_expiracao"]
+    tempo_expiracao = sinal["tempo_expiracao"]  # Agora sempre será 1 minuto
     
     # Obter horário atual
     hora_atual = obter_hora_brasilia()
     
-    # Horário do sinal (2 minutos depois do envio)
-    hora_sinal = hora_atual + timedelta(minutes=2)
+    # Horário do sinal (entrada imediata)
+    hora_sinal = hora_atual
     
-    # Horário de expiração (5 minutos depois do horário do sinal)
+    # Horário de expiração (1 minuto depois do horário do sinal)
     hora_expiracao = hora_sinal + timedelta(minutes=tempo_expiracao)
     
-    # Horários de gales
-    hora_gale1 = hora_expiracao + timedelta(minutes=5)
-    hora_gale2 = hora_gale1 + timedelta(minutes=5)
-    hora_gale3 = hora_gale2 + timedelta(minutes=5)
+    # Horários das proteções (1 e 2 minutos após expiração)
+    hora_protecao1 = hora_expiracao + timedelta(minutes=1)
+    hora_protecao2 = hora_protecao1 + timedelta(minutes=1)
     
     # Emoji baseado na direção
     emoji = "🟩" if direcao == "CALL" else "🟥"
@@ -665,23 +664,23 @@ def formatar_mensagem_sinal(sinal, idioma):
     
     # Formatação de horários
     hora_sinal_str = hora_sinal.strftime("%H:%M")
-    hora_expiracao_str = hora_expiracao.strftime("%H:%M")
-    hora_gale1_str = hora_gale1.strftime("%H:%M")
-    hora_gale2_str = hora_gale2.strftime("%H:%M")
-    hora_gale3_str = hora_gale3.strftime("%H:%M")
+    hora_protecao1_str = hora_protecao1.strftime("%H:%M")
+    hora_protecao2_str = hora_protecao2.strftime("%H:%M")
     
     # Obter links específicos para o idioma
     link_corretora = LINKS_CORRETORA[idioma]
     link_video = LINKS_VIDEO[idioma]
     
-    # Mensagem em português
+    # Novo formato de mensagem
     mensagem = (
-        f"💰{tempo_expiracao} minutos de expiração\n"
-        f"{ativo};{hora_sinal_str};{action} {emoji} Digital\n\n"
-        f"🕐TEMPO PARA {hora_expiracao_str}\n\n"
-        f"1º GALE — TEMPO PARA {hora_gale1_str}\n"
-        f"2º GALE TEMPO PARA {hora_gale2_str}\n"
-        f"3º GALE TEMPO PARA {hora_gale3_str}\n\n"
+        f"🧑‍💻 Tavares confirmou entrada\n\n"
+        f"📊 Par = {ativo}\n"
+        f"⏰ Expiração = {tempo_expiracao} Minuto\n\n"
+        f"💻 Entrada às {hora_sinal_str}\n"
+        f"{emoji} {action}\n\n"
+        f"✋🏻 Em caso de LOSS\n"
+        f"Fazer 1º Proteção às {hora_protecao1_str}\n"
+        f"Fazer 2º Proteção às {hora_protecao2_str}\n\n"
         f'📲 <a href="{link_corretora}">Clique para abrir a corretora</a>\n'
         f'🙋‍♂️ Não sabe operar ainda? <a href="{link_video}">Clique aqui</a>'
     )
