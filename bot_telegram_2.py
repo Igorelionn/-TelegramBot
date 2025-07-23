@@ -646,8 +646,8 @@ def formatar_mensagem_sinal(sinal, idioma):
     # Obter horário atual
     hora_atual = obter_hora_brasilia()
     
-    # Horário do sinal (entrada imediata)
-    hora_sinal = hora_atual
+    # Horário do sinal (3 minutos depois do envio)
+    hora_sinal = hora_atual + timedelta(minutes=3)
     
     # Horário de expiração (1 minuto depois do horário do sinal)
     hora_expiracao = hora_sinal + timedelta(minutes=tempo_expiracao)
