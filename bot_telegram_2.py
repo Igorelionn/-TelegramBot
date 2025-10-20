@@ -89,7 +89,7 @@ bot2 = telebot.TeleBot(BOT2_TOKEN)
 
 # Configuração dos canais para cada idioma
 BOT2_CANAIS_CONFIG = {
-    "pt": [-1002716945366]  # Canal para mensagens em português
+    "pt": [-1003175803559]  # Canal para mensagens em português
 }
 
 # Lista de IDs dos canais para facilitar iteração
@@ -99,7 +99,7 @@ for idioma, chats in BOT2_CANAIS_CONFIG.items():
 
 # Links para cada idioma
 LINKS_CORRETORA = {
-    "pt": "https://www.homebroker.com/ref/cDOWMjSI/"
+    "pt": "https://blendbroker.com/?ref=cmgplsb7f018cavh80l81h2cy"
 }
 
 # URLs dos vídeos para cada idioma
@@ -124,341 +124,119 @@ INSTRUÇÕES PARA OTIMIZAR GIFs:
 4. Tamanho máximo recomendado: 1MB para melhor compatibilidade com celulares
 """
 
-# Horários de funcionamento dos ativos
+# Horários de funcionamento dos ativos - Todos configurados para 24/7
+HORARIO_24_7 = {
+        "Monday": ["00:00-23:59"],
+        "Tuesday": ["00:00-23:59"],
+        "Wednesday": ["00:00-23:59"],
+        "Thursday": ["00:00-23:59"],
+        "Friday": ["00:00-23:59"],
+        "Saturday": ["00:00-23:59"],
+        "Sunday": ["00:00-23:59"],
+}
+
 HORARIOS_PADRAO = {
-    "AUD_CAD_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "AUD_JPY_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "EUR_GBP_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "EUR_JPY": {
-        "Monday": ["00:00-20:00"],
-        "Tuesday": ["00:00-20:00"],
-        "Wednesday": ["00:00-20:00"],
-        "Thursday": ["00:00-20:00"],
-        "Friday": ["00:00-18:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "EUR_JPY_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "EUR_USD_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "GBP_JPY_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "GBP_USD": {
-        "Monday": ["22:00-23:59", "00:00-18:00"],
-        "Tuesday": ["22:00-23:59", "00:00-18:00"],
-        "Wednesday": ["22:00-23:59", "00:00-18:00"],
-        "Thursday": ["22:00-23:59", "00:00-18:00"],
-        "Friday": ["22:00-23:59", "00:00-16:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "GBP_USD_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "USD_BRL_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "USD_JPY": {
-        "Monday": ["03:00-17:00"],
-        "Tuesday": ["03:00-17:00"],
-        "Wednesday": ["03:00-17:00"],
-        "Thursday": ["03:00-17:00"],
-        "Friday": ["03:00-15:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "USD_JPY_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Bitcoin_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Cardano_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Dogecoin_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Ethereum_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Solana_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "TRON_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "USDT_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "XRP_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Amazon": {
-        "Monday": ["10:00-16:30"],
-        "Tuesday": ["10:00-16:30"],
-        "Wednesday": ["10:00-16:30"],
-        "Thursday": ["10:00-16:30"],
-        "Friday": ["10:00-15:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "Amazon_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Apple_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Apple_Inc": {
-        "Monday": ["10:00-16:30"],
-        "Tuesday": ["10:00-16:30"],
-        "Wednesday": ["10:00-16:30"],
-        "Thursday": ["10:00-16:30"],
-        "Friday": ["10:00-16:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "Facebook_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Facebook_Inc": {
-        "Monday": ["10:00-16:30"],
-        "Tuesday": ["10:00-16:30"],
-        "Wednesday": ["10:00-16:30"],
-        "Thursday": ["10:00-16:30"],
-        "Friday": ["10:00-16:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "Google": {
-        "Monday": ["10:00-16:30"],
-        "Tuesday": ["10:00-16:30"],
-        "Wednesday": ["10:00-16:30"],
-        "Thursday": ["10:00-16:30"],
-        "Friday": ["10:00-15:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "Google_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Intel": {
-        "Monday": ["10:00-16:30"],
-        "Tuesday": ["10:00-16:30"],
-        "Wednesday": ["10:00-16:30"],
-        "Thursday": ["10:00-16:30"],
-        "Friday": ["10:00-15:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "Intel_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "McDonald's_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Microsoft": {
-        "Monday": ["10:00-16:30"],
-        "Tuesday": ["10:00-16:30"],
-        "Wednesday": ["10:00-16:30"],
-        "Thursday": ["10:00-16:30"],
-        "Friday": ["10:00-15:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "Microsoft_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "NVIDIA": {
-        "Monday": ["10:00-16:30"],
-        "Tuesday": ["10:00-16:30"],
-        "Wednesday": ["10:00-16:30"],
-        "Thursday": ["10:00-16:30"],
-        "Friday": ["10:00-15:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "NVIDIA_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
-    "Tesla": {
-        "Monday": ["10:00-16:30"],
-        "Tuesday": ["10:00-16:30"],
-        "Wednesday": ["10:00-16:30"],
-        "Thursday": ["10:00-16:30"],
-        "Friday": ["10:00-15:30"],
-        "Saturday": [],
-        "Sunday": [],
-    },
-    "Tesla_(OTC)": {
-        "Monday": ["00:00-23:59"],
-        "Tuesday": ["00:00-23:59"],
-        "Wednesday": ["00:00-23:59"],
-        "Thursday": ["00:00-23:59"],
-        "Friday": ["00:00-23:59"],
-        "Saturday": ["00:00-23:59"],
-        "Sunday": ["00:00-23:59"],
-    },
+    "TRUMP_(OTC)": HORARIO_24_7,
+    "XAU_USD_(OTC)": HORARIO_24_7,
+    "GALA_(OTC)": HORARIO_24_7,
+    "BCH_(OTC)": HORARIO_24_7,
+    "GRT_(OTC)": HORARIO_24_7,
+    "EUR_USD": HORARIO_24_7,
+    "WLD_(OTC)": HORARIO_24_7,
+    "EUR_USD_(OTC)": HORARIO_24_7,
+    "EUR_GBP_(OTC)": HORARIO_24_7,
+    "USD_CHF_(OTC)": HORARIO_24_7,
+    "EUR_JPY_(OTC)": HORARIO_24_7,
+    "NZD_USD_(OTC)": HORARIO_24_7,
+    "GBP_USD_(OTC)": HORARIO_24_7,
+    "AUD_CAD_(OTC)": HORARIO_24_7,
+    "Meta_(OTC)": HORARIO_24_7,
+    "Apple_(OTC)": HORARIO_24_7,
+    "Snap_(OTC)": HORARIO_24_7,
+    "SEI_(OTC)": HORARIO_24_7,
+    "USD_CAD": HORARIO_24_7,
+    "AUD_JPY": HORARIO_24_7,
+    "GBP_CAD": HORARIO_24_7,
+    "GBP_CHF": HORARIO_24_7,
+    "GBP_AUD": HORARIO_24_7,
+    "EUR_CAD": HORARIO_24_7,
+    "CHF_JPY": HORARIO_24_7,
+    "CAD_CHF": HORARIO_24_7,
+    "EUR_AUD": HORARIO_24_7,
+    "Amazon_(OTC)": HORARIO_24_7,
+    "Tesla_(OTC)": HORARIO_24_7,
+    "TRON_(OTC)": HORARIO_24_7,
+    "DOGECOIN_(OTC)": HORARIO_24_7,
+    "Solana_(OTC)": HORARIO_24_7,
+    "EUR_GBP": HORARIO_24_7,
+    "INTEL_(OTC)": HORARIO_24_7,
+    "Microsoft_(OTC)": HORARIO_24_7,
+    "Coca_Cola_(OTC)": HORARIO_24_7,
+    "McDonald's_(OTC)": HORARIO_24_7,
+    "Nike_(OTC)": HORARIO_24_7,
+    "Ripple___XRP_(OTC)": HORARIO_24_7,
+    "AUD_USD_(OTC)": HORARIO_24_7,
+    "USD_CAD_(OTC)": HORARIO_24_7,
+    "AUD_JPY_(OTC)": HORARIO_24_7,
+    "GBP_CAD_(OTC)": HORARIO_24_7,
+    "GBP_CHF_(OTC)": HORARIO_24_7,
+    "EUR_CAD_(OTC)": HORARIO_24_7,
+    "CHF_JPY_(OTC)": HORARIO_24_7,
+    "CAD_CHF_(OTC)": HORARIO_24_7,
+    "EUR_NZD": HORARIO_24_7,
+    "Litecoin_(OTC)": HORARIO_24_7,
+    "EOS_USD_(OTC)": HORARIO_24_7,
+    "AUD_CHF_(OTC)": HORARIO_24_7,
+    "AUD_NZD_(OTC)": HORARIO_24_7,
+    "EUR_CHF_(OTC)": HORARIO_24_7,
+    "GBP_NZD_(OTC)": HORARIO_24_7,
+    "CAD_JPY_(OTC)": HORARIO_24_7,
+    "NZD_CAD_(OTC)": HORARIO_24_7,
+    "NZD_JPY_(OTC)": HORARIO_24_7,
+    "ICP_(OTC)": HORARIO_24_7,
+    "IMX_(OTC)": HORARIO_24_7,
+    "BONK_(OTC)": HORARIO_24_7,
+    "LINK_(OTC)": HORARIO_24_7,
+    "WIF_(OTC)": HORARIO_24_7,
+    "PEPE_(OTC)": HORARIO_24_7,
+    "FLOKI_(OTC)": HORARIO_24_7,
+    "DOT_(OTC)": HORARIO_24_7,
+    "ATOM_(OTC)": HORARIO_24_7,
+    "INJ_(OTC)": HORARIO_24_7,
+    "IOTA_(OTC)": HORARIO_24_7,
+    "DASH_(OTC)": HORARIO_24_7,
+    "ARB_(OTC)": HORARIO_24_7,
+    "ORDI_(OTC)": HORARIO_24_7,
+    "SATS_(OTC)": HORARIO_24_7,
+    "PYTH_(OTC)": HORARIO_24_7,
+    "RONIN_(OTC)": HORARIO_24_7,
+    "TIA_(OTC)": HORARIO_24_7,
+    "MANA_(OTC)": HORARIO_24_7,
+    "STX_(OTC)": HORARIO_24_7,
+    "MATIC_(OTC)": HORARIO_24_7,
+    "GBP_JPY": HORARIO_24_7,
+    "EUR_JPY": HORARIO_24_7,
+    "GBP_USD": HORARIO_24_7,
+    "USD_JPY": HORARIO_24_7,
+    "AUD_CAD": HORARIO_24_7,
+    "Bitcoin": HORARIO_24_7,
+    "GBP_JPY_(OTC)": HORARIO_24_7,
+    "USD_JPY_(OTC)": HORARIO_24_7,
+    "CAD_JPY": HORARIO_24_7,
+    "AUD_USD": HORARIO_24_7,
+    "Ethereum": HORARIO_24_7,
+    "AUD_CHF": HORARIO_24_7,
+    "AUD_NZD": HORARIO_24_7,
+    "AMAZON": HORARIO_24_7,
+    "APPLE": HORARIO_24_7,
+    "NZD_JPY": HORARIO_24_7,
+    "EUR_SGD": HORARIO_24_7,
+    "CHFNOK": HORARIO_24_7,
+    "Google_(OTC)": HORARIO_24_7,
+    "AUD_SGD": HORARIO_24_7,
+    "ETC_USD": HORARIO_24_7,
+    "NZD_CAD": HORARIO_24_7,
+    "NZD_USD": HORARIO_24_7,
 }
 
 # Variáveis de controle
@@ -541,43 +319,107 @@ def verificar_ativos_disponiveis():
     try:
         # Lista completa dos ativos disponíveis
         todos_ativos = [
-            "AUD/CAD (OTC)",
-            "AUD/JPY (OTC)",
-            "EUR/GBP (OTC)",
-            "EUR/JPY",
-            "EUR/JPY (OTC)",
+            "TRUMP (OTC)",
+            "XAU/USD (OTC)",
+            "GALA (OTC)",
+            "BCH (OTC)",
+            "GRT (OTC)",
+            "EUR/USD",
+            "WLD (OTC)",
             "EUR/USD (OTC)",
-            "GBP/JPY (OTC)",
-            "GBP/USD",
+            "EUR/GBP (OTC)",
+            "USD/CHF (OTC)",
+            "EUR/JPY (OTC)",
+            "NZD/USD (OTC)",
             "GBP/USD (OTC)",
-            "USD/BRL (OTC)",
-            "USD/JPY",
-            "USD/JPY (OTC)",
-            "Bitcoin (OTC)",
-            "Cardano (OTC)",
-            "Dogecoin (OTC)",
-            "Ethereum (OTC)",
-            "Solana (OTC)",
-            "TRON (OTC)",
-            "USDT (OTC)",
-            "XRP (OTC)",
-            "Amazon",
-            "Amazon (OTC)",
+            "AUD/CAD (OTC)",
+            "Meta (OTC)",
             "Apple (OTC)",
-            "Apple Inc",
-            "Facebook (OTC)",
-            "Facebook Inc",
-            "Google",
-            "Google (OTC)",
-            "Intel",
-            "Intel (OTC)",
-            "McDonald's (OTC)",
-            "Microsoft",
+            "Snap (OTC)",
+            "SEI (OTC)",
+            "USD/CAD",
+            "AUD/JPY",
+            "GBP/CAD",
+            "GBP/CHF",
+            "GBP/AUD",
+            "EUR/CAD",
+            "CHF/JPY",
+            "CAD/CHF",
+            "EUR/AUD",
+            "Amazon (OTC)",
+            "Tesla (OTC)",
+            "TRON (OTC)",
+            "DOGECOIN (OTC)",
+            "Solana (OTC)",
+            "EUR/GBP",
+            "INTEL (OTC)",
             "Microsoft (OTC)",
-            "NVIDIA",
-            "NVIDIA (OTC)",
-            "Tesla",
-            "Tesla (OTC)"
+            "Coca-Cola (OTC)",
+            "McDonald's (OTC)",
+            "Nike (OTC)",
+            "Ripple - XRP (OTC)",
+            "AUD/USD (OTC)",
+            "USD/CAD (OTC)",
+            "AUD/JPY (OTC)",
+            "GBP/CAD (OTC)",
+            "GBP/CHF (OTC)",
+            "EUR/CAD (OTC)",
+            "CHF/JPY (OTC)",
+            "CAD/CHF (OTC)",
+            "EUR/NZD",
+            "Litecoin (OTC)",
+            "EOS/USD (OTC)",
+            "AUD/CHF (OTC)",
+            "AUD/NZD (OTC)",
+            "EUR/CHF (OTC)",
+            "GBP/NZD (OTC)",
+            "CAD/JPY (OTC)",
+            "NZD/CAD (OTC)",
+            "NZD/JPY (OTC)",
+            "ICP (OTC)",
+            "IMX (OTC)",
+            "BONK (OTC)",
+            "LINK (OTC)",
+            "WIF (OTC)",
+            "PEPE (OTC)",
+            "FLOKI (OTC)",
+            "DOT (OTC)",
+            "ATOM (OTC)",
+            "INJ (OTC)",
+            "IOTA (OTC)",
+            "DASH (OTC)",
+            "ARB (OTC)",
+            "ORDI (OTC)",
+            "SATS (OTC)",
+            "PYTH (OTC)",
+            "RONIN (OTC)",
+            "TIA (OTC)",
+            "MANA (OTC)",
+            "STX (OTC)",
+            "MATIC (OTC)",
+            "GBP/JPY",
+            "EUR/JPY",
+            "GBP/USD",
+            "USD/JPY",
+            "AUD/CAD",
+            "Bitcoin",
+            "GBP/JPY (OTC)",
+            "USD/JPY (OTC)",
+            "CAD/JPY",
+            "AUD/USD",
+            "Ethereum",
+            "AUD/CHF",
+            "AUD/NZD",
+            "AMAZON",
+            "APPLE",
+            "NZD/JPY",
+            "EUR/SGD",
+            "CHFNOK",
+            "Google (OTC)",
+            "AUD/SGD",
+            "ETC/USD",
+            "NZD/CAD",
+            "NZD/USD"
         ]
         
         # Filtrar apenas os ativos disponíveis no momento
@@ -590,9 +432,9 @@ def verificar_ativos_disponiveis():
             BOT2_LOGGER.warning("Nenhum ativo disponível! Usando lista de fallback.")
             fallback_ativos = [
                 "EUR/USD (OTC)",
-                "Bitcoin (OTC)",
+                "Bitcoin",
                 "Tesla (OTC)",
-                "Ethereum (OTC)"
+                "Ethereum"
             ]
             return fallback_ativos
         
@@ -604,9 +446,9 @@ def verificar_ativos_disponiveis():
         # Lista reduzida em caso de erro
         return [
             "EUR/USD (OTC)",
-            "Bitcoin (OTC)",
+            "Bitcoin",
             "Tesla (OTC)",
-            "Ethereum (OTC)"
+            "Ethereum"
         ]
 
 # Função para gerar um sinal aleatório
@@ -673,7 +515,7 @@ def formatar_mensagem_sinal(sinal, idioma):
     
     # Novo formato de mensagem
     mensagem = (
-        f"🧑‍💻 Tavares confirmou entrada\n\n"
+        f"🧑‍💻 Dark confirmou entrada\n\n"
         f"📊 Par = {ativo}\n"
         f"⏰ Expiração = {tempo_expiracao} Minuto\n\n"
         f"💻 Entrada às {hora_sinal_str}\n"
@@ -682,7 +524,7 @@ def formatar_mensagem_sinal(sinal, idioma):
         f"Fazer 1º Proteção às {hora_protecao1_str}\n"
         f"Fazer 2º Proteção às {hora_protecao2_str}\n\n"
         f'📲 <a href="{link_corretora}">Clique para abrir a corretora</a>\n'
-        f'🙋‍♂️ Não sabe operar ainda? <a href="{link_video}">Clique aqui</a>'
+        f'🙋‍♂️ Não sabe operar ainda?'
     )
         
     return mensagem
@@ -718,7 +560,7 @@ def formatar_mensagem_abertura_corretora(idioma):
     mensagem = (
         "👉🏼Abram a corretora Pessoal\n\n"
         "⚠FIQUEM ATENTOS⚠\n\n"
-        "🔥Cadastre-se na XXBROKER agora mesmo🔥\n\n"
+        "🔥Cadastre-se na Blend Broker agora mesmo🔥\n\n"
         f'➡ <a href="{link_corretora}">CLICANDO AQUI</a>'
     )
         
@@ -732,7 +574,7 @@ def enviar_sinal():
     """Envia um sinal para todos os canais configurados."""
     global contador_sinais, ultimo_sinal
     
-    BOT2_LOGGER.info("Iniciando envio de sinal")
+    BOT2_LOGGER.info("Iniciando sequência de envio de sinal")
     
     # Incrementar o contador de sinais
     contador_sinais += 1
@@ -743,96 +585,45 @@ def enviar_sinal():
     
     # Registrar informações do sinal
     BOT2_LOGGER.info(f"Sinal #{contador_sinais}: {sinal['ativo']} - {sinal['direcao']}")
-    BOT2_LOGGER.info("Enviando sinal único")
     
-    # Formatar mensagem apenas para português
-    mensagem = formatar_mensagem_sinal(sinal, "pt")
+    chat_id = BOT2_CANAIS_CONFIG["pt"][0]  # Pegar apenas o primeiro canal em português
     
-    # Enviar o sinal apenas para o canal em português
     try:
-        chat_id = BOT2_CANAIS_CONFIG["pt"][0]  # Pegar apenas o primeiro canal em português
-        BOT2_LOGGER.info(f"Tentando enviar sinal para canal {chat_id}")
-        
+        # PASSO 1: Enviar mensagem de participação IMEDIATAMENTE (10 min antes do sinal)
+        BOT2_LOGGER.info("Enviando mensagem de participação (10 min antes do sinal)")
+        mensagem_participacao = formatar_mensagem_participacao("pt")
         bot2.send_message(
             chat_id=chat_id,
-            text=mensagem,
+            text=mensagem_participacao,
             parse_mode="HTML",
             disable_web_page_preview=True
         )
+        BOT2_LOGGER.info("Mensagem de participação enviada com sucesso")
         
-        BOT2_LOGGER.info(f"Sinal enviado com sucesso para o canal {chat_id}")
+        # PASSO 2: Agendar GIF para 7 minutos depois (3 min antes do sinal)
+        threading.Timer(7 * 60, lambda: enviar_gif_pre_sinal(chat_id)).start()
+        BOT2_LOGGER.info("Agendado envio de GIF para daqui a 7 minutos (3 min antes do sinal)")
         
-        # Sequência especial para todos os sinais
-        threading.Timer(7 * 60, lambda: iniciar_sequencia_especial(sinal)).start()
-        BOT2_LOGGER.info("Agendada sequência especial para o sinal")
+        # PASSO 3: Agendar mensagem de abertura para 8 minutos depois (2 min antes do sinal)
+        threading.Timer(8 * 60, lambda: enviar_mensagem_abertura(chat_id)).start()
+        BOT2_LOGGER.info("Agendado envio de mensagem de abertura para daqui a 8 minutos (2 min antes do sinal)")
+        
+        # PASSO 4: Agendar o sinal propriamente dito para 10 minutos depois
+        threading.Timer(10 * 60, lambda: enviar_sinal_propriamente_dito(sinal, chat_id)).start()
+        BOT2_LOGGER.info("Agendado envio do sinal para daqui a 10 minutos")
+        
         return True
     except Exception as e:
-        BOT2_LOGGER.error(f"Erro ao enviar sinal para o canal: {str(e)}")
+        BOT2_LOGGER.error(f"Erro ao iniciar sequência de envio: {str(e)}")
         BOT2_LOGGER.error(traceback.format_exc())
         return False
 
-# Função para enviar o GIF pós-sinal - removida
-def enviar_gif_pos_sinal():
-    """Função de envio do GIF pós-sinal removida."""
-    BOT2_LOGGER.info("Função de envio do GIF pós-sinal foi removida.")
-    return True
-
-# Função para iniciar a sequência de envios para todos os sinais
-def iniciar_sequencia_especial(sinal):
-    """
-    Inicia a sequência de envios especial para todos os sinais.
-    
-    Args:
-        sinal: O sinal que foi enviado
-    """
-    BOT2_LOGGER.info("Iniciando sequência especial para o sinal")
-    
-    # Agendar envio da mensagem de participação (40 minutos após o sinal)
-    threading.Timer(40 * 60, enviar_mensagem_participacao).start()
-    BOT2_LOGGER.info("Agendado envio da mensagem de participação para daqui a 40 minutos")
-
-# Função para enviar a mensagem de participação
-def enviar_mensagem_participacao():
-    """Envia a mensagem de participação para o canal."""
-    BOT2_LOGGER.info("Iniciando processo de envio da mensagem de participação")
+# Função para enviar o GIF antes do sinal
+def enviar_gif_pre_sinal(chat_id):
+    """Envia o GIF 3 minutos antes do sinal."""
+    BOT2_LOGGER.info("Iniciando envio do GIF pré-sinal")
     
     try:
-        # Formatar mensagem de participação para português
-        mensagem = formatar_mensagem_participacao("pt")
-        BOT2_LOGGER.info("Mensagem de participação formatada com sucesso")
-        
-        # Enviar para o canal em português
-        chat_id = BOT2_CANAIS_CONFIG["pt"][0]
-        BOT2_LOGGER.info(f"Tentando enviar mensagem de participação para canal {chat_id}")
-        
-        bot2.send_message(
-            chat_id=chat_id,
-            text=mensagem,
-            parse_mode="HTML",
-            disable_web_page_preview=True
-        )
-        
-        BOT2_LOGGER.info(f"Mensagem de participação enviada com sucesso para o canal {chat_id}")
-        
-        # Agendar envio do GIF promocional (10 minutos depois)
-        BOT2_LOGGER.info("Agendando envio do GIF promocional para daqui a 10 minutos")
-        threading.Timer(10 * 60, enviar_gif_promocional).start()
-        BOT2_LOGGER.info("Agendado envio do GIF promocional para daqui a 10 minutos")
-        return True
-        
-    except Exception as e:
-        BOT2_LOGGER.error(f"Exceção ao enviar mensagem de participação: {str(e)}")
-        BOT2_LOGGER.error(traceback.format_exc())
-        return False
-
-# Função para enviar o GIF promocional
-def enviar_gif_promocional():
-    """Envia o GIF promocional para o canal."""
-    BOT2_LOGGER.info("Iniciando processo de envio do GIF promocional")
-    
-    try:
-        chat_id = BOT2_CANAIS_CONFIG["pt"][0]
-        
         # Verificar se o arquivo local existe
         if os.path.exists(GIF_PROMO_PATH):
             BOT2_LOGGER.info(f"Usando arquivo: {GIF_PROMO_PATH}")
@@ -851,33 +642,21 @@ def enviar_gif_promocional():
                 animation=fallback_url
             )
         
-        BOT2_LOGGER.info(f"GIF promocional enviado com sucesso para o canal {chat_id}")
-        
-        # Agendar envio da mensagem de abertura da corretora (1 minuto depois)
-        BOT2_LOGGER.info("Agendando envio da mensagem de abertura da corretora para daqui a 1 minuto")
-        threading.Timer(1 * 60, enviar_mensagem_abertura_corretora).start()
-        BOT2_LOGGER.info("Agendado envio da mensagem de abertura da corretora para daqui a 1 minuto")
+        BOT2_LOGGER.info(f"GIF pré-sinal enviado com sucesso para o canal {chat_id}")
         return True
         
     except Exception as e:
-        BOT2_LOGGER.error(f"Exceção ao enviar GIF promocional: {str(e)}")
+        BOT2_LOGGER.error(f"Erro ao enviar GIF pré-sinal: {str(e)}")
         BOT2_LOGGER.error(traceback.format_exc())
         return False
 
 # Função para enviar a mensagem de abertura da corretora
-def enviar_mensagem_abertura_corretora():
-    """Envia a mensagem de abertura da corretora para o canal."""
-    BOT2_LOGGER.info("Iniciando processo de envio da mensagem de abertura da corretora")
+def enviar_mensagem_abertura(chat_id):
+    """Envia a mensagem de abertura da corretora 2 minutos antes do sinal."""
+    BOT2_LOGGER.info("Iniciando envio da mensagem de abertura da corretora")
     
     try:
-        # Formatar mensagem de abertura da corretora para português
         mensagem = formatar_mensagem_abertura_corretora("pt")
-        BOT2_LOGGER.info("Mensagem de abertura da corretora formatada com sucesso")
-        
-        # Enviar para o canal em português
-        chat_id = BOT2_CANAIS_CONFIG["pt"][0]
-        BOT2_LOGGER.info(f"Tentando enviar mensagem de abertura da corretora para canal {chat_id}")
-        
         bot2.send_message(
             chat_id=chat_id,
             text=mensagem,
@@ -885,27 +664,51 @@ def enviar_mensagem_abertura_corretora():
             disable_web_page_preview=True
         )
         
-        BOT2_LOGGER.info(f"Mensagem de abertura da corretora enviada com sucesso para o canal {chat_id}")
+        BOT2_LOGGER.info(f"Mensagem de abertura enviada com sucesso para o canal {chat_id}")
         return True
         
     except Exception as e:
-        BOT2_LOGGER.error(f"Exceção ao enviar mensagem de abertura da corretora: {str(e)}")
+        BOT2_LOGGER.error(f"Erro ao enviar mensagem de abertura: {str(e)}")
         BOT2_LOGGER.error(traceback.format_exc())
         return False
 
+# Função para enviar o sinal propriamente dito
+def enviar_sinal_propriamente_dito(sinal, chat_id):
+    """Envia o sinal propriamente dito no horário correto."""
+    BOT2_LOGGER.info("Iniciando envio do sinal propriamente dito")
+    
+    try:
+        mensagem = formatar_mensagem_sinal(sinal, "pt")
+        bot2.send_message(
+            chat_id=chat_id,
+            text=mensagem,
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
+        
+        BOT2_LOGGER.info(f"Sinal enviado com sucesso para o canal {chat_id}")
+        return True
+        
+    except Exception as e:
+        BOT2_LOGGER.error(f"Erro ao enviar sinal: {str(e)}")
+        BOT2_LOGGER.error(traceback.format_exc())
+        return False
+
+
 # Função para iniciar o bot e agendar os sinais
 def iniciar_bot():
-    """Inicia o bot e agenda o envio de sinais para cada hora."""
+    """Inicia o bot e agenda o envio de sinais para horários específicos."""
     BOT2_LOGGER.info("Iniciando bot...")
     
-    # Agendar envio de sinais para minuto 13 de cada hora
-    for hora in range(24):
-        # Formato: HH:MM (exemplo: "09:13")
-        horario = f"{hora:02d}:13"
+    # Horários específicos para envio de sinais
+    horarios_envio = ["09:00", "09:30", "13:00", "13:30", "16:00", "16:30"]
+    
+    # Agendar envio de sinais para cada horário específico
+    for horario in horarios_envio:
         schedule.every().day.at(horario).do(enviar_sinal)
         BOT2_LOGGER.info(f"Agendado envio de sinal para {horario}")
     
-    BOT2_LOGGER.info("Bot iniciado com sucesso. Executando loop de agendamento...")
+    BOT2_LOGGER.info(f"Bot iniciado com sucesso. {len(horarios_envio)} horários agendados. Executando loop de agendamento...")
     
     # Loop para verificar os agendamentos
     while True:
