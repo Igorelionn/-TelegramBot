@@ -524,7 +524,7 @@ def formatar_mensagem_sinal(sinal, idioma):
         f"Fazer 1º Proteção às {hora_protecao1_str}\n"
         f"Fazer 2º Proteção às {hora_protecao2_str}\n\n"
         f'📲 <a href="{link_corretora}">Clique para abrir a corretora</a>\n'
-        f'🙋‍♂️ Não sabe operar ainda?'
+        f'🙋‍♂️ <a href="https://t.me/cryptodarktrade/48">Não sabe operar ainda?</a>'
     )
         
     return mensagem
