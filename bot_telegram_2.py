@@ -99,7 +99,7 @@ for idioma, chats in BOT2_CANAIS_CONFIG.items():
 
 # Links para cada idioma
 LINKS_CORRETORA = {
-    "pt": "https://blendbroker.com/?ref=cmgplsb7f018cavh80l81h2cy"
+    "pt": "https://stke.me/l/1343/1538"
 }
 
 # URLs dos vídeos para cada idioma
@@ -136,107 +136,34 @@ HORARIO_24_7 = {
 }
 
 HORARIOS_PADRAO = {
-    "TRUMP_(OTC)": HORARIO_24_7,
-    "XAU_USD_(OTC)": HORARIO_24_7,
-    "GALA_(OTC)": HORARIO_24_7,
-    "BCH_(OTC)": HORARIO_24_7,
-    "GRT_(OTC)": HORARIO_24_7,
-    "EUR_USD": HORARIO_24_7,
-    "WLD_(OTC)": HORARIO_24_7,
-    "EUR_USD_(OTC)": HORARIO_24_7,
-    "EUR_GBP_(OTC)": HORARIO_24_7,
-    "USD_CHF_(OTC)": HORARIO_24_7,
-    "EUR_JPY_(OTC)": HORARIO_24_7,
-    "NZD_USD_(OTC)": HORARIO_24_7,
-    "GBP_USD_(OTC)": HORARIO_24_7,
-    "AUD_CAD_(OTC)": HORARIO_24_7,
-    "Meta_(OTC)": HORARIO_24_7,
-    "Apple_(OTC)": HORARIO_24_7,
-    "Snap_(OTC)": HORARIO_24_7,
-    "SEI_(OTC)": HORARIO_24_7,
-    "USD_CAD": HORARIO_24_7,
-    "AUD_JPY": HORARIO_24_7,
-    "GBP_CAD": HORARIO_24_7,
-    "GBP_CHF": HORARIO_24_7,
-    "GBP_AUD": HORARIO_24_7,
-    "EUR_CAD": HORARIO_24_7,
-    "CHF_JPY": HORARIO_24_7,
-    "CAD_CHF": HORARIO_24_7,
-    "EUR_AUD": HORARIO_24_7,
-    "Amazon_(OTC)": HORARIO_24_7,
-    "Tesla_(OTC)": HORARIO_24_7,
-    "TRON_(OTC)": HORARIO_24_7,
-    "DOGECOIN_(OTC)": HORARIO_24_7,
-    "Solana_(OTC)": HORARIO_24_7,
-    "EUR_GBP": HORARIO_24_7,
-    "INTEL_(OTC)": HORARIO_24_7,
-    "Microsoft_(OTC)": HORARIO_24_7,
-    "Coca_Cola_(OTC)": HORARIO_24_7,
-    "McDonald's_(OTC)": HORARIO_24_7,
-    "Nike_(OTC)": HORARIO_24_7,
-    "Ripple___XRP_(OTC)": HORARIO_24_7,
-    "AUD_USD_(OTC)": HORARIO_24_7,
-    "USD_CAD_(OTC)": HORARIO_24_7,
-    "AUD_JPY_(OTC)": HORARIO_24_7,
-    "GBP_CAD_(OTC)": HORARIO_24_7,
-    "GBP_CHF_(OTC)": HORARIO_24_7,
-    "EUR_CAD_(OTC)": HORARIO_24_7,
-    "CHF_JPY_(OTC)": HORARIO_24_7,
-    "CAD_CHF_(OTC)": HORARIO_24_7,
-    "EUR_NZD": HORARIO_24_7,
-    "Litecoin_(OTC)": HORARIO_24_7,
-    "EOS_USD_(OTC)": HORARIO_24_7,
-    "AUD_CHF_(OTC)": HORARIO_24_7,
-    "AUD_NZD_(OTC)": HORARIO_24_7,
-    "EUR_CHF_(OTC)": HORARIO_24_7,
-    "GBP_NZD_(OTC)": HORARIO_24_7,
-    "CAD_JPY_(OTC)": HORARIO_24_7,
-    "NZD_CAD_(OTC)": HORARIO_24_7,
-    "NZD_JPY_(OTC)": HORARIO_24_7,
-    "ICP_(OTC)": HORARIO_24_7,
-    "IMX_(OTC)": HORARIO_24_7,
-    "BONK_(OTC)": HORARIO_24_7,
-    "LINK_(OTC)": HORARIO_24_7,
-    "WIF_(OTC)": HORARIO_24_7,
-    "PEPE_(OTC)": HORARIO_24_7,
-    "FLOKI_(OTC)": HORARIO_24_7,
-    "DOT_(OTC)": HORARIO_24_7,
-    "ATOM_(OTC)": HORARIO_24_7,
-    "INJ_(OTC)": HORARIO_24_7,
-    "IOTA_(OTC)": HORARIO_24_7,
-    "DASH_(OTC)": HORARIO_24_7,
-    "ARB_(OTC)": HORARIO_24_7,
-    "ORDI_(OTC)": HORARIO_24_7,
-    "SATS_(OTC)": HORARIO_24_7,
-    "PYTH_(OTC)": HORARIO_24_7,
-    "RONIN_(OTC)": HORARIO_24_7,
-    "TIA_(OTC)": HORARIO_24_7,
-    "MANA_(OTC)": HORARIO_24_7,
-    "STX_(OTC)": HORARIO_24_7,
-    "MATIC_(OTC)": HORARIO_24_7,
-    "GBP_JPY": HORARIO_24_7,
-    "EUR_JPY": HORARIO_24_7,
-    "GBP_USD": HORARIO_24_7,
-    "USD_JPY": HORARIO_24_7,
-    "AUD_CAD": HORARIO_24_7,
     "Bitcoin": HORARIO_24_7,
-    "GBP_JPY_(OTC)": HORARIO_24_7,
-    "USD_JPY_(OTC)": HORARIO_24_7,
-    "CAD_JPY": HORARIO_24_7,
-    "AUD_USD": HORARIO_24_7,
-    "Ethereum": HORARIO_24_7,
-    "AUD_CHF": HORARIO_24_7,
-    "AUD_NZD": HORARIO_24_7,
-    "AMAZON": HORARIO_24_7,
-    "APPLE": HORARIO_24_7,
-    "NZD_JPY": HORARIO_24_7,
-    "EUR_SGD": HORARIO_24_7,
-    "CHFNOK": HORARIO_24_7,
-    "Google_(OTC)": HORARIO_24_7,
-    "AUD_SGD": HORARIO_24_7,
-    "ETC_USD": HORARIO_24_7,
-    "NZD_CAD": HORARIO_24_7,
+    "Litecoin": HORARIO_24_7,
+    "Cardano": HORARIO_24_7,
+    "AUD_JPY": HORARIO_24_7,
+    "BNB": HORARIO_24_7,
+    "EUR_USD_(OTC)": HORARIO_24_7,
+    "Bitcoin_(OTC)": HORARIO_24_7,
+    "Litecoin_(OTC)": HORARIO_24_7,
+    "Apple_(OTC)": HORARIO_24_7,
+    "Cardano_(OTC)": HORARIO_24_7,
+    "EUR_GBP_(OTC)": HORARIO_24_7,
+    "AUD_JPY_(OTC)": HORARIO_24_7,
+    "XAU_USD_(OTC)": HORARIO_24_7,
+    "BNB_(OTC)": HORARIO_24_7,
+    "Netflix_(OTC)": HORARIO_24_7,
+    "Tesla_(OTC)": HORARIO_24_7,
+    "Microsoft_(OTC)": HORARIO_24_7,
+    "EUR_JPY_(OTC)": HORARIO_24_7,
+    "GBP_USD": HORARIO_24_7,
+    "AUD_CAD": HORARIO_24_7,
+    "USD_CAD": HORARIO_24_7,
     "NZD_USD": HORARIO_24_7,
+    "USD_JPY": HORARIO_24_7,
+    "CAD_JPY": HORARIO_24_7,
+    "CHF_JPY": HORARIO_24_7,
+    "XRP": HORARIO_24_7,
+    "Ethereum": HORARIO_24_7,
+    "Solana": HORARIO_24_7,
 }
 
 # Variáveis de controle
@@ -319,107 +246,34 @@ def verificar_ativos_disponiveis():
     try:
         # Lista completa dos ativos disponíveis
         todos_ativos = [
-            "TRUMP (OTC)",
-            "XAU/USD (OTC)",
-            "GALA (OTC)",
-            "BCH (OTC)",
-            "GRT (OTC)",
-            "EUR/USD",
-            "WLD (OTC)",
-            "EUR/USD (OTC)",
-            "EUR/GBP (OTC)",
-            "USD/CHF (OTC)",
-            "EUR/JPY (OTC)",
-            "NZD/USD (OTC)",
-            "GBP/USD (OTC)",
-            "AUD/CAD (OTC)",
-            "Meta (OTC)",
-            "Apple (OTC)",
-            "Snap (OTC)",
-            "SEI (OTC)",
-            "USD/CAD",
-            "AUD/JPY",
-            "GBP/CAD",
-            "GBP/CHF",
-            "GBP/AUD",
-            "EUR/CAD",
-            "CHF/JPY",
-            "CAD/CHF",
-            "EUR/AUD",
-            "Amazon (OTC)",
-            "Tesla (OTC)",
-            "TRON (OTC)",
-            "DOGECOIN (OTC)",
-            "Solana (OTC)",
-            "EUR/GBP",
-            "INTEL (OTC)",
-            "Microsoft (OTC)",
-            "Coca-Cola (OTC)",
-            "McDonald's (OTC)",
-            "Nike (OTC)",
-            "Ripple - XRP (OTC)",
-            "AUD/USD (OTC)",
-            "USD/CAD (OTC)",
-            "AUD/JPY (OTC)",
-            "GBP/CAD (OTC)",
-            "GBP/CHF (OTC)",
-            "EUR/CAD (OTC)",
-            "CHF/JPY (OTC)",
-            "CAD/CHF (OTC)",
-            "EUR/NZD",
-            "Litecoin (OTC)",
-            "EOS/USD (OTC)",
-            "AUD/CHF (OTC)",
-            "AUD/NZD (OTC)",
-            "EUR/CHF (OTC)",
-            "GBP/NZD (OTC)",
-            "CAD/JPY (OTC)",
-            "NZD/CAD (OTC)",
-            "NZD/JPY (OTC)",
-            "ICP (OTC)",
-            "IMX (OTC)",
-            "BONK (OTC)",
-            "LINK (OTC)",
-            "WIF (OTC)",
-            "PEPE (OTC)",
-            "FLOKI (OTC)",
-            "DOT (OTC)",
-            "ATOM (OTC)",
-            "INJ (OTC)",
-            "IOTA (OTC)",
-            "DASH (OTC)",
-            "ARB (OTC)",
-            "ORDI (OTC)",
-            "SATS (OTC)",
-            "PYTH (OTC)",
-            "RONIN (OTC)",
-            "TIA (OTC)",
-            "MANA (OTC)",
-            "STX (OTC)",
-            "MATIC (OTC)",
-            "GBP/JPY",
-            "EUR/JPY",
-            "GBP/USD",
-            "USD/JPY",
-            "AUD/CAD",
             "Bitcoin",
-            "GBP/JPY (OTC)",
-            "USD/JPY (OTC)",
+            "Litecoin",
+            "Cardano",
+            "AUD/JPY",
+            "BNB",
+            "EUR/USD (OTC)",
+            "Bitcoin (OTC)",
+            "Litecoin (OTC)",
+            "Apple (OTC)",
+            "Cardano (OTC)",
+            "EUR/GBP (OTC)",
+            "AUD/JPY (OTC)",
+            "XAU/USD (OTC)",
+            "BNB (OTC)",
+            "Netflix (OTC)",
+            "Tesla (OTC)",
+            "Microsoft (OTC)",
+            "EUR/JPY (OTC)",
+            "GBP/USD",
+            "AUD/CAD",
+            "USD/CAD",
+            "NZD/USD",
+            "USD/JPY",
             "CAD/JPY",
-            "AUD/USD",
+            "CHF/JPY",
+            "XRP",
             "Ethereum",
-            "AUD/CHF",
-            "AUD/NZD",
-            "AMAZON",
-            "APPLE",
-            "NZD/JPY",
-            "EUR/SGD",
-            "CHFNOK",
-            "Google (OTC)",
-            "AUD/SGD",
-            "ETC/USD",
-            "NZD/CAD",
-            "NZD/USD"
+            "Solana"
         ]
         
         # Filtrar apenas os ativos disponíveis no momento
@@ -431,10 +285,10 @@ def verificar_ativos_disponiveis():
         if not ativos_disponiveis:
             BOT2_LOGGER.warning("Nenhum ativo disponível! Usando lista de fallback.")
             fallback_ativos = [
-                "EUR/USD (OTC)",
                 "Bitcoin",
-                "Tesla (OTC)",
-                "Ethereum"
+                "Ethereum",
+                "EUR/USD (OTC)",
+                "Tesla (OTC)"
             ]
             return fallback_ativos
         
@@ -445,10 +299,10 @@ def verificar_ativos_disponiveis():
         BOT2_LOGGER.error(traceback.format_exc())
         # Lista reduzida em caso de erro
         return [
-            "EUR/USD (OTC)",
             "Bitcoin",
-            "Tesla (OTC)",
-            "Ethereum"
+            "Ethereum",
+            "EUR/USD (OTC)",
+            "Tesla (OTC)"
         ]
 
 # Função para gerar um sinal aleatório
@@ -488,8 +342,8 @@ def formatar_mensagem_sinal(sinal, idioma):
     # Obter horário atual
     hora_atual = obter_hora_brasilia()
     
-    # Horário do sinal (3 minutos depois do envio)
-    hora_sinal = hora_atual + timedelta(minutes=3)
+    # Horário do sinal (1 minuto depois do envio da mensagem do sinal)
+    hora_sinal = hora_atual + timedelta(minutes=1)
     
     # Horário de expiração (1 minuto depois do horário do sinal)
     hora_expiracao = hora_sinal + timedelta(minutes=tempo_expiracao)
@@ -560,7 +414,7 @@ def formatar_mensagem_abertura_corretora(idioma):
     mensagem = (
         "👉🏼Abram a corretora Pessoal\n\n"
         "⚠FIQUEM ATENTOS⚠\n\n"
-        "🔥Cadastre-se na Blend Broker agora mesmo🔥\n\n"
+        "🔥Cadastre-se na Vetra Broker agora mesmo🔥\n\n"
         f'➡ <a href="{link_corretora}">CLICANDO AQUI</a>'
     )
         
@@ -589,8 +443,8 @@ def enviar_sinal():
     chat_id = BOT2_CANAIS_CONFIG["pt"][0]  # Pegar apenas o primeiro canal em português
     
     try:
-        # PASSO 1: Enviar mensagem de participação IMEDIATAMENTE (10 min antes do sinal)
-        BOT2_LOGGER.info("Enviando mensagem de participação (10 min antes do sinal)")
+        # PASSO 1: Enviar mensagem de participação IMEDIATAMENTE
+        BOT2_LOGGER.info("Enviando mensagem de participação")
         mensagem_participacao = formatar_mensagem_participacao("pt")
         bot2.send_message(
             chat_id=chat_id,
@@ -600,17 +454,17 @@ def enviar_sinal():
         )
         BOT2_LOGGER.info("Mensagem de participação enviada com sucesso")
         
-        # PASSO 2: Agendar GIF para 7 minutos depois (3 min antes do sinal)
-        threading.Timer(7 * 60, lambda: enviar_gif_pre_sinal(chat_id)).start()
-        BOT2_LOGGER.info("Agendado envio de GIF para daqui a 7 minutos (3 min antes do sinal)")
+        # PASSO 2: Agendar GIF para 30 segundos depois
+        threading.Timer(30, lambda: enviar_gif_pre_sinal(chat_id)).start()
+        BOT2_LOGGER.info("Agendado envio de GIF para daqui a 30 segundos")
         
-        # PASSO 3: Agendar mensagem de abertura para 8 minutos depois (2 min antes do sinal)
-        threading.Timer(8 * 60, lambda: enviar_mensagem_abertura(chat_id)).start()
-        BOT2_LOGGER.info("Agendado envio de mensagem de abertura para daqui a 8 minutos (2 min antes do sinal)")
+        # PASSO 3: Agendar mensagem de abertura para 1 minuto depois
+        threading.Timer(60, lambda: enviar_mensagem_abertura(chat_id)).start()
+        BOT2_LOGGER.info("Agendado envio de mensagem de abertura para daqui a 1 minuto")
         
-        # PASSO 4: Agendar o sinal propriamente dito para 10 minutos depois
-        threading.Timer(10 * 60, lambda: enviar_sinal_propriamente_dito(sinal, chat_id)).start()
-        BOT2_LOGGER.info("Agendado envio do sinal para daqui a 10 minutos")
+        # PASSO 4: Agendar o sinal propriamente dito para 2 minutos depois
+        threading.Timer(120, lambda: enviar_sinal_propriamente_dito(sinal, chat_id)).start()
+        BOT2_LOGGER.info("Agendado envio do sinal para daqui a 2 minutos")
         
         return True
     except Exception as e:
@@ -701,7 +555,7 @@ def iniciar_bot():
     BOT2_LOGGER.info("Iniciando bot...")
     
     # Horários específicos para envio de sinais
-    horarios_envio = ["09:00", "09:30", "13:00", "13:30", "16:00", "16:30"]
+    horarios_envio = ["09:30", "11:00", "14:00", "15:00", "16:00", "17:00"]
     
     # Agendar envio de sinais para cada horário específico
     for horario in horarios_envio:
